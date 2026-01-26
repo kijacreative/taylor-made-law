@@ -4,6 +4,8 @@ import ForLawyers from './pages/ForLawyers';
 import LawyerDashboard from './pages/LawyerDashboard';
 import CaseExchange from './pages/CaseExchange';
 import CaseDetail from './pages/CaseDetail';
+import MyCases from './pages/MyCases';
+import LawyerSettings from './pages/LawyerSettings';
 
 
 export const PAGES = {
@@ -13,6 +15,8 @@ export const PAGES = {
     "LawyerDashboard": LawyerDashboard,
     "CaseExchange": CaseExchange,
     "CaseDetail": CaseDetail,
+    "MyCases": MyCases,
+    "LawyerSettings": LawyerSettings,
 }
 
 export const pagesConfig = {
