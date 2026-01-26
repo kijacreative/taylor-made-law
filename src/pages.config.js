@@ -9,6 +9,8 @@ import LawyerSettings from './pages/LawyerSettings';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLeads from './pages/AdminLeads';
 import AdminLeadDetail from './pages/AdminLeadDetail';
+import AdminLawyers from './pages/AdminLawyers';
+import AdminCases from './pages/AdminCases';
 
 
 export const PAGES = {
@@ -23,6 +25,8 @@ export const PAGES = {
     "AdminDashboard": AdminDashboard,
     "AdminLeads": AdminLeads,
     "AdminLeadDetail": AdminLeadDetail,
+    "AdminLawyers": AdminLawyers,
+    "AdminCases": AdminCases,
 }
 
 export const pagesConfig = {
