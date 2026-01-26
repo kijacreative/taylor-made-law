@@ -23,6 +23,7 @@ const TMLButton = React.forwardRef(({
     ghost: 'bg-transparent hover:bg-gray-100 text-gray-700 focus:ring-gray-400 rounded-lg',
     danger: 'bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl focus:ring-red-600 rounded-full',
     success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl focus:ring-emerald-600 rounded-full',
+    info: 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl focus:ring-blue-600 rounded-full',
   };
   
   const sizes = {
