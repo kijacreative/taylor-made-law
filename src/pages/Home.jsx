@@ -5,11 +5,8 @@ import { motion } from 'framer-motion';
 import { 
   ArrowRight, 
   Shield, 
-  Users, 
   Scale, 
   CheckCircle2,
-  Briefcase,
-  Star,
   Zap
 } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
