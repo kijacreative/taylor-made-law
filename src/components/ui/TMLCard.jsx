@@ -13,8 +13,8 @@ const TMLCard = React.forwardRef(({
     default: 'bg-white border border-gray-100',
     elevated: 'bg-white shadow-lg',
     cream: 'bg-[#faf8f5] border border-gray-100',
-    gradient: 'bg-gradient-to-br from-[#7e277e] to-[#993333] text-white',
-    outlined: 'bg-white border-2 border-[#7e277e]/20',
+    gradient: 'bg-gradient-to-br from-[#3a164d] to-[#993333] text-white',
+    outlined: 'bg-white border-2 border-[#3a164d]/20',
   };
 
   return (

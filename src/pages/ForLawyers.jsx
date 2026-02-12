@@ -294,15 +294,15 @@ Taylor Made Law Team
               <h3 className="font-semibold text-gray-900 mb-4">What happens next?</h3>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#7e277e] mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-[#3a164d] mt-0.5" />
                   <span className="text-gray-700">Our team verifies your bar membership and credentials</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#7e277e] mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-[#3a164d] mt-0.5" />
                   <span className="text-gray-700">If approved, you'll receive account setup instructions</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#7e277e] mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-[#3a164d] mt-0.5" />
                   <span className="text-gray-700">Start receiving case referrals matched to your expertise</span>
                 </li>
               </ul>
@@ -334,7 +334,7 @@ Taylor Made Law Team
               >
                 <h1 className="text-5xl font-bold text-gray-900 mb-6">
                   Join the Taylor Made Law{' '}
-                  <span className="text-[#7e277e]">Attorney Network</span>
+                  <span className="text-[#3a164d]">Attorney Network</span>
                 </h1>
                 <p className="text-xl text-gray-600 mb-8 leading-relaxed">
                   Receive pre-screened, quality case referrals matched to your practice areas 
@@ -368,10 +368,10 @@ Taylor Made Law Team
                 animate={{ opacity: 1, scale: 1 }}
                 className="relative"
               >
-                <div className="absolute -inset-4 bg-gradient-to-br from-[#7e277e]/10 to-[#993333]/10 rounded-3xl" />
+                <div className="absolute -inset-4 bg-gradient-to-br from-[#3a164d]/10 to-[#993333]/10 rounded-3xl" />
                 <TMLCard variant="elevated" className="relative">
                   <div className="text-center mb-6">
-                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#7e277e] to-[#993333] flex items-center justify-center">
+                    <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#3a164d] to-[#993333] flex items-center justify-center">
                       <Scale className="w-10 h-10 text-white" />
                     </div>
                     <h3 className="text-2xl font-bold text-gray-900">Network Benefits</h3>
@@ -380,7 +380,7 @@ Taylor Made Law Team
                   <div className="space-y-4">
                     {['Pre-screened case referrals', 'Cases matched to your expertise', 'No per-lead fees', 'Dedicated support'].map((item) => (
                       <div key={item} className="flex items-center gap-3 bg-[#faf8f5] rounded-lg px-4 py-3">
-                        <CheckCircle2 className="w-5 h-5 text-[#7e277e]" />
+                        <CheckCircle2 className="w-5 h-5 text-[#3a164d]" />
                         <span className="text-gray-700">{item}</span>
                       </div>
                     ))}
@@ -413,8 +413,8 @@ Taylor Made Law Team
                   transition={{ duration: 0.5, delay: index * 0.1 }}
                 >
                   <TMLCard variant="cream" hover className="h-full text-center">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-[#7e277e]/10 flex items-center justify-center">
-                      <benefit.icon className="w-7 h-7 text-[#7e277e]" />
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-[#3a164d]/10 flex items-center justify-center">
+                      <benefit.icon className="w-7 h-7 text-[#3a164d]" />
                     </div>
                     <h3 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h3>
                     <p className="text-gray-600 text-sm">{benefit.description}</p>
@@ -426,7 +426,7 @@ Taylor Made Law Team
         </section>
 
         {/* CTA */}
-        <section className="py-24 bg-gradient-to-br from-[#7e277e] to-[#993333]">
+        <section className="py-24 bg-gradient-to-br from-[#3a164d] to-[#993333]">
           <div className="max-w-4xl mx-auto px-4 text-center">
             <h2 className="text-4xl font-bold text-white mb-6">
               Ready to Grow Your Practice?
@@ -469,14 +469,14 @@ Taylor Made Law Team
             {[1, 2, 3].map((s) => (
               <React.Fragment key={s}>
                 <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all ${
-                  s < step ? 'bg-[#7e277e] text-white' :
-                  s === step ? 'bg-[#7e277e] text-white ring-4 ring-[#7e277e]/20' :
+                  s < step ? 'bg-[#3a164d] text-white' :
+                  s === step ? 'bg-[#3a164d] text-white ring-4 ring-[#3a164d]/20' :
                   'bg-gray-200 text-gray-500'
                 }`}>
                   {s < step ? <CheckCircle2 className="w-5 h-5" /> : s}
                 </div>
                 {s < 3 && (
-                  <div className={`w-24 h-1 mx-2 rounded ${s < step ? 'bg-[#7e277e]' : 'bg-gray-200'}`} />
+                  <div className={`w-24 h-1 mx-2 rounded ${s < step ? 'bg-[#3a164d]' : 'bg-gray-200'}`} />
                 )}
               </React.Fragment>
             ))}
@@ -495,8 +495,8 @@ Taylor Made Law Team
                   className="space-y-6"
                 >
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-[#7e277e]/10 flex items-center justify-center">
-                      <Building2 className="w-6 h-6 text-[#7e277e]" />
+                    <div className="w-12 h-12 rounded-xl bg-[#3a164d]/10 flex items-center justify-center">
+                      <Building2 className="w-6 h-6 text-[#3a164d]" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-gray-900">Basic Information</h2>
@@ -569,8 +569,8 @@ Taylor Made Law Team
                   className="space-y-6"
                 >
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-[#7e277e]/10 flex items-center justify-center">
-                      <Scale className="w-6 h-6 text-[#7e277e]" />
+                    <div className="w-12 h-12 rounded-xl bg-[#3a164d]/10 flex items-center justify-center">
+                      <Scale className="w-6 h-6 text-[#3a164d]" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-gray-900">Practice Details</h2>
@@ -656,8 +656,8 @@ Taylor Made Law Team
                   className="space-y-6"
                 >
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-[#7e277e]/10 flex items-center justify-center">
-                      <Users className="w-6 h-6 text-[#7e277e]" />
+                    <div className="w-12 h-12 rounded-xl bg-[#3a164d]/10 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-[#3a164d]" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-gray-900">Final Steps</h2>
@@ -701,7 +701,7 @@ Taylor Made Law Team
                   <div className="pt-6 border-t border-gray-200">
                     <div className="bg-gray-50 rounded-xl p-4 mb-4">
                       <div className="flex items-start gap-3">
-                        <Shield className="w-5 h-5 text-[#7e277e] mt-0.5" />
+                        <Shield className="w-5 h-5 text-[#3a164d] mt-0.5" />
                         <div className="text-sm text-gray-600">
                           <p className="font-medium text-gray-900 mb-2">Terms & Agreement</p>
                           <p className="whitespace-pre-line text-xs">{LAWYER_CONSENT_TEXT}</p>
@@ -714,7 +714,7 @@ Taylor Made Law Team
                         type="checkbox"
                         checked={formData.consent}
                         onChange={(e) => updateField('consent', e.target.checked)}
-                        className="mt-1 w-5 h-5 rounded border-gray-300 text-[#7e277e] focus:ring-[#7e277e]"
+                        className="mt-1 w-5 h-5 rounded border-gray-300 text-[#3a164d] focus:ring-[#3a164d]"
                       />
                       <span className="text-sm text-gray-700">
                         I certify the information provided is accurate and agree to the terms above.

@@ -246,15 +246,15 @@ Taylor Made Law Team
               <h3 className="font-semibold text-gray-900 mb-4">What happens next?</h3>
               <ul className="space-y-3">
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#7e277e] mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-[#3a164d] mt-0.5" />
                   <span className="text-gray-700">Our team reviews your case details</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#7e277e] mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-[#3a164d] mt-0.5" />
                   <span className="text-gray-700">We match you with qualified attorneys in our network</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <CheckCircle2 className="w-5 h-5 text-[#7e277e] mt-0.5" />
+                  <CheckCircle2 className="w-5 h-5 text-[#3a164d] mt-0.5" />
                   <span className="text-gray-700">You'll be contacted within 24-48 hours</span>
                 </li>
               </ul>
@@ -290,14 +290,14 @@ Taylor Made Law Team
             {[1, 2, 3].map((s) => (
               <React.Fragment key={s}>
                 <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all ${
-                  s < step ? 'bg-[#7e277e] text-white' :
-                  s === step ? 'bg-[#7e277e] text-white ring-4 ring-[#7e277e]/20' :
+                  s < step ? 'bg-[#3a164d] text-white' :
+                  s === step ? 'bg-[#3a164d] text-white ring-4 ring-[#3a164d]/20' :
                   'bg-gray-200 text-gray-500'
                 }`}>
                   {s < step ? <CheckCircle2 className="w-5 h-5" /> : s}
                 </div>
                 {s < 3 && (
-                  <div className={`w-24 h-1 mx-2 rounded ${s < step ? 'bg-[#7e277e]' : 'bg-gray-200'}`} />
+                  <div className={`w-24 h-1 mx-2 rounded ${s < step ? 'bg-[#3a164d]' : 'bg-gray-200'}`} />
                 )}
               </React.Fragment>
             ))}
@@ -316,8 +316,8 @@ Taylor Made Law Team
                   className="space-y-6"
                 >
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-[#7e277e]/10 flex items-center justify-center">
-                      <Scale className="w-6 h-6 text-[#7e277e]" />
+                    <div className="w-12 h-12 rounded-xl bg-[#3a164d]/10 flex items-center justify-center">
+                      <Scale className="w-6 h-6 text-[#3a164d]" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-gray-900">What type of legal help do you need?</h2>
@@ -364,8 +364,8 @@ Taylor Made Law Team
                   className="space-y-6"
                 >
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-[#7e277e]/10 flex items-center justify-center">
-                      <FileText className="w-6 h-6 text-[#7e277e]" />
+                    <div className="w-12 h-12 rounded-xl bg-[#3a164d]/10 flex items-center justify-center">
+                      <FileText className="w-6 h-6 text-[#3a164d]" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-gray-900">Tell us more about your situation</h2>
@@ -413,8 +413,8 @@ Taylor Made Law Team
                   className="space-y-6"
                 >
                   <div className="flex items-center gap-3 mb-6">
-                    <div className="w-12 h-12 rounded-xl bg-[#7e277e]/10 flex items-center justify-center">
-                      <User className="w-6 h-6 text-[#7e277e]" />
+                    <div className="w-12 h-12 rounded-xl bg-[#3a164d]/10 flex items-center justify-center">
+                      <User className="w-6 h-6 text-[#3a164d]" />
                     </div>
                     <div>
                       <h2 className="text-xl font-bold text-gray-900">Your Contact Information</h2>
@@ -487,7 +487,7 @@ Taylor Made Law Team
                   <div className="pt-6 border-t border-gray-200">
                     <div className="bg-gray-50 rounded-xl p-4 mb-4">
                       <div className="flex items-start gap-3">
-                        <Shield className="w-5 h-5 text-[#7e277e] mt-0.5" />
+                        <Shield className="w-5 h-5 text-[#3a164d] mt-0.5" />
                         <div className="text-sm text-gray-600">
                           <p className="font-medium text-gray-900 mb-2">Terms & Consent</p>
                           <p className="whitespace-pre-line text-xs">{CONSENT_TEXT}</p>
@@ -500,7 +500,7 @@ Taylor Made Law Team
                         type="checkbox"
                         checked={formData.consent}
                         onChange={(e) => updateField('consent', e.target.checked)}
-                        className="mt-1 w-5 h-5 rounded border-gray-300 text-[#7e277e] focus:ring-[#7e277e]"
+                        className="mt-1 w-5 h-5 rounded border-gray-300 text-[#3a164d] focus:ring-[#3a164d]"
                       />
                       <span className="text-sm text-gray-700">
                         I have read and agree to the terms above, including the Privacy Policy and Terms of Service.
