@@ -114,6 +114,30 @@ export default function FindLawyer() {
     setLoading(true);
     
     try {
+      // Send to Lead Docket webhook first
+      try {
+        const webhookData = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          phone: formData.phone,
+          state: formData.state,
+          practice_area: formData.practice_area,
+          description: formData.description,
+          urgency: formData.urgency
+        };
+        
+        await fetch('https://taylormadelaw.leaddocket.com/opportunities/form/1', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(webhookData)
+        });
+      } catch (webhookErr) {
+        console.log('Lead Docket webhook send attempted');
+      }
+      
       // Create lead
       const leadData = {
         practice_area: formData.practice_area,
