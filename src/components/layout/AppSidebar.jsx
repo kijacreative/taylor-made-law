@@ -56,13 +56,13 @@ const AppSidebar = ({ user, lawyerProfile }) => {
       <div className="h-20 flex items-center justify-between px-4 border-b border-gray-100">
         {!collapsed && (
           <Link to={createPageUrl('LawyerDashboard')} className="flex items-center">
-            <span className="text-lg font-bold text-[#7e277e]" style={{ fontFamily: 'serif' }}>
+            <span className="text-lg font-bold text-[#3a164d]" style={{ fontFamily: 'serif' }}>
               TAYLOR MADE LAW
             </span>
           </Link>
         )}
         {collapsed && (
-          <span className="text-xl font-bold text-[#7e277e] mx-auto" style={{ fontFamily: 'serif' }}>
+          <span className="text-xl font-bold text-[#3a164d] mx-auto" style={{ fontFamily: 'serif' }}>
             TM
           </span>
         )}
@@ -78,7 +78,7 @@ const AppSidebar = ({ user, lawyerProfile }) => {
       {!collapsed && user && (
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#7e277e] to-[#993333] flex items-center justify-center text-white font-semibold">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3a164d] to-[#993333] flex items-center justify-center text-white font-semibold">
               {user.full_name?.charAt(0) || user.email?.charAt(0)?.toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
@@ -111,8 +111,8 @@ const AppSidebar = ({ user, lawyerProfile }) => {
             to={createPageUrl(item.path)}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
               item.active
-                ? 'bg-[#7e277e] text-white shadow-lg shadow-[#7e277e]/20'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-[#7e277e]'
+                ? 'bg-[#3a164d] text-white shadow-lg shadow-[#3a164d]/20'
+                : 'text-gray-600 hover:bg-gray-50 hover:text-[#3a164d]'
             }`}
           >
             <item.icon className={`w-5 h-5 ${collapsed ? 'mx-auto' : ''}`} />

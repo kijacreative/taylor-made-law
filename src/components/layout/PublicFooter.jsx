@@ -12,7 +12,7 @@ const PublicFooter = () => {
           {/* Brand */}
           <div className="md:col-span-1">
             <div className="text-2xl font-bold mb-4" style={{ fontFamily: 'serif' }}>
-              <span className="text-[#7e277e]">TAYLOR MADE</span>
+              <span className="text-[#3a164d]">TAYLOR MADE</span>
               <br />
               <span className="text-[#a47864]">LAW</span>
             </div>
