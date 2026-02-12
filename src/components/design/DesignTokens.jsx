@@ -4,10 +4,10 @@
 export const colors = {
   // Primary brand colors
   primary: {
-    DEFAULT: '#7e277e',
-    dark: '#5c1d5c',
-    light: '#9a3d9a',
-    gradient: 'linear-gradient(135deg, #7e277e 0%, #993333 100%)'
+    DEFAULT: '#3a164d',
+    dark: '#2a1038',
+    light: '#5a2a6d',
+    gradient: 'linear-gradient(135deg, #3a164d 0%, #993333 100%)'
   },
   
   // Accent colors

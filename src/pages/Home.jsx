@@ -144,7 +144,7 @@ export default function Home() {
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
                 <TMLCard variant="elevated" hover className="h-full text-center">
-                  <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[#7e277e] to-[#993333] flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[#3a164d] to-[#993333] flex items-center justify-center">
                     <feature.icon className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
@@ -172,7 +172,7 @@ export default function Home() {
               <div className="grid grid-cols-2 gap-4 mb-8">
                 {practiceAreas.map((area) => (
                   <div key={area} className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-[#7e277e]" />
+                    <CheckCircle2 className="w-5 h-5 text-[#3a164d]" />
                     <span className="text-gray-700 font-medium">{area}</span>
                   </div>
                 ))}
@@ -187,10 +187,10 @@ export default function Home() {
             </div>
 
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-br from-[#7e277e]/10 to-[#993333]/10 rounded-3xl" />
+              <div className="absolute -inset-4 bg-gradient-to-br from-[#3a164d]/10 to-[#993333]/10 rounded-3xl" />
               <div className="relative bg-white rounded-2xl shadow-2xl p-8">
                 <div className="text-center mb-8">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#7e277e] to-[#993333] flex items-center justify-center">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#3a164d] to-[#993333] flex items-center justify-center">
                     <Scale className="w-10 h-10 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900">Free Case Evaluation</h3>
@@ -200,7 +200,7 @@ export default function Home() {
                 <div className="space-y-4">
                   {['Quick 5-minute form', 'No cost or obligation', 'Matched within 24 hours'].map((item) => (
                     <div key={item} className="flex items-center gap-3 bg-[#faf8f5] rounded-lg px-4 py-3">
-                      <CheckCircle2 className="w-5 h-5 text-[#7e277e]" />
+                      <CheckCircle2 className="w-5 h-5 text-[#3a164d]" />
                       <span className="text-gray-700">{item}</span>
                     </div>
                   ))}
@@ -218,7 +218,7 @@ export default function Home() {
       </section>
 
       {/* For Attorneys CTA */}
-      <section className="py-24 bg-gradient-to-br from-[#7e277e] to-[#993333]">
+      <section className="py-24 bg-gradient-to-br from-[#3a164d] to-[#993333]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
             Are You an Attorney?

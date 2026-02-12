@@ -32,7 +32,7 @@ const PublicNav = () => {
               <Link
                 key={link.path}
                 to={createPageUrl(link.path)}
-                className="text-gray-700 hover:text-[#7e277e] font-medium transition-colors relative group"
+                className="text-gray-700 hover:text-[#3a164d] font-medium transition-colors relative group"
               >
                 {link.label}
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#a47864] transition-all duration-300 group-hover:w-full" />
@@ -55,7 +55,7 @@ const PublicNav = () => {
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="md:hidden p-2 text-gray-700 hover:text-[#7e277e]"
+            className="md:hidden p-2 text-gray-700 hover:text-[#3a164d]"
           >
             {mobileOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -71,7 +71,7 @@ const PublicNav = () => {
                 key={link.path}
                 to={createPageUrl(link.path)}
                 onClick={() => setMobileOpen(false)}
-                className="block py-2 text-gray-700 hover:text-[#7e277e] font-medium"
+                className="block py-2 text-gray-700 hover:text-[#3a164d] font-medium"
               >
                 {link.label}
               </Link>

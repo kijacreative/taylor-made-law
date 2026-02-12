@@ -8,9 +8,9 @@ export default function Layout({ children, currentPageName }) {
       <style>{`
         :root {
           /* Taylor Made Law Brand Colors */
-          --tml-primary: #7e277e;
-          --tml-primary-dark: #5c1d5c;
-          --tml-primary-light: #9a3d9a;
+          --tml-primary: #3a164d;
+          --tml-primary-dark: #2a1038;
+          --tml-primary-light: #5a2a6d;
           --tml-accent: #a47864;
           --tml-accent-light: #c49b8a;
           --tml-background: #faf8f5;

@@ -16,10 +16,10 @@ const TMLButton = React.forwardRef(({
   const baseStyles = 'inline-flex items-center justify-center font-semibold transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
   
   const variants = {
-    primary: 'bg-[#7e277e] hover:bg-[#5c1d5c] text-white shadow-lg hover:shadow-xl focus:ring-[#7e277e] rounded-full',
-    secondary: 'bg-white hover:bg-gray-50 text-[#7e277e] border-2 border-[#7e277e] shadow-md hover:shadow-lg focus:ring-[#7e277e] rounded-full',
+    primary: 'bg-[#3a164d] hover:bg-[#2a1038] text-white shadow-lg hover:shadow-xl focus:ring-[#3a164d] rounded-full',
+    secondary: 'bg-white hover:bg-gray-50 text-[#3a164d] border-2 border-[#3a164d] shadow-md hover:shadow-lg focus:ring-[#3a164d] rounded-full',
     accent: 'bg-[#a47864] hover:bg-[#7d5a4a] text-white shadow-lg hover:shadow-xl focus:ring-[#a47864] rounded-full',
-    outline: 'bg-transparent hover:bg-[#7e277e]/10 text-[#7e277e] border-2 border-[#7e277e] focus:ring-[#7e277e] rounded-full',
+    outline: 'bg-transparent hover:bg-[#3a164d]/10 text-[#3a164d] border-2 border-[#3a164d] focus:ring-[#3a164d] rounded-full',
     ghost: 'bg-transparent hover:bg-gray-100 text-gray-700 focus:ring-gray-400 rounded-lg',
     danger: 'bg-red-600 hover:bg-red-700 text-white shadow-lg hover:shadow-xl focus:ring-red-600 rounded-full',
     success: 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg hover:shadow-xl focus:ring-emerald-600 rounded-full',
