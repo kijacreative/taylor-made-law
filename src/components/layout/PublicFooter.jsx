@@ -11,11 +11,11 @@ const PublicFooter = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
           {/* Brand */}
           <div className="md:col-span-1">
-            <div className="text-2xl font-bold mb-4" style={{ fontFamily: 'serif' }}>
-              <span className="text-[#3a164d]">TAYLOR MADE</span>
-              <br />
-              <span className="text-[#a47864]">LAW</span>
-            </div>
+            <img 
+              src="https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Logo_Stacked_Cream-scaled.png" 
+              alt="Taylor Made Law" 
+              className="h-20 w-auto mb-4"
+            />
             <p className="text-gray-400 text-sm leading-relaxed">
               Your Digital Tailor for a Better Legal Fit. Connecting clients with qualified attorneys nationwide.
             </p>
