@@ -58,15 +58,19 @@ const AdminSidebar = ({ user }) => {
       <div className="h-20 flex items-center justify-between px-4 border-b border-gray-800">
         {!collapsed && (
           <div className="flex items-center gap-2">
-            <span className="text-lg font-bold text-white" style={{ fontFamily: 'serif' }}>
-              TML Admin
-            </span>
+            <img 
+              src="https://taylormadelaw.com/wp-content/uploads/2025/06/cropped-TML-concierge.png" 
+              alt="TML Admin" 
+              className="h-12 w-auto"
+            />
           </div>
         )}
         {collapsed && (
-          <span className="text-xl font-bold text-[#3a164d] mx-auto" style={{ fontFamily: 'serif' }}>
-            TM
-          </span>
+          <img 
+            src="https://taylormadelaw.com/wp-content/uploads/2025/06/cropped-TML-concierge.png" 
+            alt="TML" 
+            className="h-10 w-auto mx-auto"
+          />
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
