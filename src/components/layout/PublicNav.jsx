@@ -18,15 +18,12 @@ const PublicNav = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-20">
           {/* Logo */}
-          <Link to={createPageUrl('Home')} className="flex items-center gap-3">
-            <div className="flex items-center">
-              <span className="text-2xl font-bold text-[#7e277e]" style={{ fontFamily: 'serif' }}>
-                TAYLOR MADE
-              </span>
-              <span className="text-2xl font-bold text-[#7e277e] ml-1 -mt-1" style={{ fontFamily: 'serif' }}>
-                LAW
-              </span>
-            </div>
+          <Link to={createPageUrl('Home')} className="flex items-center">
+            <img 
+              src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" 
+              alt="Taylor Made Law" 
+              className="h-12 w-auto"
+            />
           </Link>
 
           {/* Desktop Navigation */}
