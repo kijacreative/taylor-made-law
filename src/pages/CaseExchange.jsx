@@ -107,7 +107,7 @@ export default function CaseExchange() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#7e277e]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" />
       </div>
     );
   }
@@ -135,7 +135,7 @@ export default function CaseExchange() {
                   placeholder="Search cases..."
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#7e277e]/20 focus:border-[#7e277e]"
+                  className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]"
                 />
               </div>
               
@@ -201,7 +201,7 @@ export default function CaseExchange() {
                       type="checkbox"
                       checked={filters.trending_only}
                       onChange={(e) => setFilters({ ...filters, trending_only: e.target.checked })}
-                      className="w-4 h-4 rounded border-gray-300 text-[#7e277e] focus:ring-[#7e277e]"
+                      className="w-4 h-4 rounded border-gray-300 text-[#3a164d] focus:ring-[#3a164d]"
                     />
                     <span className="text-sm text-gray-700">Trending cases only</span>
                   </label>
@@ -209,7 +209,7 @@ export default function CaseExchange() {
                   {hasActiveFilters && (
                     <button
                       onClick={clearFilters}
-                      className="text-sm text-[#7e277e] hover:underline flex items-center gap-1"
+                      className="text-sm text-[#3a164d] hover:underline flex items-center gap-1"
                     >
                       <X className="w-4 h-4" /> Clear filters
                     </button>
@@ -229,7 +229,7 @@ export default function CaseExchange() {
           {/* Cases List */}
           {casesLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Loader2 className="w-8 h-8 animate-spin text-[#7e277e]" />
+              <Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" />
             </div>
           ) : filteredCases.length === 0 ? (
             <TMLCard variant="cream" className="text-center py-12">

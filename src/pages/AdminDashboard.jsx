@@ -119,7 +119,7 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#7e277e]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" />
       </div>
     );
   }
@@ -244,10 +244,10 @@ export default function AdminDashboard() {
               <TMLCard variant="elevated">
                 <TMLCardHeader className="flex items-center justify-between">
                   <TMLCardTitle className="flex items-center gap-2">
-                    <Inbox className="w-5 h-5 text-[#7e277e]" />
+                    <Inbox className="w-5 h-5 text-[#3a164d]" />
                     Leads Requiring Review
                   </TMLCardTitle>
-                  <Link to={createPageUrl('AdminLeads')} className="text-sm text-[#7e277e] hover:underline">
+                  <Link to={createPageUrl('AdminLeads')} className="text-sm text-[#3a164d] hover:underline">
                     View All
                   </Link>
                 </TMLCardHeader>
@@ -297,7 +297,7 @@ export default function AdminDashboard() {
               <TMLCard variant="elevated">
                 <TMLCardHeader>
                   <TMLCardTitle className="flex items-center gap-2 text-base">
-                    <MapPin className="w-4 h-4 text-[#7e277e]" />
+                    <MapPin className="w-4 h-4 text-[#3a164d]" />
                     Attorneys by State
                   </TMLCardTitle>
                 </TMLCardHeader>
@@ -321,7 +321,7 @@ export default function AdminDashboard() {
               <TMLCard variant="elevated">
                 <TMLCardHeader>
                   <TMLCardTitle className="flex items-center gap-2 text-base">
-                    <Scale className="w-4 h-4 text-[#7e277e]" />
+                    <Scale className="w-4 h-4 text-[#3a164d]" />
                     Top Practice Areas
                   </TMLCardTitle>
                 </TMLCardHeader>

@@ -82,7 +82,7 @@ export default function LawyerDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#7e277e]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" />
       </div>
     );
   }
@@ -169,7 +169,7 @@ export default function LawyerDashboard() {
                     <Scale className="w-6 h-6 text-emerald-600" />
                   </div>
                 </div>
-                <Link to={createPageUrl('CaseExchange')} className="text-[#7e277e] text-sm font-medium mt-4 flex items-center gap-1 hover:underline">
+                <Link to={createPageUrl('CaseExchange')} className="text-[#3a164d] text-sm font-medium mt-4 flex items-center gap-1 hover:underline">
                   Browse Cases <ArrowRight className="w-4 h-4" />
                 </Link>
               </TMLCardContent>
@@ -188,7 +188,7 @@ export default function LawyerDashboard() {
                     <FolderOpen className="w-6 h-6 text-blue-600" />
                   </div>
                 </div>
-                <Link to={createPageUrl('MyCases')} className="text-[#7e277e] text-sm font-medium mt-4 flex items-center gap-1 hover:underline">
+                <Link to={createPageUrl('MyCases')} className="text-[#3a164d] text-sm font-medium mt-4 flex items-center gap-1 hover:underline">
                   View My Cases <ArrowRight className="w-4 h-4" />
                 </Link>
               </TMLCardContent>
@@ -208,7 +208,7 @@ export default function LawyerDashboard() {
                     <CreditCard className="w-6 h-6 text-purple-600" />
                   </div>
                 </div>
-                <Link to={createPageUrl('LawyerSettings')} className="text-[#7e277e] text-sm font-medium mt-4 flex items-center gap-1 hover:underline">
+                <Link to={createPageUrl('LawyerSettings')} className="text-[#3a164d] text-sm font-medium mt-4 flex items-center gap-1 hover:underline">
                   Manage Subscription <ArrowRight className="w-4 h-4" />
                 </Link>
               </TMLCardContent>
@@ -220,10 +220,10 @@ export default function LawyerDashboard() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <TrendingUp className="w-5 h-5 text-[#7e277e]" />
+                  <TrendingUp className="w-5 h-5 text-[#3a164d]" />
                   <h2 className="text-xl font-bold text-gray-900">Trending Cases</h2>
                 </div>
-                <Link to={createPageUrl('CaseExchange')} className="text-[#7e277e] text-sm font-medium hover:underline">
+                <Link to={createPageUrl('CaseExchange')} className="text-[#3a164d] text-sm font-medium hover:underline">
                   View All
                 </Link>
               </div>
@@ -263,7 +263,7 @@ export default function LawyerDashboard() {
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-xl font-bold text-gray-900">Recent Available Cases</h2>
-              <Link to={createPageUrl('CaseExchange')} className="text-[#7e277e] text-sm font-medium hover:underline">
+              <Link to={createPageUrl('CaseExchange')} className="text-[#3a164d] text-sm font-medium hover:underline">
                 View All
               </Link>
             </div>
