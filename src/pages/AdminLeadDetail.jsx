@@ -308,7 +308,7 @@ Taylor Made Law Team
   if (loading || leadLoading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#7e277e]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" />
       </div>
     );
   }
@@ -342,7 +342,7 @@ Taylor Made Law Team
       <main className="ml-64 p-8">
         <div className="max-w-5xl mx-auto">
           {/* Back Button */}
-          <Link to={createPageUrl('AdminLeads')} className="inline-flex items-center text-gray-600 hover:text-[#7e277e] mb-6">
+          <Link to={createPageUrl('AdminLeads')} className="inline-flex items-center text-gray-600 hover:text-[#3a164d] mb-6">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Leads Queue
           </Link>
@@ -375,7 +375,7 @@ Taylor Made Law Team
             <TMLCardContent className="p-6">
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#7e277e] to-[#993333] flex items-center justify-center text-white text-xl font-semibold">
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#3a164d] to-[#993333] flex items-center justify-center text-white text-xl font-semibold">
                     {lead.first_name?.charAt(0)}{lead.last_name?.charAt(0)}
                   </div>
                   <div>
@@ -418,7 +418,7 @@ Taylor Made Law Team
               <TMLCard>
                 <TMLCardHeader>
                   <TMLCardTitle className="flex items-center gap-2">
-                    <User className="w-5 h-5 text-[#7e277e]" />
+                    <User className="w-5 h-5 text-[#3a164d]" />
                     Contact Information
                   </TMLCardTitle>
                 </TMLCardHeader>
@@ -427,14 +427,14 @@ Taylor Made Law Team
                     <Mail className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-500">Email</p>
-                      <a href={`mailto:${lead.email}`} className="text-[#7e277e] hover:underline">{lead.email}</a>
+                      <a href={`mailto:${lead.email}`} className="text-[#3a164d] hover:underline">{lead.email}</a>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Phone className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-500">Phone</p>
-                      <a href={`tel:${lead.phone}`} className="text-[#7e277e] hover:underline">{lead.phone}</a>
+                      <a href={`tel:${lead.phone}`} className="text-[#3a164d] hover:underline">{lead.phone}</a>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -458,7 +458,7 @@ Taylor Made Law Team
               <TMLCard>
                 <TMLCardHeader>
                   <TMLCardTitle className="flex items-center gap-2">
-                    <FileText className="w-5 h-5 text-[#7e277e]" />
+                    <FileText className="w-5 h-5 text-[#3a164d]" />
                     Case Description
                   </TMLCardTitle>
                 </TMLCardHeader>
@@ -473,7 +473,7 @@ Taylor Made Law Team
               <TMLCard>
                 <TMLCardHeader>
                   <TMLCardTitle className="flex items-center gap-2">
-                    <MessageSquare className="w-5 h-5 text-[#7e277e]" />
+                    <MessageSquare className="w-5 h-5 text-[#3a164d]" />
                     Internal Notes
                   </TMLCardTitle>
                 </TMLCardHeader>
@@ -503,7 +503,7 @@ Taylor Made Law Team
               <TMLCard>
                 <TMLCardHeader>
                   <TMLCardTitle className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-[#7e277e]" />
+                    <Clock className="w-5 h-5 text-[#3a164d]" />
                     Activity Log
                   </TMLCardTitle>
                 </TMLCardHeader>
