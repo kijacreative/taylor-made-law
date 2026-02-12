@@ -2,13 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
-import { 
-  ArrowRight, 
-  Shield, 
-  Scale, 
+import {
+  ArrowRight,
+  Shield,
+  Scale,
   CheckCircle2,
-  Zap
-} from 'lucide-react';
+  Zap } from
+'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
 import PublicFooter from '@/components/layout/PublicFooter';
 import TMLButton from '@/components/ui/TMLButton';
@@ -22,31 +22,31 @@ const fadeIn = {
 
 export default function Home() {
   const features = [
-    {
-      icon: Shield,
-      title: 'Verified Attorneys',
-      description: 'Every attorney in our network is thoroughly vetted and verified for quality representation.'
-    },
-    {
-      icon: Zap,
-      title: 'Fast Matching',
-      description: 'Get matched with qualified attorneys in your area within hours, not days.'
-    },
-    {
-      icon: Scale,
-      title: 'Transparent Process',
-      description: 'Clear communication and updates throughout your legal journey.'
-    }
-  ];
+  {
+    icon: Shield,
+    title: 'Verified Attorneys',
+    description: 'Every attorney in our network is thoroughly vetted and verified for quality representation.'
+  },
+  {
+    icon: Zap,
+    title: 'Fast Matching',
+    description: 'Get matched with qualified attorneys in your area within hours, not days.'
+  },
+  {
+    icon: Scale,
+    title: 'Transparent Process',
+    description: 'Clear communication and updates throughout your legal journey.'
+  }];
+
 
   const practiceAreas = [
-    'Personal Injury',
-    'Auto Accidents',
-    'Medical Malpractice',
-    'Workers Compensation',
-    'Mass Torts',
-    'Wrongful Death'
-  ];
+  'Personal Injury',
+  'Auto Accidents',
+  'Medical Malpractice',
+  'Workers Compensation',
+  'Mass Torts',
+  'Wrongful Death'];
+
 
   return (
     <div className="min-h-screen bg-[#faf8f5]">
@@ -55,12 +55,12 @@ export default function Home() {
       {/* Hero Section */}
       <section className="relative pt-20 min-h-[90vh] flex items-center overflow-hidden">
         {/* Background Gradient */}
-        <div 
+        <div
           className="absolute inset-0 z-0"
           style={{
             background: 'linear-gradient(135deg, rgba(126, 39, 126, 0.85) 0%, rgba(153, 51, 51, 0.85) 100%)'
-          }}
-        />
+          }} />
+
         
         {/* Pattern Overlay */}
         <div className="absolute inset-0 z-0 opacity-10">
@@ -76,15 +76,15 @@ export default function Home() {
                 Get{' '}
                 <span className="relative inline-block">
                   Fitted
-                  <svg className="absolute -bottom-2 left-0 w-full h-4" viewBox="0 0 200 20" preserveAspectRatio="none">
-                    <path 
-                      d="M0,15 Q50,5 100,15 T200,15" 
-                      fill="none" 
-                      stroke="#a47864" 
-                      strokeWidth="4"
-                      strokeLinecap="round"
-                    />
-                  </svg>
+                  
+
+
+
+
+
+
+
+
                 </span>
                 <span className="text-[#a47864]">.</span>
               </h1>
@@ -97,12 +97,12 @@ export default function Home() {
               </p>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex flex-col sm:flex-row gap-4"
-            >
+              className="flex flex-col sm:flex-row gap-4">
+
               <Link to={createPageUrl('FindLawyer')}>
                 <TMLButton variant="accent" size="lg" className="group">
                   Find a Lawyer
@@ -135,23 +135,23 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <motion.div
-                key={feature.title}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
+            {features.map((feature, index) =>
+            <motion.div
+              key={feature.title}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}>
+
                 <TMLCard variant="elevated" hover className="h-full text-center">
-                  <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[#3a164d] to-[#993333] flex items-center justify-center">
+                  <div className="w-16 h-16 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-[#7e277e] to-[#993333] flex items-center justify-center">
                     <feature.icon className="w-8 h-8 text-white" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
                   <p className="text-gray-600">{feature.description}</p>
                 </TMLCard>
               </motion.div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -170,12 +170,12 @@ export default function Home() {
               </p>
               
               <div className="grid grid-cols-2 gap-4 mb-8">
-                {practiceAreas.map((area) => (
-                  <div key={area} className="flex items-center gap-3">
-                    <CheckCircle2 className="w-5 h-5 text-[#3a164d]" />
+                {practiceAreas.map((area) =>
+                <div key={area} className="flex items-center gap-3">
+                    <CheckCircle2 className="w-5 h-5 text-[#7e277e]" />
                     <span className="text-gray-700 font-medium">{area}</span>
                   </div>
-                ))}
+                )}
               </div>
 
               <Link to={createPageUrl('FindLawyer')}>
@@ -187,10 +187,10 @@ export default function Home() {
             </div>
 
             <div className="relative">
-              <div className="absolute -inset-4 bg-gradient-to-br from-[#3a164d]/10 to-[#993333]/10 rounded-3xl" />
+              <div className="absolute -inset-4 bg-gradient-to-br from-[#7e277e]/10 to-[#993333]/10 rounded-3xl" />
               <div className="relative bg-white rounded-2xl shadow-2xl p-8">
                 <div className="text-center mb-8">
-                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#3a164d] to-[#993333] flex items-center justify-center">
+                  <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-[#7e277e] to-[#993333] flex items-center justify-center">
                     <Scale className="w-10 h-10 text-white" />
                   </div>
                   <h3 className="text-2xl font-bold text-gray-900">Free Case Evaluation</h3>
@@ -198,12 +198,12 @@ export default function Home() {
                 </div>
                 
                 <div className="space-y-4">
-                  {['Quick 5-minute form', 'No cost or obligation', 'Matched within 24 hours'].map((item) => (
-                    <div key={item} className="flex items-center gap-3 bg-[#faf8f5] rounded-lg px-4 py-3">
-                      <CheckCircle2 className="w-5 h-5 text-[#3a164d]" />
+                  {['Quick 5-minute form', 'No cost or obligation', 'Matched within 24 hours'].map((item) =>
+                  <div key={item} className="flex items-center gap-3 bg-[#faf8f5] rounded-lg px-4 py-3">
+                      <CheckCircle2 className="w-5 h-5 text-[#7e277e]" />
                       <span className="text-gray-700">{item}</span>
                     </div>
-                  ))}
+                  )}
                 </div>
 
                 <Link to={createPageUrl('FindLawyer')} className="block mt-8">
@@ -218,7 +218,7 @@ export default function Home() {
       </section>
 
       {/* For Attorneys CTA */}
-      <section className="py-24 bg-gradient-to-br from-[#3a164d] to-[#993333]">
+      <section className="py-24 bg-gradient-to-br from-[#7e277e] to-[#993333]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
             Are You an Attorney?
@@ -236,11 +236,11 @@ export default function Home() {
               </TMLButton>
             </Link>
             <Link to={createPageUrl('Login')}>
-              <TMLButton 
-                variant="outline" 
+              <TMLButton
+                variant="outline"
                 size="lg"
-                className="border-white/30 text-white hover:bg-white/10"
-              >
+                className="border-white/30 text-white hover:bg-white/10">
+
                 Attorney Login
               </TMLButton>
             </Link>
@@ -248,21 +248,21 @@ export default function Home() {
 
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-8">
             {[
-              { value: '500+', label: 'Network Attorneys' },
-              { value: '50', label: 'States Covered' },
-              { value: '10k+', label: 'Cases Referred' },
-              { value: '95%', label: 'Satisfaction Rate' }
-            ].map((stat) => (
-              <div key={stat.label}>
+            { value: '500+', label: 'Network Attorneys' },
+            { value: '50', label: 'States Covered' },
+            { value: '10k+', label: 'Cases Referred' },
+            { value: '95%', label: 'Satisfaction Rate' }].
+            map((stat) =>
+            <div key={stat.label}>
                 <div className="text-3xl font-bold text-white">{stat.value}</div>
                 <div className="text-white/70">{stat.label}</div>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
 
       <PublicFooter />
-    </div>
-  );
+    </div>);
+
 }
