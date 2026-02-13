@@ -166,7 +166,7 @@ export default function FindLawyer() {
         consented_at: new Date().toISOString()
       });
       
-      // Send confirmation email
+      // Send confirmation email to client
       try {
         await base44.integrations.Core.SendEmail({
           to: formData.email,
@@ -191,6 +191,41 @@ Taylor Made Law Team
         });
       } catch (emailErr) {
         console.log('Email send attempted');
+      }
+      
+      // Send alert email to all admin accounts
+      try {
+        const allUsers = await base44.entities.User.list();
+        const adminUsers = allUsers.filter(u => u.role === 'admin');
+        
+        for (const admin of adminUsers) {
+          await base44.integrations.Core.SendEmail({
+            to: admin.email,
+            subject: 'New Lead Submitted - Taylor Made Law',
+            body: `
+A new lead has been submitted on Taylor Made Law:
+
+Client Information:
+- Name: ${formData.first_name} ${formData.last_name}
+- Email: ${formData.email}
+- Phone: ${formData.phone}
+
+Case Details:
+- Practice Area: ${formData.practice_area}
+- State: ${formData.state}
+- Urgency: ${formData.urgency}
+
+Description:
+${formData.description}
+
+Lead ID: ${lead.id}
+
+Please review this lead in the admin dashboard.
+            `.trim()
+          });
+        }
+      } catch (adminEmailErr) {
+        console.log('Admin notification email attempted');
       }
       
       // Handle attorney invitation if provided
