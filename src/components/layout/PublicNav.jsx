@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import TMLButton from '../ui/TMLButton';
 
@@ -43,9 +44,9 @@ const PublicNav = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <Link to={createPageUrl('Login')}>
-              <TMLButton variant="ghost">Log In</TMLButton>
-            </Link>
+            <TMLButton variant="ghost" onClick={() => base44.auth.redirectToLogin()}>
+              Log In
+            </TMLButton>
             <div className="relative">
               <TMLButton 
                 variant="primary"
@@ -102,9 +103,13 @@ const PublicNav = () => {
               </Link>
             ))}
             <div className="pt-4 space-y-3">
-              <Link to={createPageUrl('Login')} onClick={() => setMobileOpen(false)}>
-                <TMLButton variant="outline" className="w-full">Log In</TMLButton>
-              </Link>
+              <TMLButton 
+                variant="outline" 
+                className="w-full"
+                onClick={() => base44.auth.redirectToLogin()}
+              >
+                Log In
+              </TMLButton>
               <Link to={createPageUrl('FindLawyer')} onClick={() => setMobileOpen(false)}>
                 <TMLButton variant="primary" className="w-full">Find a Lawyer</TMLButton>
               </Link>
