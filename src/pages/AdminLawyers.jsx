@@ -44,6 +44,17 @@ export default function AdminLawyers() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(null);
   const [freeTrialMonths, setFreeTrialMonths] = useState('6');
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteData, setInviteData] = useState({
+    email: '',
+    full_name: '',
+    firm_name: '',
+    states_served: [],
+    practice_areas: [],
+    admin_note: '',
+    send_email: true
+  });
+  const [inviting, setInviting] = useState(false);
   
   const [filters, setFilters] = useState({
     search: '',
@@ -300,9 +311,15 @@ Questions? Contact us at support@taylormadelaw.com
       <main className="ml-64 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">Attorney Management</h1>
-            <p className="text-gray-600 mt-1">Manage attorney applications and network members.</p>
+          <div className="flex items-start justify-between mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Attorney Management</h1>
+              <p className="text-gray-600 mt-1">Manage attorney applications and network members.</p>
+            </div>
+            <TMLButton variant="primary" onClick={() => setShowInviteModal(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Invite Attorney
+            </TMLButton>
           </div>
 
           {/* Success Message */}
@@ -598,6 +615,131 @@ Questions? Contact us at support@taylormadelaw.com
               >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 Approve
+              </TMLButton>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Invite Attorney Modal */}
+      {showInviteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Invite Attorney</h3>
+                <p className="text-sm text-gray-500 mt-1">Send invitation to join the TML network</p>
+              </div>
+              <button onClick={() => setShowInviteModal(false)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-4">
+              <TMLInput
+                label="Email Address"
+                type="email"
+                required
+                value={inviteData.email}
+                onChange={(e) => setInviteData({ ...inviteData, email: e.target.value })}
+                placeholder="attorney@lawfirm.com"
+              />
+
+              <TMLInput
+                label="Full Name (Optional)"
+                value={inviteData.full_name}
+                onChange={(e) => setInviteData({ ...inviteData, full_name: e.target.value })}
+                placeholder="John Doe"
+              />
+
+              <TMLInput
+                label="Firm Name (Optional)"
+                value={inviteData.firm_name}
+                onChange={(e) => setInviteData({ ...inviteData, firm_name: e.target.value })}
+                placeholder="Law Firm & Associates"
+              />
+
+              <TMLInput
+                label="States Served (Optional)"
+                value={inviteData.states_served.join(', ')}
+                onChange={(e) => setInviteData({ 
+                  ...inviteData, 
+                  states_served: e.target.value.split(',').map(s => s.trim()).filter(s => s) 
+                })}
+                placeholder="California, Texas, New York"
+                helperText="Comma-separated list"
+              />
+
+              <TMLInput
+                label="Practice Areas (Optional)"
+                value={inviteData.practice_areas.join(', ')}
+                onChange={(e) => setInviteData({ 
+                  ...inviteData, 
+                  practice_areas: e.target.value.split(',').map(s => s.trim()).filter(s => s) 
+                })}
+                placeholder="Personal Injury, Medical Malpractice"
+                helperText="Comma-separated list"
+              />
+
+              <TMLTextarea
+                label="Admin Note (Optional)"
+                value={inviteData.admin_note}
+                onChange={(e) => setInviteData({ ...inviteData, admin_note: e.target.value })}
+                placeholder="Internal notes about this invitation..."
+                rows={3}
+              />
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={inviteData.send_email}
+                  onChange={(e) => setInviteData({ ...inviteData, send_email: e.target.checked })}
+                  className="w-4 h-4 text-[#7e277e] rounded focus:ring-[#7e277e]"
+                />
+                <span className="text-sm text-gray-700">Send invitation email now</span>
+              </label>
+            </div>
+            
+            <div className="sticky bottom-0 bg-white border-t border-gray-100 p-6 flex gap-3">
+              <TMLButton variant="outline" onClick={() => setShowInviteModal(false)} className="flex-1">
+                Cancel
+              </TMLButton>
+              <TMLButton 
+                variant="primary" 
+                onClick={async () => {
+                  if (!inviteData.email) {
+                    alert('Email is required');
+                    return;
+                  }
+                  setInviting(true);
+                  try {
+                    await base44.functions.invoke('inviteAttorney', inviteData);
+                    setSuccess('Invitation sent successfully!');
+                    setShowInviteModal(false);
+                    setInviteData({
+                      email: '',
+                      full_name: '',
+                      firm_name: '',
+                      states_served: [],
+                      practice_areas: [],
+                      admin_note: '',
+                      send_email: true
+                    });
+                  } catch (err) {
+                    alert('Failed to send invitation: ' + (err.response?.data?.error || err.message));
+                  } finally {
+                    setInviting(false);
+                  }
+                }}
+                className="flex-1"
+                loading={inviting}
+              >
+                <Mail className="w-4 h-4 mr-2" />
+                Send Invitation
               </TMLButton>
             </div>
           </motion.div>
