@@ -56,15 +56,19 @@ const AppSidebar = ({ user, lawyerProfile }) => {
       <div className="h-20 flex items-center justify-between px-4 border-b border-gray-100">
         {!collapsed && (
           <Link to={createPageUrl('LawyerDashboard')} className="flex items-center">
-            <span className="text-lg font-bold text-[#3a164d]" style={{ fontFamily: 'serif' }}>
-              TAYLOR MADE LAW
-            </span>
+            <img 
+              src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" 
+              alt="Taylor Made Law" 
+              className="h-12 w-auto"
+            />
           </Link>
         )}
         {collapsed && (
-          <span className="text-xl font-bold text-[#3a164d] mx-auto" style={{ fontFamily: 'serif' }}>
-            TM
-          </span>
+          <img 
+            src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" 
+            alt="TML" 
+            className="h-10 w-auto mx-auto"
+          />
         )}
         <button
           onClick={() => setCollapsed(!collapsed)}
