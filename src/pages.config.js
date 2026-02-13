@@ -55,21 +55,22 @@ import AdminLeads from './pages/AdminLeads';
 import AuthRedirect from './pages/AuthRedirect';
 import CaseDetail from './pages/CaseDetail';
 import CaseExchange from './pages/CaseExchange';
+import Content from './pages/Content';
+import ContentDetail from './pages/ContentDetail';
+import CreateGroup from './pages/CreateGroup';
 import FindLawyer from './pages/FindLawyer';
 import ForLawyers from './pages/ForLawyers';
 import ForgotPassword from './pages/ForgotPassword';
+import GroupDetail from './pages/GroupDetail';
+import Groups from './pages/Groups';
 import Home from './pages/Home';
 import LawyerDashboard from './pages/LawyerDashboard';
 import LawyerSettings from './pages/LawyerSettings';
+import MassTortDetail from './pages/MassTortDetail';
+import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
-import MassTorts from './pages/MassTorts';
-import MassTortDetail from './pages/MassTortDetail';
-import Content from './pages/Content';
-import ContentDetail from './pages/ContentDetail';
-import Groups from './pages/Groups';
-import CreateGroup from './pages/CreateGroup';
-import GroupDetail from './pages/GroupDetail';
+import Activate from './pages/Activate';
 import __Layout from './Layout.jsx';
 
 
@@ -82,21 +83,22 @@ export const PAGES = {
     "AuthRedirect": AuthRedirect,
     "CaseDetail": CaseDetail,
     "CaseExchange": CaseExchange,
+    "Content": Content,
+    "ContentDetail": ContentDetail,
+    "CreateGroup": CreateGroup,
     "FindLawyer": FindLawyer,
     "ForLawyers": ForLawyers,
     "ForgotPassword": ForgotPassword,
+    "GroupDetail": GroupDetail,
+    "Groups": Groups,
     "Home": Home,
     "LawyerDashboard": LawyerDashboard,
     "LawyerSettings": LawyerSettings,
+    "MassTortDetail": MassTortDetail,
+    "MassTorts": MassTorts,
     "MyCases": MyCases,
     "ResetPassword": ResetPassword,
-    "MassTorts": MassTorts,
-    "MassTortDetail": MassTortDetail,
-    "Content": Content,
-    "ContentDetail": ContentDetail,
-    "Groups": Groups,
-    "CreateGroup": CreateGroup,
-    "GroupDetail": GroupDetail,
+    "Activate": Activate,
 }
 
 export const pagesConfig = {
