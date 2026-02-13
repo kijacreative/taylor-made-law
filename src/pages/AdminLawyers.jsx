@@ -20,7 +20,9 @@ import {
   X,
   DollarSign,
   Gift,
-  Shield
+  Shield,
+  Eye,
+  Edit
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
@@ -28,6 +30,7 @@ import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/componen
 import TMLBadge from '@/components/ui/TMLBadge';
 import TMLSelect from '@/components/ui/TMLSelect';
 import TMLInput from '@/components/ui/TMLInput';
+import TMLTextarea from '@/components/ui/TMLTextarea';
 import { LAWYER_STATUSES, PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
 
 export default function AdminLawyers() {
@@ -37,6 +40,7 @@ export default function AdminLawyers() {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [selectedLawyer, setSelectedLawyer] = useState(null);
+  const [viewingLawyer, setViewingLawyer] = useState(null);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(null);
   const [freeTrialMonths, setFreeTrialMonths] = useState('6');
@@ -211,6 +215,50 @@ Taylor Made Law Team
       refetch();
     } catch (err) {
       console.error('Error changing status:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleViewLawyer = (lawyer) => {
+    setViewingLawyer({
+      ...lawyer,
+      bio: lawyer.bio || '',
+      phone: lawyer.phone || '',
+      bar_number: lawyer.bar_number || '',
+      years_experience: lawyer.years_experience || ''
+    });
+  };
+
+  const handleSaveLawyerChanges = async () => {
+    if (!viewingLawyer) return;
+    
+    setSaving(true);
+    try {
+      await base44.entities.LawyerProfile.update(viewingLawyer.id, {
+        firm_name: viewingLawyer.firm_name,
+        phone: viewingLawyer.phone,
+        bar_number: viewingLawyer.bar_number,
+        bio: viewingLawyer.bio,
+        years_experience: viewingLawyer.years_experience ? parseInt(viewingLawyer.years_experience) : null,
+        states_licensed: viewingLawyer.states_licensed,
+        practice_areas: viewingLawyer.practice_areas
+      });
+      
+      await base44.entities.AuditLog.create({
+        entity_type: 'LawyerProfile',
+        entity_id: viewingLawyer.id,
+        action: 'update_profile',
+        actor_email: user.email,
+        actor_role: user.user_type || user.role,
+        notes: 'Profile information updated by admin'
+      });
+      
+      setSuccess('Lawyer profile updated successfully!');
+      setViewingLawyer(null);
+      refetch();
+    } catch (err) {
+      console.error('Error updating lawyer:', err);
     } finally {
       setSaving(false);
     }
@@ -437,6 +485,13 @@ Taylor Made Law Team
                         </div>
                         
                         <div className="flex items-center gap-2">
+                          <TMLButton 
+                            variant="primary" 
+                            size="sm"
+                            onClick={() => handleViewLawyer(lawyer)}
+                          >
+                            <Eye className="w-4 h-4" />
+                          </TMLButton>
                           {lawyer.status === 'pending' && (
                             <TMLButton 
                               variant="success" 
@@ -522,6 +577,158 @@ Taylor Made Law Team
               >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 Approve
+              </TMLButton>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* View/Edit Lawyer Modal */}
+      {viewingLawyer && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+          >
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">{viewingLawyer.firm_name}</h3>
+                <p className="text-sm text-gray-500 mt-1">{viewingLawyer.created_by}</p>
+              </div>
+              <button onClick={() => setViewingLawyer(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Status & Badges */}
+              <div className="flex flex-wrap gap-2">
+                <TMLBadge 
+                  variant={
+                    viewingLawyer.status === 'approved' ? 'success' :
+                    viewingLawyer.status === 'pending' ? 'warning' :
+                    viewingLawyer.status === 'restricted' ? 'danger' :
+                    'default'
+                  }
+                >
+                  {LAWYER_STATUSES[viewingLawyer.status]?.label || viewingLawyer.status}
+                </TMLBadge>
+                {viewingLawyer.referral_agreement_accepted && (
+                  <TMLBadge variant="primary">
+                    <Shield className="w-3 h-3 mr-1" />
+                    Agreement Signed
+                  </TMLBadge>
+                )}
+                {viewingLawyer.free_trial_months > 0 && (
+                  <TMLBadge variant="accent">
+                    <Gift className="w-3 h-3 mr-1" />
+                    {viewingLawyer.free_trial_months}mo Trial
+                  </TMLBadge>
+                )}
+              </div>
+
+              {/* Editable Fields */}
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <TMLInput
+                    label="Firm Name"
+                    value={viewingLawyer.firm_name}
+                    onChange={(e) => setViewingLawyer({ ...viewingLawyer, firm_name: e.target.value })}
+                  />
+                  <TMLInput
+                    label="Phone"
+                    value={viewingLawyer.phone}
+                    onChange={(e) => setViewingLawyer({ ...viewingLawyer, phone: e.target.value })}
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <TMLInput
+                    label="Bar Number"
+                    value={viewingLawyer.bar_number}
+                    onChange={(e) => setViewingLawyer({ ...viewingLawyer, bar_number: e.target.value })}
+                  />
+                  <TMLInput
+                    label="Years of Experience"
+                    type="number"
+                    value={viewingLawyer.years_experience}
+                    onChange={(e) => setViewingLawyer({ ...viewingLawyer, years_experience: e.target.value })}
+                  />
+                </div>
+
+                <TMLTextarea
+                  label="Bio"
+                  value={viewingLawyer.bio}
+                  onChange={(e) => setViewingLawyer({ ...viewingLawyer, bio: e.target.value })}
+                  rows={4}
+                />
+
+                {/* States Licensed */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    States Licensed
+                  </label>
+                  <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
+                    {(viewingLawyer.states_licensed || []).map(state => (
+                      <TMLBadge key={state} variant="default">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        {state}
+                      </TMLBadge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Practice Areas */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Practice Areas
+                  </label>
+                  <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
+                    {(viewingLawyer.practice_areas || []).map(area => (
+                      <TMLBadge key={area} variant="default">
+                        <Scale className="w-3 h-3 mr-1" />
+                        {area}
+                      </TMLBadge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subscription Info */}
+                {viewingLawyer.subscription_status && (
+                  <div className="bg-blue-50 rounded-lg p-4">
+                    <h4 className="font-semibold text-gray-900 mb-2">Subscription</h4>
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-gray-600">Status:</span>
+                        <span className="ml-2 font-medium">{viewingLawyer.subscription_status}</span>
+                      </div>
+                      {viewingLawyer.trial_ends_at && (
+                        <div>
+                          <span className="text-gray-600">Trial Ends:</span>
+                          <span className="ml-2 font-medium">
+                            {new Date(viewingLawyer.trial_ends_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            <div className="sticky bottom-0 bg-white border-t border-gray-100 p-6 flex gap-3">
+              <TMLButton variant="outline" onClick={() => setViewingLawyer(null)} className="flex-1">
+                Close
+              </TMLButton>
+              <TMLButton 
+                variant="primary" 
+                onClick={handleSaveLawyerChanges} 
+                className="flex-1"
+                loading={saving}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Save Changes
               </TMLButton>
             </div>
           </motion.div>
