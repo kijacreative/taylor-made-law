@@ -17,7 +17,8 @@ import {
   ArrowRight,
   AlertCircle,
   Edit,
-  X
+  X,
+  Eye
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
@@ -32,7 +33,7 @@ export default function MyCases() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active');
-  const [editingCase, setEditingCase] = useState(null);
+  const [viewingCase, setViewingCase] = useState(null);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -75,25 +76,27 @@ export default function MyCases() {
 
   const displayCases = activeTab === 'active' ? activeCases : closedCases;
 
-  const handleEditCase = (caseItem) => {
-    setEditingCase({
-      id: caseItem.id,
+  const handleViewCase = (caseItem) => {
+    setViewingCase({
+      ...caseItem,
       description: caseItem.description || '',
-      estimated_value: caseItem.estimated_value || ''
+      estimated_value: caseItem.estimated_value || '',
+      lawyer_notes: caseItem.lawyer_notes || ''
     });
   };
 
-  const handleSaveEdit = async () => {
-    if (!editingCase) return;
+  const handleSaveChanges = async () => {
+    if (!viewingCase) return;
     
     setSaving(true);
     try {
-      await base44.entities.Case.update(editingCase.id, {
-        description: editingCase.description,
-        estimated_value: editingCase.estimated_value ? parseFloat(editingCase.estimated_value) : null
+      await base44.entities.Case.update(viewingCase.id, {
+        description: viewingCase.description,
+        estimated_value: viewingCase.estimated_value ? parseFloat(viewingCase.estimated_value) : null,
+        lawyer_notes: viewingCase.lawyer_notes
       });
       
-      setEditingCase(null);
+      setViewingCase(null);
       refetch();
     } catch (err) {
       console.error('Error updating case:', err);
@@ -260,12 +263,12 @@ export default function MyCases() {
                             </div>
                           )}
                           <TMLButton
-                            variant="outline"
+                            variant="primary"
                             size="sm"
-                            onClick={() => handleEditCase(caseItem)}
+                            onClick={() => handleViewCase(caseItem)}
                           >
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Details
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Details
                           </TMLButton>
                         </div>
                       </div>
@@ -278,49 +281,115 @@ export default function MyCases() {
         </div>
       </main>
 
-      {/* Edit Case Modal */}
-      {editingCase && (
+      {/* View/Edit Case Modal */}
+      {viewingCase && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl max-w-2xl w-full p-6"
+            className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
           >
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Edit Case Details</h3>
-              <button onClick={() => setEditingCase(null)} className="text-gray-400 hover:text-gray-600">
+            <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">{viewingCase.title}</h3>
+                <p className="text-sm text-gray-500 mt-1">
+                  {viewingCase.practice_area} • {viewingCase.state}
+                </p>
+              </div>
+              <button onClick={() => setViewingCase(null)} className="text-gray-400 hover:text-gray-600">
                 <X className="w-6 h-6" />
               </button>
             </div>
             
-            <div className="space-y-4">
-              <TMLTextarea
-                label="Case Notes / Description"
-                placeholder="Add notes or update case description..."
-                value={editingCase.description}
-                onChange={(e) => setEditingCase({ ...editingCase, description: e.target.value })}
-                rows={6}
-              />
-              
-              <TMLInput
-                label="Estimated Value ($)"
-                type="number"
-                placeholder="Enter estimated case value"
-                value={editingCase.estimated_value}
-                onChange={(e) => setEditingCase({ ...editingCase, estimated_value: e.target.value })}
-              />
+            <div className="p-6 space-y-6">
+              {/* Client Information */}
+              {(viewingCase.client_first_name || viewingCase.client_email || viewingCase.client_phone) && (
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <h4 className="font-semibold text-gray-900 mb-3">Client Contact</h4>
+                  <div className="grid md:grid-cols-3 gap-3">
+                    {viewingCase.client_first_name && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <User className="w-4 h-4" />
+                        <span>{viewingCase.client_first_name} {viewingCase.client_last_name}</span>
+                      </div>
+                    )}
+                    {viewingCase.client_email && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Mail className="w-4 h-4" />
+                        <a href={`mailto:${viewingCase.client_email}`} className="hover:text-[#7e277e]">
+                          {viewingCase.client_email}
+                        </a>
+                      </div>
+                    )}
+                    {viewingCase.client_phone && (
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Phone className="w-4 h-4" />
+                        <a href={`tel:${viewingCase.client_phone}`} className="hover:text-[#7e277e]">
+                          {viewingCase.client_phone}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Key Facts */}
+              {viewingCase.key_facts && viewingCase.key_facts.length > 0 && (
+                <div>
+                  <h4 className="font-semibold text-gray-900 mb-3">Key Facts</h4>
+                  <ul className="space-y-2">
+                    {viewingCase.key_facts.map((fact, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
+                        <span>{fact}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {/* Editable Fields */}
+              <div className="space-y-4 border-t border-gray-100 pt-6">
+                <h4 className="font-semibold text-gray-900">Case Details</h4>
+                
+                <TMLTextarea
+                  label="Case Notes / Description"
+                  placeholder="Add notes or update case description..."
+                  value={viewingCase.description}
+                  onChange={(e) => setViewingCase({ ...viewingCase, description: e.target.value })}
+                  rows={4}
+                />
+                
+                <TMLInput
+                  label="Estimated Value ($)"
+                  type="number"
+                  placeholder="Enter estimated case value"
+                  value={viewingCase.estimated_value}
+                  onChange={(e) => setViewingCase({ ...viewingCase, estimated_value: e.target.value })}
+                />
+
+                <TMLTextarea
+                  label="Questions / Notes for Submitting Attorney"
+                  placeholder="Ask questions or add notes about this case..."
+                  helperText="Use this field to communicate with the attorney who submitted this case"
+                  value={viewingCase.lawyer_notes}
+                  onChange={(e) => setViewingCase({ ...viewingCase, lawyer_notes: e.target.value })}
+                  rows={4}
+                />
+              </div>
             </div>
             
-            <div className="flex gap-3 mt-6">
-              <TMLButton variant="outline" onClick={() => setEditingCase(null)} className="flex-1">
-                Cancel
+            <div className="sticky bottom-0 bg-white border-t border-gray-100 p-6 flex gap-3">
+              <TMLButton variant="outline" onClick={() => setViewingCase(null)} className="flex-1">
+                Close
               </TMLButton>
               <TMLButton 
                 variant="primary" 
-                onClick={handleSaveEdit} 
+                onClick={handleSaveChanges} 
                 className="flex-1"
                 loading={saving}
               >
+                <Edit className="w-4 h-4 mr-2" />
                 Save Changes
               </TMLButton>
             </div>
