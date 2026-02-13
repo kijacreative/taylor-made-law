@@ -15,12 +15,16 @@ import {
   User,
   Loader2,
   ArrowRight,
-  AlertCircle
+  AlertCircle,
+  Edit,
+  X
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
 import TMLBadge from '@/components/ui/TMLBadge';
+import TMLInput from '@/components/ui/TMLInput';
+import TMLTextarea from '@/components/ui/TMLTextarea';
 import { CASE_STATUSES } from '@/components/design/DesignTokens';
 
 export default function MyCases() {
@@ -28,6 +32,8 @@ export default function MyCases() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('active');
+  const [editingCase, setEditingCase] = useState(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -58,7 +64,7 @@ export default function MyCases() {
   const lawyerProfile = profiles[0] || null;
 
   // Get my cases
-  const { data: myCases = [], isLoading: casesLoading } = useQuery({
+  const { data: myCases = [], isLoading: casesLoading, refetch } = useQuery({
     queryKey: ['myCases', user?.email],
     queryFn: () => base44.entities.Case.filter({ accepted_by_email: user.email }, '-accepted_at'),
     enabled: !!user?.email,
@@ -68,6 +74,33 @@ export default function MyCases() {
   const closedCases = myCases.filter(c => ['closed', 'withdrawn'].includes(c.status));
 
   const displayCases = activeTab === 'active' ? activeCases : closedCases;
+
+  const handleEditCase = (caseItem) => {
+    setEditingCase({
+      id: caseItem.id,
+      description: caseItem.description || '',
+      estimated_value: caseItem.estimated_value || ''
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingCase) return;
+    
+    setSaving(true);
+    try {
+      await base44.entities.Case.update(editingCase.id, {
+        description: editingCase.description,
+        estimated_value: editingCase.estimated_value ? parseFloat(editingCase.estimated_value) : null
+      });
+      
+      setEditingCase(null);
+      refetch();
+    } catch (err) {
+      console.error('Error updating case:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -226,6 +259,14 @@ export default function MyCases() {
                               </p>
                             </div>
                           )}
+                          <TMLButton
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditCase(caseItem)}
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit Details
+                          </TMLButton>
                         </div>
                       </div>
                     </TMLCardContent>
@@ -236,6 +277,56 @@ export default function MyCases() {
           )}
         </div>
       </main>
+
+      {/* Edit Case Modal */}
+      {editingCase && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl max-w-2xl w-full p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Edit Case Details</h3>
+              <button onClick={() => setEditingCase(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <TMLTextarea
+                label="Case Notes / Description"
+                placeholder="Add notes or update case description..."
+                value={editingCase.description}
+                onChange={(e) => setEditingCase({ ...editingCase, description: e.target.value })}
+                rows={6}
+              />
+              
+              <TMLInput
+                label="Estimated Value ($)"
+                type="number"
+                placeholder="Enter estimated case value"
+                value={editingCase.estimated_value}
+                onChange={(e) => setEditingCase({ ...editingCase, estimated_value: e.target.value })}
+              />
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <TMLButton variant="outline" onClick={() => setEditingCase(null)} className="flex-1">
+                Cancel
+              </TMLButton>
+              <TMLButton 
+                variant="primary" 
+                onClick={handleSaveEdit} 
+                className="flex-1"
+                loading={saving}
+              >
+                Save Changes
+              </TMLButton>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }

@@ -17,7 +17,8 @@ import {
   Loader2,
   X,
   Plus,
-  Eye
+  Eye,
+  Edit
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
@@ -36,6 +37,7 @@ export default function AdminCases() {
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [editingCase, setEditingCase] = useState(null);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(null);
   
@@ -198,6 +200,34 @@ export default function AdminCases() {
       refetch();
     } catch (err) {
       console.error('Error creating case:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleEditCase = (caseItem) => {
+    setEditingCase({
+      id: caseItem.id,
+      description: caseItem.description || '',
+      estimated_value: caseItem.estimated_value || ''
+    });
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingCase) return;
+    
+    setSaving(true);
+    try {
+      await base44.entities.Case.update(editingCase.id, {
+        description: editingCase.description,
+        estimated_value: editingCase.estimated_value ? parseFloat(editingCase.estimated_value) : null
+      });
+      
+      setSuccess('Case updated successfully!');
+      setEditingCase(null);
+      refetch();
+    } catch (err) {
+      console.error('Error updating case:', err);
     } finally {
       setSaving(false);
     }
@@ -408,6 +438,14 @@ export default function AdminCases() {
                         
                         <div className="flex items-center gap-2">
                           <TMLButton 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => handleEditCase(caseItem)}
+                          >
+                            <Edit className="w-4 h-4" />
+                          </TMLButton>
+                          
+                          <TMLButton 
                             variant={caseItem.is_trending ? 'primary' : 'outline'} 
                             size="sm"
                             onClick={() => handleToggleTrending(caseItem)}
@@ -521,6 +559,56 @@ export default function AdminCases() {
                 disabled={!newCase.title || !newCase.state || !newCase.practice_area}
               >
                 Create & Publish
+              </TMLButton>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Edit Case Modal */}
+      {editingCase && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl max-w-2xl w-full p-6"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Edit Case Details</h3>
+              <button onClick={() => setEditingCase(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <TMLTextarea
+                label="Case Notes / Description"
+                placeholder="Add notes or update case description..."
+                value={editingCase.description}
+                onChange={(e) => setEditingCase({ ...editingCase, description: e.target.value })}
+                rows={6}
+              />
+              
+              <TMLInput
+                label="Estimated Value ($)"
+                type="number"
+                placeholder="Enter estimated case value"
+                value={editingCase.estimated_value}
+                onChange={(e) => setEditingCase({ ...editingCase, estimated_value: e.target.value })}
+              />
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <TMLButton variant="outline" onClick={() => setEditingCase(null)} className="flex-1">
+                Cancel
+              </TMLButton>
+              <TMLButton 
+                variant="primary" 
+                onClick={handleSaveEdit} 
+                className="flex-1"
+                loading={saving}
+              >
+                Save Changes
               </TMLButton>
             </div>
           </motion.div>
