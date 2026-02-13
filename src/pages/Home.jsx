@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion } from 'framer-motion';
@@ -13,6 +13,41 @@ import PublicNav from '@/components/layout/PublicNav';
 import PublicFooter from '@/components/layout/PublicFooter';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLCard from '@/components/ui/TMLCard';
+
+const HeroSlideshow = () => {
+  const [currentSlide, setCurrentSlide] = useState(0);
+  
+  const images = [
+    'https://taylormadelaw.com/wp-content/uploads/2025/11/Connections.jpg',
+    'https://taylormadelaw.com/wp-content/uploads/2025/11/tmpm185313i.webp',
+    'https://taylormadelaw.com/wp-content/uploads/2025/06/lawyer-meeting.jpg'
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % images.length);
+    }, 5000); // Change slide every 5 seconds
+
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 z-0">
+      {images.map((image, index) => (
+        <div
+          key={image}
+          className="absolute inset-0 transition-opacity duration-1000"
+          style={{
+            opacity: currentSlide === index ? 1 : 0,
+            backgroundImage: `url(${image})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center'
+          }}
+        />
+      ))}
+    </div>
+  );
+};
 
 const fadeIn = {
   initial: { opacity: 0, y: 20 },
@@ -54,7 +89,10 @@ export default function Home() {
       
       {/* Hero Section */}
       <section className="relative pt-20 min-h-[90vh] flex items-center overflow-hidden">
-        {/* Background Gradient */}
+        {/* Background Slideshow */}
+        <HeroSlideshow />
+        
+        {/* Gradient Overlay */}
         <div
           className="absolute inset-0 z-0"
           style={{
