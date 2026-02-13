@@ -67,6 +67,8 @@ import MassTorts from './pages/MassTorts';
 import MassTortDetail from './pages/MassTortDetail';
 import Content from './pages/Content';
 import ContentDetail from './pages/ContentDetail';
+import Groups from './pages/Groups';
+import CreateGroup from './pages/CreateGroup';
 import __Layout from './Layout.jsx';
 
 
@@ -91,6 +93,8 @@ export const PAGES = {
     "MassTortDetail": MassTortDetail,
     "Content": Content,
     "ContentDetail": ContentDetail,
+    "Groups": Groups,
+    "CreateGroup": CreateGroup,
 }
 
 export const pagesConfig = {
