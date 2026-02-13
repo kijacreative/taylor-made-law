@@ -8,6 +8,15 @@ import TMLButton from '../ui/TMLButton';
 const PublicNav = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+
+  React.useEffect(() => {
+    const checkAuth = async () => {
+      const auth = await base44.auth.isAuthenticated();
+      setIsAuthenticated(auth);
+    };
+    checkAuth();
+  }, []);
 
   const navLinks = [
     { label: 'Home', path: 'Home' },
@@ -44,9 +53,15 @@ const PublicNav = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
-            <TMLButton variant="ghost" onClick={() => base44.auth.redirectToLogin()}>
-              Log In
-            </TMLButton>
+            {isAuthenticated ? (
+              <Link to={createPageUrl('LawyerDashboard')}>
+                <TMLButton variant="ghost">My Dashboard</TMLButton>
+              </Link>
+            ) : (
+              <TMLButton variant="ghost" onClick={() => base44.auth.redirectToLogin()}>
+                Log In
+              </TMLButton>
+            )}
             <div className="relative">
               <TMLButton 
                 variant="primary"
@@ -103,13 +118,19 @@ const PublicNav = () => {
               </Link>
             ))}
             <div className="pt-4 space-y-3">
-              <TMLButton 
-                variant="outline" 
-                className="w-full"
-                onClick={() => base44.auth.redirectToLogin()}
-              >
-                Log In
-              </TMLButton>
+              {isAuthenticated ? (
+                <Link to={createPageUrl('LawyerDashboard')} onClick={() => setMobileOpen(false)}>
+                  <TMLButton variant="outline" className="w-full">My Dashboard</TMLButton>
+                </Link>
+              ) : (
+                <TMLButton 
+                  variant="outline" 
+                  className="w-full"
+                  onClick={() => base44.auth.redirectToLogin()}
+                >
+                  Log In
+                </TMLButton>
+              )}
               <Link to={createPageUrl('FindLawyer')} onClick={() => setMobileOpen(false)}>
                 <TMLButton variant="primary" className="w-full">Find a Lawyer</TMLButton>
               </Link>
