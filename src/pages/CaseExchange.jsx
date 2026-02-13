@@ -66,12 +66,13 @@ export default function CaseExchange() {
   });
 
   const lawyerProfile = profiles[0] || null;
+  const isPending = !lawyerProfile || lawyerProfile.status === 'pending';
 
   // Get available cases
   const { data: cases = [], isLoading: casesLoading } = useQuery({
     queryKey: ['publishedCases'],
     queryFn: () => base44.entities.Case.filter({ status: 'published' }, '-created_date'),
-    enabled: !!user,
+    enabled: !!user && !isPending,
   });
 
   // Filter cases
@@ -123,6 +124,35 @@ export default function CaseExchange() {
             <h1 className="text-3xl font-bold text-gray-900">Case Exchange</h1>
             <p className="text-gray-600 mt-1">Browse and accept verified case referrals.</p>
           </div>
+
+          {/* Pending Status Banner */}
+          {isPending && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-8"
+            >
+              <TMLCard className="border-l-4 border-l-amber-500 bg-amber-50">
+                <TMLCardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-amber-100 rounded-xl">
+                      <Scale className="w-6 h-6 text-amber-600" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-gray-900 text-lg mb-2">Cases Unlock Once Your Membership Is Approved</h3>
+                      <p className="text-gray-700 mb-4">
+                        Your application is currently under review. Once approved, you'll be able to view full case details and accept cases. This typically takes 2-3 business days.
+                      </p>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Application under review...</span>
+                      </div>
+                    </div>
+                  </div>
+                </TMLCardContent>
+              </TMLCard>
+            </motion.div>
+          )}
 
           {/* Search and Filters */}
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
@@ -227,7 +257,49 @@ export default function CaseExchange() {
           </div>
 
           {/* Cases List */}
-          {casesLoading ? (
+          {isPending ? (
+            <div className="space-y-4">
+              {/* Blurred placeholder cards for pending lawyers */}
+              {[1, 2, 3].map((i) => (
+                <TMLCard key={i} className="relative overflow-hidden">
+                  <TMLCardContent className="p-6 blur-sm select-none">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-start gap-3 mb-3">
+                          <TMLBadge variant="success" size="sm">Available</TMLBadge>
+                        </div>
+                        <h3 className="text-xl font-semibold text-gray-900 mb-2">Case Title Placeholder</h3>
+                        <p className="text-gray-600 mb-4">Case description details will be available once your account is approved...</p>
+                        <div className="flex flex-wrap gap-2">
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <Scale className="w-4 h-4" />
+                            <span>Practice Area</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-sm text-gray-600">
+                            <MapPin className="w-4 h-4" />
+                            <span>State</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right flex flex-col items-end gap-3">
+                        <div>
+                          <p className="text-xs text-gray-500 uppercase tracking-wide">Est. Value</p>
+                          <p className="text-2xl font-bold text-emerald-600">$XX,XXX</p>
+                        </div>
+                      </div>
+                    </div>
+                  </TMLCardContent>
+                  <div className="absolute inset-0 flex items-center justify-center bg-white/60 backdrop-blur-[2px]">
+                    <div className="text-center px-6">
+                      <Scale className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                      <p className="font-semibold text-gray-900 text-lg">Locked</p>
+                      <p className="text-gray-600 text-sm">Available after approval</p>
+                    </div>
+                  </div>
+                </TMLCard>
+              ))}
+            </div>
+          ) : casesLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" />
             </div>

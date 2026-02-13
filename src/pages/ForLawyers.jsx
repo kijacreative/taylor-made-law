@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -42,6 +42,7 @@ const LAWYER_CONSENT_TEXT = `By submitting this application, I certify that:
 My payment method will be securely stored but not charged until my application is approved.`;
 
 export default function ForLawyers() {
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -51,6 +52,8 @@ export default function ForLawyers() {
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
+    password: '',
+    confirm_password: '',
     phone: '',
     firm_name: '',
     bar_number: '',
@@ -88,6 +91,12 @@ export default function ForLawyers() {
       if (!formData.full_name) newErrors.full_name = 'Full name is required';
       if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
         newErrors.email = 'Valid email is required';
+      }
+      if (!formData.password || formData.password.length < 8) {
+        newErrors.password = 'Password must be at least 8 characters';
+      }
+      if (formData.password !== formData.confirm_password) {
+        newErrors.confirm_password = 'Passwords do not match';
       }
       if (!formData.phone || formData.phone.length < 10) {
         newErrors.phone = 'Valid phone number is required';
@@ -136,9 +145,22 @@ export default function ForLawyers() {
     setLoading(true);
     
     try {
+      // Register user account with password
+      await base44.auth.register({
+        email: formData.email,
+        password: formData.password,
+        full_name: formData.full_name
+      });
+
+      // Login immediately after registration
+      await base44.auth.loginViaEmailPassword(formData.email, formData.password);
+      
+      // Get the newly created user
+      const user = await base44.auth.me();
+      
       // Create lawyer profile
       const profileData = {
-        user_id: '', // Will be updated when user creates account
+        user_id: user.id,
         firm_name: formData.firm_name,
         bar_number: formData.bar_number,
         bio: formData.bio,
@@ -166,13 +188,14 @@ export default function ForLawyers() {
       try {
         await base44.integrations.Core.SendEmail({
           to: formData.email,
-          subject: 'Taylor Made Law - Application Received',
+          from_name: 'Taylor Made Law Network',
+          subject: 'Application Received — Taylor Made Law Network',
           body: `
 Dear ${formData.full_name},
 
 Thank you for applying to join the Taylor Made Law attorney network!
 
-We have received your application and our team will review your qualifications. You can expect to hear back from us within 2-3 business days.
+✓ Your application has been received and is under review.
 
 Application Summary:
 - Firm: ${formData.firm_name}
@@ -180,20 +203,37 @@ Application Summary:
 - Practice Areas: ${formData.practice_areas.join(', ')}
 - Years of Experience: ${formData.years_experience}
 
-Next Steps:
-1. Our team will verify your bar membership and credentials
-2. If approved, you'll receive an email to complete your account setup
-3. Payment method will only be charged after approval
+What Happens Next?
+Your application is being reviewed by our team. Once approved, you'll be able to log in and view/accept cases in the Case Exchange. This typically takes 2-3 business days.
 
-If you have any questions, please don't hesitate to reach out.
+In the meantime, you can log in to:
+• View your dashboard
+• Update your profile
+• Explore the platform
+
+Login here: ${window.location.origin}
+
+Cases will unlock once your membership is approved.
+
+Questions? Contact us at support@taylormadelaw.com
 
 Best regards,
-Taylor Made Law Team
+The Taylor Made Law Team
           `.trim()
         });
       } catch (emailErr) {
         console.log('Email send attempted');
       }
+      
+      // Create audit log
+      await base44.entities.AuditLog.create({
+        entity_type: 'LawyerProfile',
+        entity_id: profile.id,
+        action: 'lawyer_applied',
+        actor_email: formData.email,
+        actor_role: 'lawyer',
+        notes: `New lawyer application: ${formData.full_name}`
+      });
       
       // Handle attorney invitation if provided
       if (formData.invite_attorney_email) {
@@ -240,10 +280,13 @@ Taylor Made Law Team
         }
       }
       
-      setSubmitted(true);
+      // Redirect to dashboard after successful application
+      setTimeout(() => {
+        navigate(createPageUrl('LawyerDashboard'));
+      }, 2000);
     } catch (error) {
       console.error('Error submitting form:', error);
-      setErrors({ submit: 'An error occurred. Please try again.' });
+      setErrors({ submit: error.message || 'An error occurred. Please try again.' });
     } finally {
       setLoading(false);
     }
@@ -499,8 +542,8 @@ Taylor Made Law Team
                       <Building2 className="w-6 h-6 text-[#3a164d]" />
                     </div>
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900">Basic Information</h2>
-                      <p className="text-gray-500">Tell us about yourself and your firm</p>
+                      <h2 className="text-xl font-bold text-gray-900">Account Setup</h2>
+                      <p className="text-gray-500">Create your account and tell us about yourself</p>
                     </div>
                   </div>
 
@@ -513,26 +556,47 @@ Taylor Made Law Team
                     required
                   />
 
+                  <TMLInput
+                    label="Email Address"
+                    type="email"
+                    placeholder="john@lawfirm.com"
+                    value={formData.email}
+                    onChange={(e) => updateField('email', e.target.value)}
+                    error={errors.email}
+                    required
+                  />
+
                   <div className="grid grid-cols-2 gap-4">
                     <TMLInput
-                      label="Email Address"
-                      type="email"
-                      placeholder="john@lawfirm.com"
-                      value={formData.email}
-                      onChange={(e) => updateField('email', e.target.value)}
-                      error={errors.email}
+                      label="Password"
+                      type="password"
+                      placeholder="Min. 8 characters"
+                      value={formData.password}
+                      onChange={(e) => updateField('password', e.target.value)}
+                      error={errors.password}
+                      helperText="At least 8 characters"
                       required
                     />
                     <TMLInput
-                      label="Phone Number"
-                      type="tel"
-                      placeholder="(555) 123-4567"
-                      value={formData.phone}
-                      onChange={(e) => updateField('phone', e.target.value)}
-                      error={errors.phone}
+                      label="Confirm Password"
+                      type="password"
+                      placeholder="Re-enter password"
+                      value={formData.confirm_password}
+                      onChange={(e) => updateField('confirm_password', e.target.value)}
+                      error={errors.confirm_password}
                       required
                     />
                   </div>
+
+                  <TMLInput
+                    label="Phone Number"
+                    type="tel"
+                    placeholder="(555) 123-4567"
+                    value={formData.phone}
+                    onChange={(e) => updateField('phone', e.target.value)}
+                    error={errors.phone}
+                    required
+                  />
 
                   <TMLInput
                     label="Law Firm Name"
