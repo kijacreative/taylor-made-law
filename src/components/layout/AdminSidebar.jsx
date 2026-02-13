@@ -13,11 +13,19 @@ import {
   BarChart3
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 
 const AdminSidebar = ({ user }) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const currentPath = location.pathname;
+
+  // Fetch pending cases count
+  const { data: pendingCases = [] } = useQuery({
+    queryKey: ['pendingCasesCount'],
+    queryFn: () => base44.entities.Case.filter({ status: 'draft' }),
+    enabled: !!user,
+  });
 
   const menuItems = [
     { 
@@ -33,10 +41,11 @@ const AdminSidebar = ({ user }) => {
       active: currentPath.includes('/AdminLeads')
     },
     { 
-      label: 'Cases', 
+      label: 'Cases Queue', 
       icon: Scale, 
       path: 'AdminCases',
-      active: currentPath.includes('/AdminCases')
+      active: currentPath.includes('/AdminCases'),
+      count: pendingCases.length
     },
     { 
       label: 'Lawyers', 
@@ -110,7 +119,14 @@ const AdminSidebar = ({ user }) => {
             }`}
           >
             <item.icon className={`w-5 h-5 ${collapsed ? 'mx-auto' : ''}`} />
-            {!collapsed && <span className="font-medium">{item.label}</span>}
+            {!collapsed && (
+              <span className="font-medium flex-1">{item.label}</span>
+            )}
+            {!collapsed && item.count > 0 && (
+              <span className="bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center">
+                {item.count}
+              </span>
+            )}
           </Link>
         ))}
       </nav>
