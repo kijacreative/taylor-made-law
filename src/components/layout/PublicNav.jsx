@@ -6,6 +6,7 @@ import TMLButton from '../ui/TMLButton';
 
 const PublicNav = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const navLinks = [
     { label: 'Home', path: 'Home' },
@@ -45,11 +46,35 @@ const PublicNav = () => {
             <Link to={createPageUrl('Login')}>
               <TMLButton variant="ghost">Log In</TMLButton>
             </Link>
-            <Link to={createPageUrl('FindLawyer')}>
-              <TMLButton variant="primary">
-                Get Started
+            <div className="relative">
+              <TMLButton 
+                variant="primary"
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2"
+              >
+                Get Fitted
+                <ChevronDown className={`w-4 h-4 transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
               </TMLButton>
-            </Link>
+              
+              {dropdownOpen && (
+                <div className="absolute top-full mt-2 right-0 w-56 bg-[#3a164d] rounded-2xl shadow-xl overflow-hidden animate-slideDown">
+                  <Link 
+                    to={createPageUrl('FindLawyer')}
+                    className="block px-6 py-3 text-white hover:bg-[#2a1038] transition-colors"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Find a Lawyer
+                  </Link>
+                  <Link 
+                    to={createPageUrl('ForLawyers')}
+                    className="block px-6 py-3 text-white hover:bg-[#2a1038] transition-colors border-t border-white/10"
+                    onClick={() => setDropdownOpen(false)}
+                  >
+                    Join the Network
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Mobile Menu Button */}
@@ -81,7 +106,10 @@ const PublicNav = () => {
                 <TMLButton variant="outline" className="w-full">Log In</TMLButton>
               </Link>
               <Link to={createPageUrl('FindLawyer')} onClick={() => setMobileOpen(false)}>
-                <TMLButton variant="primary" className="w-full">Get Started</TMLButton>
+                <TMLButton variant="primary" className="w-full">Find a Lawyer</TMLButton>
+              </Link>
+              <Link to={createPageUrl('ForLawyers')} onClick={() => setMobileOpen(false)}>
+                <TMLButton variant="primary" className="w-full">Join the Network</TMLButton>
               </Link>
             </div>
           </div>
