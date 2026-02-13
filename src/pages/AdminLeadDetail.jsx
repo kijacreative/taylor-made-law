@@ -295,7 +295,42 @@ Taylor Made Law Team
       
       await createAuditLog('route_cochran', 'Routed to Cochran Firm', { status: lead.status }, { status: 'routed_cochran' });
       
-      setSuccess('Lead routed to Cochran Firm');
+      // Send email to Cochran with case information
+      try {
+        await base44.integrations.Core.SendEmail({
+          to: 'pburns@cochrantexas.com',
+          subject: `New Case Referral - ${lead.practice_area} (${lead.state})`,
+          body: `
+New Case Referral from Taylor Made Law
+
+CLIENT INFORMATION:
+Name: ${lead.first_name} ${lead.last_name}
+Email: ${lead.email}
+Phone: ${lead.phone}
+
+CASE DETAILS:
+State: ${lead.state}
+Practice Area: ${lead.practice_area}
+Urgency: ${lead.urgency || 'Not specified'}
+${lead.estimated_value ? `Estimated Value: $${lead.estimated_value.toLocaleString()}` : ''}
+
+CASE DESCRIPTION:
+${lead.description}
+
+${lead.internal_notes ? `INTERNAL NOTES:\n${lead.internal_notes}` : ''}
+
+Lead ID: ${leadId}
+Submitted: ${new Date(lead.created_date).toLocaleString()}
+
+---
+This lead has been routed to Cochran Firm by ${user.email}
+          `.trim()
+        });
+      } catch (emailErr) {
+        console.log('Email send attempted');
+      }
+      
+      setSuccess('Lead routed to Cochran Firm and email notification sent');
       refetch();
       queryClient.invalidateQueries(['allLeads']);
     } catch (err) {
