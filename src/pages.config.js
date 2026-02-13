@@ -57,12 +57,16 @@ import CaseDetail from './pages/CaseDetail';
 import CaseExchange from './pages/CaseExchange';
 import FindLawyer from './pages/FindLawyer';
 import ForLawyers from './pages/ForLawyers';
+import ForgotPassword from './pages/ForgotPassword';
 import Home from './pages/Home';
 import LawyerDashboard from './pages/LawyerDashboard';
 import LawyerSettings from './pages/LawyerSettings';
 import MyCases from './pages/MyCases';
-import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import MassTorts from './pages/MassTorts';
+import MassTortDetail from './pages/MassTortDetail';
+import Content from './pages/Content';
+import ContentDetail from './pages/ContentDetail';
 import __Layout from './Layout.jsx';
 
 
@@ -77,12 +81,16 @@ export const PAGES = {
     "CaseExchange": CaseExchange,
     "FindLawyer": FindLawyer,
     "ForLawyers": ForLawyers,
+    "ForgotPassword": ForgotPassword,
     "Home": Home,
     "LawyerDashboard": LawyerDashboard,
     "LawyerSettings": LawyerSettings,
     "MyCases": MyCases,
-    "ForgotPassword": ForgotPassword,
     "ResetPassword": ResetPassword,
+    "MassTorts": MassTorts,
+    "MassTortDetail": MassTortDetail,
+    "Content": Content,
+    "ContentDetail": ContentDetail,
 }
 
 export const pagesConfig = {
