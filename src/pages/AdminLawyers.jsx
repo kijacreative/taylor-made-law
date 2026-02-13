@@ -155,27 +155,48 @@ export default function AdminLawyers() {
         notes: `Approved with ${freeTrialMonths} months free trial`
       });
       
-      // Send approval email
+      // Send approval email with login instructions
       try {
+        const loginUrl = `${window.location.origin}${createPageUrl('Login')}`;
         await base44.integrations.Core.SendEmail({
           to: lawyer.created_by,
-          subject: 'Taylor Made Law - Application Approved!',
+          subject: "You're Approved — Access Your TML Account",
           body: `
-Congratulations!
+Congratulations ${lawyer.firm_name}!
 
-Your application to join the Taylor Made Law attorney network has been approved.
+Your application to join the Taylor Made Law attorney network has been approved!
 
-You can now:
+🎉 You now have full access to:
 • Browse and accept case referrals
 • Access the Case Exchange marketplace
 • Manage your profile and preferences
+• Connect with our attorney community
 
-${parseInt(freeTrialMonths) > 0 ? `As a welcome gift, you have ${freeTrialMonths} months of free membership!` : ''}
+${parseInt(freeTrialMonths) > 0 ? `🎁 SPECIAL WELCOME OFFER\nAs a welcome gift, you have ${freeTrialMonths} months of FREE membership! No payment required during your trial period.` : ''}
 
-Log in to get started: ${window.location.origin}
+📲 LOG IN TO YOUR ACCOUNT
+Click here to access your attorney dashboard:
+${loginUrl}
+
+Use the email address: ${lawyer.created_by}
+
+If you haven't set your password yet, use the "Forgot Password" link to create one.
+
+💼 NEXT STEPS:
+1. Log in to your account
+2. Complete your profile
+3. Start browsing available cases
+4. Accept your first referral
+
+Need help getting started? Reply to this email or contact our support team at support@taylormadelaw.com
+
+We're excited to have you in our network!
 
 Best regards,
-Taylor Made Law Team
+The Taylor Made Law Team
+
+---
+Questions? Contact us at support@taylormadelaw.com
           `.trim()
         });
       } catch (emailErr) {

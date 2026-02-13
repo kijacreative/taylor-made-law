@@ -61,6 +61,8 @@ import Home from './pages/Home';
 import LawyerDashboard from './pages/LawyerDashboard';
 import LawyerSettings from './pages/LawyerSettings';
 import MyCases from './pages/MyCases';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 import __Layout from './Layout.jsx';
 
 
@@ -79,6 +81,8 @@ export const PAGES = {
     "LawyerDashboard": LawyerDashboard,
     "LawyerSettings": LawyerSettings,
     "MyCases": MyCases,
+    "ForgotPassword": ForgotPassword,
+    "ResetPassword": ResetPassword,
 }
 
 export const pagesConfig = {
