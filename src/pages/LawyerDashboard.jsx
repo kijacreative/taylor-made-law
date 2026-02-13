@@ -37,8 +37,8 @@ export default function LawyerDashboard() {
         }
         const userData = await base44.auth.me();
         
-        // Only redirect if user is explicitly an admin
-        if (userData.role === 'admin' || userData.user_type === 'admin' || userData.user_type === 'senior_associate' || userData.user_type === 'junior_associate') {
+        // Only redirect actual admin users to admin dashboard
+        if (userData.role === 'admin') {
           navigate(createPageUrl('AdminDashboard'));
           return;
         }
