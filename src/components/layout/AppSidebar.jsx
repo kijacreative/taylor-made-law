@@ -8,7 +8,8 @@ import {
   Settings, 
   LogOut,
   ChevronLeft,
-  Scale
+  Scale,
+  Users
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
@@ -35,6 +36,12 @@ const AppSidebar = ({ user, lawyerProfile }) => {
       icon: FolderOpen, 
       path: 'MyCases',
       active: currentPath.includes('/MyCases')
+    },
+    { 
+      label: 'Legal Circles', 
+      icon: Users, 
+      path: 'Groups',
+      active: currentPath.includes('/Group')
     },
     { 
       label: 'Settings', 

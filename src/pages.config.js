@@ -69,6 +69,7 @@ import Content from './pages/Content';
 import ContentDetail from './pages/ContentDetail';
 import Groups from './pages/Groups';
 import CreateGroup from './pages/CreateGroup';
+import GroupDetail from './pages/GroupDetail';
 import __Layout from './Layout.jsx';
 
 
@@ -95,6 +96,7 @@ export const PAGES = {
     "ContentDetail": ContentDetail,
     "Groups": Groups,
     "CreateGroup": CreateGroup,
+    "GroupDetail": GroupDetail,
 }
 
 export const pagesConfig = {
