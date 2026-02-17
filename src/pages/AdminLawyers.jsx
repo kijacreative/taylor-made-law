@@ -22,7 +22,8 @@ import {
   Gift,
   Shield,
   Eye,
-  Edit
+  Edit,
+  Plus
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
