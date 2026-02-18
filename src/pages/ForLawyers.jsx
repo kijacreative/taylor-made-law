@@ -546,6 +546,15 @@ Taylor Made Law Team
   return (
     <div className="min-h-screen bg-[#faf8f5]">
       <PublicNav />
+
+      {/* OTP Verification Modal */}
+      {showOtpModal && (
+        <EmailVerificationModal
+          email={formData.email}
+          onVerified={handleEmailVerified}
+          onClose={() => setShowOtpModal(false)}
+        />
+      )}
       
       <div className="pt-32 pb-24 px-4">
         <div className="max-w-3xl mx-auto">
