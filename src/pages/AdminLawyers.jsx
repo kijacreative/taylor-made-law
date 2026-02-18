@@ -222,9 +222,7 @@ export default function AdminLawyers() {
     setSaving(true);
     
     try {
-      await base44.entities.LawyerProfile.update(lawyer.id, {
-        status: newStatus
-      });
+      await base44.entities.LawyerProfile.update(lawyer.id, { status: newStatus });
       
       await base44.entities.AuditLog.create({
         entity_type: 'LawyerProfile',
@@ -234,6 +232,18 @@ export default function AdminLawyers() {
         actor_role: user.user_type || user.role,
         notes: `Status changed to ${newStatus}`
       });
+
+      // Send rejection email if cancelled
+      if (newStatus === 'cancelled' && lawyer.created_by) {
+        try {
+          await base44.functions.invoke('sendApplicationEmails', {
+            to: lawyer.created_by,
+            from_name: 'Taylor Made Law Network',
+            subject: 'Update on Your Taylor Made Law Application',
+            body: `<div style="font-family: Inter, system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;"><div style="text-align: center; margin-bottom: 24px;"><img src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" alt="Taylor Made Law" style="height: 44px;" /></div><div style="background: white; border-radius: 16px; padding: 36px; border: 1px solid #e5e7eb;"><h2 style="color: #111827; font-size: 22px; font-weight: 700; margin: 0 0 16px;">Application Status Update</h2><p style="color: #374151; font-size: 15px; line-height: 1.7; margin-bottom: 20px;">Thank you for your interest in joining the Taylor Made Law attorney network. After reviewing your application, we are unable to approve your membership at this time.</p><p style="color: #374151; font-size: 14px; line-height: 1.7;">If you have any questions or believe this was an error, please contact us at <a href="mailto:support@taylormadelaw.com" style="color: #3a164d;">support@taylormadelaw.com</a>.</p><p style="color: #374151; font-size: 14px; margin-top: 20px;">Thank you for your understanding.</p></div><p style="text-align: center; color: #9ca3af; font-size: 11px; margin-top: 20px;">© ${new Date().getFullYear()} Taylor Made Law. All rights reserved.</p></div>`
+          });
+        } catch (e) { /* non-critical */ }
+      }
       
       setSuccess(`Status updated to ${LAWYER_STATUSES[newStatus]?.label || newStatus}`);
       setSelectedLawyer(null);
