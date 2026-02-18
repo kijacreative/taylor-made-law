@@ -74,10 +74,7 @@ export default function ForLawyers() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: null }));
     }
-    // Reset email verification state if email changes
-    if (field === 'email') {
-      setAwaitingEmailVerification(false);
-    }
+
   };
 
   const toggleArrayItem = (field, item) => {
