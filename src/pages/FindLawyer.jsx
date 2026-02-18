@@ -170,24 +170,53 @@ export default function FindLawyer() {
       try {
         await base44.integrations.Core.SendEmail({
           to: formData.email,
-          subject: 'Taylor Made Law - We Received Your Request',
+          from_name: 'Taylor Made Law',
+          subject: 'We Received Your Request — Taylor Made Law',
           body: `
-Dear ${formData.first_name},
+            <div style="font-family: Inter, system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #faf8f5;">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <img src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" alt="Taylor Made Law" style="height: 50px;" />
+              </div>
 
-Thank you for contacting Taylor Made Law. We have received your request for legal assistance.
+              <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="text-align: center; margin-bottom: 32px;">
+                  <div style="width: 64px; height: 64px; background: #d1fae5; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                    <span style="font-size: 28px;">✓</span>
+                  </div>
+                  <h1 style="color: #111827; font-size: 26px; font-weight: 700; margin: 0 0 8px;">Thank You, ${formData.first_name}!</h1>
+                  <p style="color: #6b7280; font-size: 16px; margin: 0;">Your request has been submitted successfully.</p>
+                </div>
 
-Here's a summary of your submission:
-- Practice Area: ${formData.practice_area}
-- State: ${formData.state}
-- Urgency: ${formData.urgency}
+                <p style="color: #374151; font-size: 15px; line-height: 1.7; margin-bottom: 24px;">
+                  Our team is reviewing your information and will work to match you with a qualified attorney in our network. You can expect to hear from us within <strong>24–48 hours</strong>.
+                </p>
 
-Our team is reviewing your information and will work to match you with a qualified attorney in our network. You can expect to hear from us within 24-48 hours.
+                <div style="background: #f5f0fa; border-left: 4px solid #3a164d; border-radius: 8px; padding: 20px; margin-bottom: 28px;">
+                  <p style="color: #3a164d; font-weight: 600; margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Your Submission Summary</p>
+                  <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #374151;">
+                    <tr><td style="padding: 4px 0; color: #6b7280; width: 40%;">Practice Area</td><td style="padding: 4px 0; font-weight: 500;">${formData.practice_area}</td></tr>
+                    <tr><td style="padding: 4px 0; color: #6b7280;">State</td><td style="padding: 4px 0; font-weight: 500;">${formData.state}</td></tr>
+                    <tr><td style="padding: 4px 0; color: #6b7280;">Urgency</td><td style="padding: 4px 0; font-weight: 500; text-transform: capitalize;">${formData.urgency}</td></tr>
+                  </table>
+                </div>
 
-If you have any immediate questions, please don't hesitate to reach out.
+                <p style="color: #374151; font-weight: 600; font-size: 15px; margin-bottom: 12px;">What happens next?</p>
+                <ul style="color: #374151; font-size: 14px; line-height: 1.8; padding-left: 0; list-style: none; margin: 0 0 28px;">
+                  <li style="padding: 6px 0; display: flex; gap: 10px;"><span style="color: #3a164d; font-weight: 700;">✓</span> Our team reviews your case details</li>
+                  <li style="padding: 6px 0; display: flex; gap: 10px;"><span style="color: #3a164d; font-weight: 700;">✓</span> We match you with qualified attorneys in our network</li>
+                  <li style="padding: 6px 0; display: flex; gap: 10px;"><span style="color: #3a164d; font-weight: 700;">✓</span> You'll be contacted within 24–48 hours</li>
+                </ul>
 
-Best regards,
-Taylor Made Law Team
-          `.trim()
+                <p style="color: #6b7280; font-size: 13px; margin: 0;">
+                  Questions? Contact us at <a href="mailto:support@taylormadelaw.com" style="color: #3a164d;">support@taylormadelaw.com</a>
+                </p>
+              </div>
+
+              <div style="margin-top: 32px; text-align: center; color: #9ca3af; font-size: 12px;">
+                <p style="margin: 0;">© ${new Date().getFullYear()} Taylor Made Law. All rights reserved.</p>
+              </div>
+            </div>
+          `
         });
       } catch (emailErr) {
         console.log('Email send attempted');
@@ -201,27 +230,52 @@ Taylor Made Law Team
         for (const admin of adminUsers) {
           await base44.integrations.Core.SendEmail({
             to: admin.email,
-            subject: 'New Lead Submitted - Taylor Made Law',
+            from_name: 'Taylor Made Law Alerts',
+            subject: `🔔 New Lead: ${formData.first_name} ${formData.last_name} — ${formData.practice_area}`,
             body: `
-A new lead has been submitted on Taylor Made Law:
+              <div style="font-family: Inter, system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                  <img src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" alt="Taylor Made Law" style="height: 44px;" />
+                </div>
+                <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 32px;">
+                  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+                    <div style="background: #fef3c7; border-radius: 8px; padding: 8px 12px; font-size: 20px;">🔔</div>
+                    <div>
+                      <h2 style="margin: 0; color: #111827; font-size: 20px; font-weight: 700;">New Lead Submitted</h2>
+                      <p style="margin: 4px 0 0; color: #6b7280; font-size: 13px;">Lead ID: ${lead.id}</p>
+                    </div>
+                  </div>
 
-Client Information:
-- Name: ${formData.first_name} ${formData.last_name}
-- Email: ${formData.email}
-- Phone: ${formData.phone}
+                  <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <p style="color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin: 0 0 12px;">Client Information</p>
+                    <table style="width: 100%; font-size: 14px; color: #374151; border-collapse: collapse;">
+                      <tr><td style="padding: 5px 0; color: #6b7280; width: 35%;">Name</td><td style="padding: 5px 0; font-weight: 600;">${formData.first_name} ${formData.last_name}</td></tr>
+                      <tr><td style="padding: 5px 0; color: #6b7280;">Email</td><td style="padding: 5px 0;"><a href="mailto:${formData.email}" style="color: #3a164d;">${formData.email}</a></td></tr>
+                      <tr><td style="padding: 5px 0; color: #6b7280;">Phone</td><td style="padding: 5px 0;"><a href="tel:${formData.phone}" style="color: #3a164d;">${formData.phone}</a></td></tr>
+                    </table>
+                  </div>
 
-Case Details:
-- Practice Area: ${formData.practice_area}
-- State: ${formData.state}
-- Urgency: ${formData.urgency}
+                  <div style="background: #f5f0fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <p style="color: #3a164d; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin: 0 0 12px;">Case Details</p>
+                    <table style="width: 100%; font-size: 14px; color: #374151; border-collapse: collapse;">
+                      <tr><td style="padding: 5px 0; color: #6b7280; width: 35%;">Practice Area</td><td style="padding: 5px 0; font-weight: 600;">${formData.practice_area}</td></tr>
+                      <tr><td style="padding: 5px 0; color: #6b7280;">State</td><td style="padding: 5px 0; font-weight: 600;">${formData.state}</td></tr>
+                      <tr><td style="padding: 5px 0; color: #6b7280;">Urgency</td><td style="padding: 5px 0; font-weight: 600; text-transform: capitalize;">${formData.urgency}</td></tr>
+                    </table>
+                  </div>
 
-Description:
-${formData.description}
+                  <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                    <p style="color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin: 0 0 10px;">Description</p>
+                    <p style="color: #374151; font-size: 14px; line-height: 1.7; margin: 0;">${formData.description}</p>
+                  </div>
 
-Lead ID: ${lead.id}
-
-Please review this lead in the admin dashboard.
-            `.trim()
+                  <a href="${window.location.origin}/admin-leads" style="display: block; background: linear-gradient(135deg, #3a164d 0%, #993333 100%); color: white; text-align: center; padding: 14px 24px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 15px;">
+                    Review Lead in Dashboard →
+                  </a>
+                </div>
+                <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">© ${new Date().getFullYear()} Taylor Made Law</p>
+              </div>
+            `
           });
         }
       } catch (adminEmailErr) {
