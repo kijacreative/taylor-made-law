@@ -127,8 +127,6 @@ export default function ForLawyers() {
       if (!formData.full_name) newErrors.full_name = 'Full name is required';
       if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
         newErrors.email = 'Valid email is required';
-      } else if (!emailVerified) {
-        newErrors.email = 'Please verify your email address before continuing';
       }
       if (!formData.password || formData.password.length < 8) {
         newErrors.password = 'Password must be at least 8 characters';
