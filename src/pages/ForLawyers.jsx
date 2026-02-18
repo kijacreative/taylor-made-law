@@ -190,9 +190,9 @@ export default function ForLawyers() {
         consented_at: new Date().toISOString()
       });
 
-      // Send confirmation email
+      // Send confirmation email via backend function (bypasses "outside app" restriction)
       try {
-        await base44.integrations.Core.SendEmail({
+        await base44.functions.invoke('sendApplicationEmails', {
           to: formData.email,
           from_name: 'Taylor Made Law Network',
           subject: 'Application Received — Taylor Made Law Network',
@@ -228,7 +228,7 @@ The Taylor Made Law Team
           `.trim()
         });
       } catch (emailErr) {
-        console.log('Email send attempted');
+        console.log('Confirmation email attempted');
       }
 
       // Create audit log
