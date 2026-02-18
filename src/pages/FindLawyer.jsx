@@ -312,28 +312,10 @@ export default function FindLawyer() {
 
         // Send invitation email
         try {
-          await base44.integrations.Core.SendEmail({
+          await base44.functions.invoke('sendApplicationEmails', {
             to: formData.invite_attorney_email,
-            subject: 'You\'ve Been Invited to Join Taylor Made Law',
-            body: `
-Hello${formData.invite_attorney_name ? ' ' + formData.invite_attorney_name : ''},
-
-${formData.first_name} ${formData.last_name} has invited you to join the Taylor Made Law attorney network.
-
-${formData.invite_message ? `Personal message: "${formData.invite_message}"` : ''}
-
-Taylor Made Law connects qualified attorneys with pre-screened clients seeking legal representation. Join our network to receive quality case referrals matched to your practice areas and jurisdiction.
-
-Benefits of joining:
-• Receive pre-screened, quality case referrals
-• Build your practice with clients matched to your expertise
-• Flexible membership with first 6 months free for qualified attorneys
-
-Learn more and apply: ${window.location.origin}${createPageUrl('ForLawyers')}
-
-Best regards,
-Taylor Made Law Team
-            `.trim()
+            subject: "You've Been Invited to Join Taylor Made Law",
+            body: `<p>Hello${formData.invite_attorney_name ? ' ' + formData.invite_attorney_name : ''},</p><p>${formData.first_name} ${formData.last_name} has invited you to join the Taylor Made Law attorney network.</p><p><a href="${window.location.origin}${createPageUrl('ForLawyers')}">Apply now →</a></p><p>Best regards,<br/>Taylor Made Law Team</p>`
           });
         } catch (inviteErr) {
           console.log('Invitation email send attempted');
