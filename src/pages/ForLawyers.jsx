@@ -51,13 +51,8 @@ export default function ForLawyers() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [emailVerifiedFor, setEmailVerifiedFor] = useState('');
-  const [showOtpModal, setShowOtpModal] = useState(false);
-  const [sendingOtp, setSendingOtp] = useState(false);
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpCooldown, setOtpCooldown] = useState(0);
-  const otpTimerRef = React.useRef(null);
+  const [awaitingEmailVerification, setAwaitingEmailVerification] = useState(false);
+  const [sendingVerification, setSendingVerification] = useState(false);
 
   const [formData, setFormData] = useState({
     full_name: '',
