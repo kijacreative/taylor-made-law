@@ -10,12 +10,26 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields: to, subject, body' }, { status: 400 });
     }
 
-    await base44.asServiceRole.integrations.Core.SendEmail({
-      to,
-      from_name: from_name || 'Taylor Made Law Network',
-      subject,
-      body: emailBody
+    const resendKey = Deno.env.get('RESEND_API_KEY');
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${resendKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: `${from_name || 'Taylor Made Law'} <onboarding@resend.dev>`,
+        to: [to],
+        subject,
+        html: emailBody
+      })
     });
+
+    if (!res.ok) {
+      const errData = await res.json();
+      console.error('Resend error:', errData);
+      return Response.json({ error: 'Failed to send email' }, { status: 500 });
+    }
 
     return Response.json({ success: true });
 
