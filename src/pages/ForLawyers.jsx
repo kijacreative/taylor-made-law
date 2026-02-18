@@ -14,11 +14,8 @@ import {
   Star,
   Scale,
   Building2,
-  Phone,
   Mail,
-  MapPin,
-  SendHorizonal,
-  BadgeCheck } from
+  MapPin } from
 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import PublicNav from '@/components/layout/PublicNav';
