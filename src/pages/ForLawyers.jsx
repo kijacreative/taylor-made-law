@@ -16,7 +16,9 @@ import {
   Building2,
   Phone,
   Mail,
-  MapPin
+  MapPin,
+  SendHorizonal,
+  BadgeCheck
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import PublicNav from '@/components/layout/PublicNav';
@@ -28,6 +30,7 @@ import TMLTextarea from '@/components/ui/TMLTextarea';
 import TMLSelect from '@/components/ui/TMLSelect';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
+import EmailVerificationModal from '@/components/EmailVerificationModal';
 
 const LAWYER_CONSENT_VERSION = '1.0.0';
 
@@ -48,6 +51,13 @@ export default function ForLawyers() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [emailVerifiedFor, setEmailVerifiedFor] = useState('');
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const otpTimerRef = React.useRef(null);
   
   const [formData, setFormData] = useState({
     full_name: '',
@@ -73,6 +83,44 @@ export default function ForLawyers() {
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
     }
+    // Reset email verification if email changes
+    if (field === 'email' && value !== emailVerifiedFor) {
+      setEmailVerified(false);
+      setEmailVerifiedFor('');
+      setOtpSent(false);
+    }
+  };
+
+  const handleSendOtp = async () => {
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setErrors(prev => ({ ...prev, email: 'Please enter a valid email address first' }));
+      return;
+    }
+    setSendingOtp(true);
+    try {
+      await base44.functions.invoke('sendEmailOtp', { email: formData.email });
+      setOtpSent(true);
+      setShowOtpModal(true);
+      // Start cooldown
+      setOtpCooldown(60);
+      clearInterval(otpTimerRef.current);
+      otpTimerRef.current = setInterval(() => {
+        setOtpCooldown(prev => {
+          if (prev <= 1) { clearInterval(otpTimerRef.current); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (err) {
+      setErrors(prev => ({ ...prev, email: err.response?.data?.error || 'Failed to send code' }));
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleEmailVerified = (verifiedEmail) => {
+    setEmailVerified(true);
+    setEmailVerifiedFor(verifiedEmail);
+    setShowOtpModal(false);
   };
 
   const toggleArrayItem = (field, item) => {
@@ -91,6 +139,8 @@ export default function ForLawyers() {
       if (!formData.full_name) newErrors.full_name = 'Full name is required';
       if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
         newErrors.email = 'Valid email is required';
+      } else if (!emailVerified) {
+        newErrors.email = 'Please verify your email address before continuing';
       }
       if (!formData.password || formData.password.length < 8) {
         newErrors.password = 'Password must be at least 8 characters';
@@ -556,15 +606,65 @@ Taylor Made Law Team
                     required
                   />
 
-                  <TMLInput
-                    label="Email Address"
-                    type="email"
-                    placeholder="john@lawfirm.com"
-                    value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
-                    error={errors.email}
-                    required
-                  />
+                  {/* Email with verification */}
+                  <div>
+                    <TMLInput
+                      label="Email Address"
+                      type="email"
+                      placeholder="john@lawfirm.com"
+                      value={formData.email}
+                      onChange={(e) => updateField('email', e.target.value)}
+                      error={errors.email}
+                      required
+                    />
+                    <div className="mt-2 flex items-center gap-3">
+                      {emailVerified && formData.email === emailVerifiedFor ? (
+                        <span className="flex items-center gap-1.5 text-sm text-emerald-600 font-medium">
+                          <BadgeCheck className="w-4 h-4" />
+                          Email verified
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={otpSent ? () => setShowOtpModal(true) : handleSendOtp}
+                          disabled={sendingOtp || !formData.email}
+                          className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
+                            sendingOtp || !formData.email
+                              ? 'text-gray-400 cursor-not-allowed'
+                              : 'text-[#3a164d] hover:text-[#5a2a6d]'
+                          }`}
+                        >
+                          {sendingOtp ? (
+                            <><span className="inline-block w-3 h-3 border-2 border-[#3a164d] border-t-transparent rounded-full animate-spin" /> Sending...</>
+                          ) : otpSent ? (
+                            <><BadgeCheck className="w-4 h-4" /> Enter verification code</>
+                          ) : (
+                            <><SendHorizonal className="w-4 h-4" /> Send verification code</>
+                          )}
+                        </button>
+                      )}
+                      {otpSent && !emailVerified && otpCooldown > 0 && (
+                        <span className="text-xs text-gray-400">
+                          Code sent — resend in {otpCooldown}s
+                        </span>
+                      )}
+                      {otpSent && !emailVerified && otpCooldown === 0 && (
+                        <button
+                          type="button"
+                          onClick={handleSendOtp}
+                          disabled={sendingOtp}
+                          className="text-xs text-gray-500 hover:text-[#3a164d] transition-colors"
+                        >
+                          Resend code
+                        </button>
+                      )}
+                    </div>
+                    {otpSent && !emailVerified && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        Code sent to <strong>{formData.email}</strong>
+                      </p>
+                    )}
+                  </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <TMLInput
