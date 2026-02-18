@@ -222,13 +222,25 @@ export default function FindLawyer() {
         console.log('Email send attempted');
       }
 
+      // Audit log for email send
+      try {
+        await base44.entities.AuditLog.create({
+          entity_type: 'Lead',
+          entity_id: lead.id,
+          action: 'confirmation_email_sent',
+          actor_email: formData.email,
+          actor_role: 'public',
+          notes: `Confirmation email sent to ${formData.email}`
+        });
+      } catch (e) { /* non-critical */ }
+
       // Send alert email to all admin accounts
       try {
         const allUsers = await base44.entities.User.list();
         const adminUsers = allUsers.filter((u) => u.role === 'admin');
 
         for (const admin of adminUsers) {
-          await base44.integrations.Core.SendEmail({
+          await base44.functions.invoke('sendApplicationEmails', {
             to: admin.email,
             from_name: 'Taylor Made Law Alerts',
             subject: `🔔 New Lead: ${formData.first_name} ${formData.last_name} — ${formData.practice_area}`,
