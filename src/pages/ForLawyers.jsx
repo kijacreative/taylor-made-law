@@ -573,7 +573,7 @@ Taylor Made Law Team
           <TMLCard variant="elevated" className="p-8">
             <AnimatePresence mode="wait">
               {/* Step 1: Basic Info */}
-              {step === 1 &&
+              {step === 1 && !awaitingEmailVerification &&
               <motion.div
                 key="step1"
                 initial={{ opacity: 0, x: 20 }}
@@ -599,66 +599,14 @@ Taylor Made Law Team
                   error={errors.full_name}
                   required />
 
-
-                  {/* Email with verification */}
-                  <div>
-                    <TMLInput
-                    label="Email Address"
-                    type="email"
-                    placeholder="john@lawfirm.com"
-                    value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
-                    error={errors.email}
-                    required />
-
-                    <div className="mt-2 flex items-center gap-3">
-                      {emailVerified && formData.email === emailVerifiedFor ?
-                    <span className="flex items-center gap-1.5 text-sm text-emerald-600 font-medium">
-                          <BadgeCheck className="w-4 h-4" />
-                          Email verified
-                        </span> :
-
-                    <button
-                      type="button"
-                      onClick={otpSent ? () => setShowOtpModal(true) : handleSendOtp}
-                      disabled={sendingOtp || !formData.email}
-                      className={`flex items-center gap-1.5 text-sm font-medium transition-colors ${
-                      sendingOtp || !formData.email ?
-                      'text-gray-400 cursor-not-allowed' :
-                      'text-[#3a164d] hover:text-[#5a2a6d]'}`
-                      }>
-
-                          {sendingOtp ?
-                      <><span className="inline-block w-3 h-3 border-2 border-[#3a164d] border-t-transparent rounded-full animate-spin" /> Sending...</> :
-                      otpSent ?
-                      <><BadgeCheck className="w-4 h-4" /> Enter verification code</> :
-
-                      <><SendHorizonal className="w-4 h-4" /> Send verification code</>
-                      }
-                        </button>
-                    }
-                      {otpSent && !emailVerified && otpCooldown > 0 &&
-                    <span className="text-xs text-gray-400">
-                          Code sent — resend in {otpCooldown}s
-                        </span>
-                    }
-                      {otpSent && !emailVerified && otpCooldown === 0 &&
-                    <button
-                      type="button"
-                      onClick={handleSendOtp}
-                      disabled={sendingOtp}
-                      className="text-xs text-gray-500 hover:text-[#3a164d] transition-colors">
-
-                          Resend code
-                        </button>
-                    }
-                    </div>
-                    {otpSent && !emailVerified &&
-                  <p className="text-xs text-gray-500 mt-1">
-                        Code sent to <strong>{formData.email}</strong>
-                      </p>
-                  }
-                  </div>
+                  <TMLInput
+                  label="Email Address"
+                  type="email"
+                  placeholder="john@lawfirm.com"
+                  value={formData.email}
+                  onChange={(e) => updateField('email', e.target.value)}
+                  error={errors.email}
+                  required />
 
                   <div className="grid grid-cols-2 gap-4">
                     <TMLInput
@@ -679,7 +627,6 @@ Taylor Made Law Team
                     onChange={(e) => updateField('confirm_password', e.target.value)}
                     error={errors.confirm_password}
                     required />
-
                   </div>
 
                   <TMLInput
@@ -691,7 +638,6 @@ Taylor Made Law Team
                   error={errors.phone}
                   required />
 
-
                   <TMLInput
                   label="Law Firm Name"
                   placeholder="Smith & Associates"
@@ -699,7 +645,6 @@ Taylor Made Law Team
                   onChange={(e) => updateField('firm_name', e.target.value)}
                   error={errors.firm_name}
                   required />
-
 
                   <TMLInput
                   label="Bar Number"
@@ -709,10 +654,46 @@ Taylor Made Law Team
                   error={errors.bar_number}
                   required />
 
-
                   <div className="flex justify-end pt-4">
-                    <TMLButton variant="primary" onClick={nextStep}>
+                    <TMLButton variant="primary" onClick={nextStep} loading={sendingVerification}>
                       Continue
+                      <ArrowRight className="ml-2 w-5 h-5" />
+                    </TMLButton>
+                  </div>
+                </motion.div>
+              }
+
+              {/* Step 1: Awaiting Email Verification */}
+              {step === 1 && awaitingEmailVerification &&
+              <motion.div
+                key="step1-verify"
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                className="text-center py-8 space-y-6">
+
+                  <div className="w-20 h-20 mx-auto rounded-full bg-[#3a164d]/10 flex items-center justify-center">
+                    <Mail className="w-10 h-10 text-[#3a164d]" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h2>
+                    <p className="text-gray-500 max-w-sm mx-auto">
+                      We sent a verification link to <strong className="text-gray-800">{formData.email}</strong>. 
+                      Click the link in the email to verify your account, then return here.
+                    </p>
+                  </div>
+
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-800 max-w-sm mx-auto">
+                    <p>Don't see it? Check your spam folder or <button type="button" onClick={handleSendVerificationEmail} className="underline font-medium hover:text-amber-900">resend the email</button>.</p>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                    <TMLButton variant="outline" onClick={() => setAwaitingEmailVerification(false)}>
+                      <ArrowLeft className="mr-2 w-4 h-4" />
+                      Edit Info
+                    </TMLButton>
+                    <TMLButton variant="primary" onClick={() => { if (validateStep(1)) setStep(2); }}>
+                      I've Verified My Email
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </TMLButton>
                   </div>
