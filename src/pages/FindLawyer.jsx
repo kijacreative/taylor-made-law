@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowRight, 
-  ArrowLeft, 
-  CheckCircle2, 
+import {
+  ArrowRight,
+  ArrowLeft,
+  CheckCircle2,
   AlertCircle,
   MapPin,
   Scale,
@@ -14,8 +14,8 @@ import {
   Mail,
   User,
   FileText,
-  Shield
-} from 'lucide-react';
+  Shield } from
+'lucide-react';
 import { base44 } from '@/api/base44Client';
 import PublicNav from '@/components/layout/PublicNav';
 import PublicFooter from '@/components/layout/PublicFooter';
@@ -42,7 +42,7 @@ export default function FindLawyer() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
-  
+
   const [formData, setFormData] = useState({
     practice_area: '',
     state: '',
@@ -60,26 +60,26 @@ export default function FindLawyer() {
   });
 
   const updateField = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
+      setErrors((prev) => ({ ...prev, [field]: null }));
     }
   };
 
   const validateStep = (currentStep) => {
     const newErrors = {};
-    
+
     if (currentStep === 1) {
       if (!formData.practice_area) newErrors.practice_area = 'Please select a practice area';
       if (!formData.state) newErrors.state = 'Please select a state';
     }
-    
+
     if (currentStep === 2) {
       if (!formData.description || formData.description.length < 20) {
         newErrors.description = 'Please provide more details about your situation (at least 20 characters)';
       }
     }
-    
+
     if (currentStep === 3) {
       if (!formData.first_name) newErrors.first_name = 'First name is required';
       if (!formData.last_name) newErrors.last_name = 'Last name is required';
@@ -110,9 +110,9 @@ export default function FindLawyer() {
 
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
-    
+
     setLoading(true);
-    
+
     try {
       // Send to Lead Docket webhook first
       try {
@@ -126,18 +126,18 @@ export default function FindLawyer() {
           description: formData.description,
           urgency: formData.urgency
         };
-        
+
         await fetch('https://taylormadelaw.leaddocket.com/opportunities/form/1', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify(webhookData)
         });
       } catch (webhookErr) {
         console.log('Lead Docket webhook send attempted');
       }
-      
+
       // Create lead
       const leadData = {
         practice_area: formData.practice_area,
@@ -153,9 +153,9 @@ export default function FindLawyer() {
         status: 'new',
         source: 'website'
       };
-      
+
       const lead = await base44.entities.Lead.create(leadData);
-      
+
       // Create consent log
       await base44.entities.ConsentLog.create({
         entity_type: 'Lead',
@@ -165,7 +165,7 @@ export default function FindLawyer() {
         consent_text: CONSENT_TEXT,
         consented_at: new Date().toISOString()
       });
-      
+
       // Send confirmation email to client
       try {
         await base44.integrations.Core.SendEmail({
@@ -192,12 +192,12 @@ Taylor Made Law Team
       } catch (emailErr) {
         console.log('Email send attempted');
       }
-      
+
       // Send alert email to all admin accounts
       try {
         const allUsers = await base44.entities.User.list();
-        const adminUsers = allUsers.filter(u => u.role === 'admin');
-        
+        const adminUsers = allUsers.filter((u) => u.role === 'admin');
+
         for (const admin of adminUsers) {
           await base44.integrations.Core.SendEmail({
             to: admin.email,
@@ -227,11 +227,11 @@ Please review this lead in the admin dashboard.
       } catch (adminEmailErr) {
         console.log('Admin notification email attempted');
       }
-      
+
       // Handle attorney invitation if provided
       if (formData.invite_attorney_email) {
         const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        
+
         await base44.entities.Invitation.create({
           inviter_email: formData.email,
           inviter_name: `${formData.first_name} ${formData.last_name}`,
@@ -243,7 +243,7 @@ Please review this lead in the admin dashboard.
           sent_at: new Date().toISOString(),
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
         });
-        
+
         // Send invitation email
         try {
           await base44.integrations.Core.SendEmail({
@@ -273,7 +273,7 @@ Taylor Made Law Team
           console.log('Invitation email send attempted');
         }
       }
-      
+
       setSubmitted(true);
     } catch (error) {
       console.error('Error submitting form:', error);
@@ -288,11 +288,11 @@ Taylor Made Law Team
       <div className="min-h-screen bg-[#faf8f5]">
         <PublicNav />
         <div className="pt-32 pb-24 px-4">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-2xl mx-auto text-center"
-          >
+            className="max-w-2xl mx-auto text-center">
+
             <div className="w-24 h-24 mx-auto mb-8 rounded-full bg-emerald-100 flex items-center justify-center">
               <CheckCircle2 className="w-12 h-12 text-emerald-600" />
             </div>
@@ -326,8 +326,8 @@ Taylor Made Law Team
           </motion.div>
         </div>
         <PublicFooter />
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -346,34 +346,34 @@ Taylor Made Law Team
 
           {/* Progress Steps */}
           <div className="flex items-center justify-center mb-12">
-            {[1, 2, 3].map((s) => (
-              <React.Fragment key={s}>
+            {[1, 2, 3].map((s) =>
+            <React.Fragment key={s}>
                 <div className={`flex items-center justify-center w-10 h-10 rounded-full font-semibold transition-all ${
-                  s < step ? 'bg-[#3a164d] text-white' :
-                  s === step ? 'bg-[#3a164d] text-white ring-4 ring-[#3a164d]/20' :
-                  'bg-gray-200 text-gray-500'
-                }`}>
+              s < step ? 'bg-[#3a164d] text-white' :
+              s === step ? 'bg-[#3a164d] text-white ring-4 ring-[#3a164d]/20' :
+              'bg-gray-200 text-gray-500'}`
+              }>
                   {s < step ? <CheckCircle2 className="w-5 h-5" /> : s}
                 </div>
-                {s < 3 && (
-                  <div className={`w-24 h-1 mx-2 rounded ${s < step ? 'bg-[#3a164d]' : 'bg-gray-200'}`} />
-                )}
+                {s < 3 &&
+              <div className={`w-24 h-1 mx-2 rounded ${s < step ? 'bg-[#3a164d]' : 'bg-gray-200'}`} />
+              }
               </React.Fragment>
-            ))}
+            )}
           </div>
 
           {/* Form Steps */}
           <TMLCard variant="elevated" className="p-8">
             <AnimatePresence mode="wait">
               {/* Step 1: Case Type & Location */}
-              {step === 1 && (
-                <motion.div
-                  key="step1"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
+              {step === 1 &&
+              <motion.div
+                key="step1"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6">
+
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 rounded-xl bg-[#3a164d]/10 flex items-center justify-center">
                       <Scale className="w-6 h-6 text-[#3a164d]" />
@@ -385,24 +385,24 @@ Taylor Made Law Team
                   </div>
 
                   <TMLSelect
-                    label="Practice Area"
-                    placeholder="Select the type of legal matter"
-                    options={PRACTICE_AREAS}
-                    value={formData.practice_area}
-                    onChange={(e) => updateField('practice_area', e.target.value)}
-                    error={errors.practice_area}
-                    required
-                  />
+                  label="Practice Area"
+                  placeholder="Select the type of legal matter"
+                  options={PRACTICE_AREAS}
+                  value={formData.practice_area}
+                  onChange={(e) => updateField('practice_area', e.target.value)}
+                  error={errors.practice_area}
+                  required />
+
 
                   <TMLSelect
-                    label="State"
-                    placeholder="Select your state"
-                    options={US_STATES}
-                    value={formData.state}
-                    onChange={(e) => updateField('state', e.target.value)}
-                    error={errors.state}
-                    required
-                  />
+                  label="State"
+                  placeholder="Select your state"
+                  options={US_STATES}
+                  value={formData.state}
+                  onChange={(e) => updateField('state', e.target.value)}
+                  error={errors.state}
+                  required />
+
 
                   <div className="flex justify-end pt-4">
                     <TMLButton variant="primary" onClick={nextStep}>
@@ -411,17 +411,17 @@ Taylor Made Law Team
                     </TMLButton>
                   </div>
                 </motion.div>
-              )}
+              }
 
               {/* Step 2: Case Details */}
-              {step === 2 && (
-                <motion.div
-                  key="step2"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
+              {step === 2 &&
+              <motion.div
+                key="step2"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6">
+
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 rounded-xl bg-[#3a164d]/10 flex items-center justify-center">
                       <FileText className="w-6 h-6 text-[#3a164d]" />
@@ -433,21 +433,21 @@ Taylor Made Law Team
                   </div>
 
                   <TMLTextarea
-                    label="Description of Your Legal Matter"
-                    placeholder="Please describe your situation in detail. Include relevant dates, parties involved, and any other information that would help an attorney understand your case."
-                    rows={6}
-                    value={formData.description}
-                    onChange={(e) => updateField('description', e.target.value)}
-                    error={errors.description}
-                    required
-                  />
+                  label="Description of Your Legal Matter"
+                  placeholder="Please describe your situation in detail. Include relevant dates, parties involved, and any other information that would help an attorney understand your case."
+                  rows={6}
+                  value={formData.description}
+                  onChange={(e) => updateField('description', e.target.value)}
+                  error={errors.description}
+                  required />
+
 
                   <TMLSelect
-                    label="Urgency Level"
-                    options={URGENCY_LEVELS.map(u => ({ value: u.value, label: u.label }))}
-                    value={formData.urgency}
-                    onChange={(e) => updateField('urgency', e.target.value)}
-                  />
+                  label="Urgency Level"
+                  options={URGENCY_LEVELS.map((u) => ({ value: u.value, label: u.label }))}
+                  value={formData.urgency}
+                  onChange={(e) => updateField('urgency', e.target.value)} />
+
 
                   <div className="flex justify-between pt-4">
                     <TMLButton variant="outline" onClick={prevStep}>
@@ -460,17 +460,17 @@ Taylor Made Law Team
                     </TMLButton>
                   </div>
                 </motion.div>
-              )}
+              }
 
               {/* Step 3: Contact Info & Consent */}
-              {step === 3 && (
-                <motion.div
-                  key="step3"
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  className="space-y-6"
-                >
+              {step === 3 &&
+              <motion.div
+                key="step3"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="space-y-6">
+
                   <div className="flex items-center gap-3 mb-6">
                     <div className="w-12 h-12 rounded-xl bg-[#3a164d]/10 flex items-center justify-center">
                       <User className="w-6 h-6 text-[#3a164d]" />
@@ -483,64 +483,64 @@ Taylor Made Law Team
 
                   <div className="grid grid-cols-2 gap-4">
                     <TMLInput
-                      label="First Name"
-                      placeholder="John"
-                      value={formData.first_name}
-                      onChange={(e) => updateField('first_name', e.target.value)}
-                      error={errors.first_name}
-                      required
-                    />
+                    label="First Name"
+                    placeholder="John"
+                    value={formData.first_name}
+                    onChange={(e) => updateField('first_name', e.target.value)}
+                    error={errors.first_name}
+                    required />
+
                     <TMLInput
-                      label="Last Name"
-                      placeholder="Doe"
-                      value={formData.last_name}
-                      onChange={(e) => updateField('last_name', e.target.value)}
-                      error={errors.last_name}
-                      required
-                    />
+                    label="Last Name"
+                    placeholder="Doe"
+                    value={formData.last_name}
+                    onChange={(e) => updateField('last_name', e.target.value)}
+                    error={errors.last_name}
+                    required />
+
                   </div>
 
                   <TMLInput
-                    label="Email Address"
-                    type="email"
-                    placeholder="john@example.com"
-                    value={formData.email}
-                    onChange={(e) => updateField('email', e.target.value)}
-                    error={errors.email}
-                    required
-                  />
+                  label="Email Address"
+                  type="email"
+                  placeholder="john@example.com"
+                  value={formData.email}
+                  onChange={(e) => updateField('email', e.target.value)}
+                  error={errors.email}
+                  required />
+
 
                   <TMLInput
-                    label="Phone Number"
-                    type="tel"
-                    placeholder="(555) 123-4567"
-                    value={formData.phone}
-                    onChange={(e) => updateField('phone', e.target.value)}
-                    error={errors.phone}
-                    required
-                  />
+                  label="Phone Number"
+                  type="tel"
+                  placeholder="(555) 123-4567"
+                  value={formData.phone}
+                  onChange={(e) => updateField('phone', e.target.value)}
+                  error={errors.phone}
+                  required />
+
 
                   {/* Optional: Invite an Attorney */}
-                  <div className="pt-6 border-t border-gray-200">
-                    <h3 className="font-semibold text-gray-900 mb-2">Know an attorney who should join our network?</h3>
-                    <p className="text-sm text-gray-500 mb-4">Optional: Invite a qualified attorney to Taylor Made Law</p>
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <TMLInput
-                        label="Attorney Name"
-                        placeholder="Optional"
-                        value={formData.invite_attorney_name}
-                        onChange={(e) => updateField('invite_attorney_name', e.target.value)}
-                      />
-                      <TMLInput
-                        label="Attorney Email"
-                        type="email"
-                        placeholder="Optional"
-                        value={formData.invite_attorney_email}
-                        onChange={(e) => updateField('invite_attorney_email', e.target.value)}
-                      />
-                    </div>
-                  </div>
+                  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                   {/* Consent */}
                   <div className="pt-6 border-t border-gray-200">
@@ -556,49 +556,49 @@ Taylor Made Law Team
                     
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input
-                        type="checkbox"
-                        checked={formData.consent}
-                        onChange={(e) => updateField('consent', e.target.checked)}
-                        className="mt-1 w-5 h-5 rounded border-gray-300 text-[#3a164d] focus:ring-[#3a164d]"
-                      />
+                      type="checkbox"
+                      checked={formData.consent}
+                      onChange={(e) => updateField('consent', e.target.checked)}
+                      className="mt-1 w-5 h-5 rounded border-gray-300 text-[#3a164d] focus:ring-[#3a164d]" />
+
                       <span className="text-sm text-gray-700">
                         I have read and agree to the terms above, including the Privacy Policy and Terms of Service.
                       </span>
                     </label>
-                    {errors.consent && (
-                      <p className="text-sm text-red-600 mt-2">{errors.consent}</p>
-                    )}
+                    {errors.consent &&
+                  <p className="text-sm text-red-600 mt-2">{errors.consent}</p>
+                  }
                   </div>
 
-                  {errors.submit && (
-                    <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl">
+                  {errors.submit &&
+                <div className="flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl">
                       <AlertCircle className="w-5 h-5" />
                       <span>{errors.submit}</span>
                     </div>
-                  )}
+                }
 
                   <div className="flex justify-between pt-4">
                     <TMLButton variant="outline" onClick={prevStep}>
                       <ArrowLeft className="mr-2 w-5 h-5" />
                       Back
                     </TMLButton>
-                    <TMLButton 
-                      variant="primary" 
-                      onClick={handleSubmit}
-                      loading={loading}
-                    >
+                    <TMLButton
+                    variant="primary"
+                    onClick={handleSubmit}
+                    loading={loading}>
+
                       Submit Request
                       <ArrowRight className="ml-2 w-5 h-5" />
                     </TMLButton>
                   </div>
                 </motion.div>
-              )}
+              }
             </AnimatePresence>
           </TMLCard>
         </div>
       </div>
 
       <PublicFooter />
-    </div>
-  );
+    </div>);
+
 }
