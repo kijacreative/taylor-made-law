@@ -4,9 +4,9 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { 
-  Search, 
-  Filter, 
+import {
+  Search,
+  Filter,
   Scale,
   CheckCircle2,
   XCircle,
@@ -20,8 +20,8 @@ import {
   Eye,
   Edit,
   Mail,
-  Phone
-} from 'lucide-react';
+  Phone } from
+'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
@@ -42,7 +42,7 @@ export default function AdminCases() {
   const [viewingCase, setViewingCase] = useState(null);
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(null);
-  
+
   const [filters, setFilters] = useState({
     search: '',
     status: '',
@@ -69,12 +69,12 @@ export default function AdminCases() {
           return;
         }
         const userData = await base44.auth.me();
-        
+
         if (!['admin', 'senior_associate', 'junior_associate'].includes(userData.user_type) && userData.role !== 'admin') {
           navigate(createPageUrl('LawyerDashboard'));
           return;
         }
-        
+
         setUser(userData);
       } catch (e) {
         navigate(createPageUrl('Home'));
@@ -89,11 +89,11 @@ export default function AdminCases() {
   const { data: cases = [], isLoading: casesLoading, refetch } = useQuery({
     queryKey: ['allCases'],
     queryFn: () => base44.entities.Case.list('-created_date'),
-    enabled: !!user,
+    enabled: !!user
   });
 
   // Filter cases
-  const filteredCases = cases.filter(caseItem => {
+  const filteredCases = cases.filter((caseItem) => {
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       if (!caseItem.title?.toLowerCase().includes(searchLower)) {
@@ -124,21 +124,21 @@ export default function AdminCases() {
   }, {});
 
   const quickFilters = [
-    { value: '', label: 'All', count: cases.length },
-    { value: 'published', label: 'Published', count: statusCounts.published || 0 },
-    { value: 'accepted', label: 'Accepted', count: statusCounts.accepted || 0 },
-    { value: 'in_progress', label: 'In Progress', count: statusCounts.in_progress || 0 },
-    { value: 'closed', label: 'Closed', count: statusCounts.closed || 0 },
-  ];
+  { value: '', label: 'All', count: cases.length },
+  { value: 'published', label: 'Published', count: statusCounts.published || 0 },
+  { value: 'accepted', label: 'Accepted', count: statusCounts.accepted || 0 },
+  { value: 'in_progress', label: 'In Progress', count: statusCounts.in_progress || 0 },
+  { value: 'closed', label: 'Closed', count: statusCounts.closed || 0 }];
+
 
   const handleToggleTrending = async (caseItem) => {
     setSaving(true);
-    
+
     try {
       await base44.entities.Case.update(caseItem.id, {
         is_trending: !caseItem.is_trending
       });
-      
+
       setSuccess(caseItem.is_trending ? 'Removed from trending' : 'Added to trending');
       refetch();
     } catch (err) {
@@ -150,14 +150,14 @@ export default function AdminCases() {
 
   const handleWithdraw = async (caseItem) => {
     if (!confirm('Are you sure you want to withdraw this case?')) return;
-    
+
     setSaving(true);
-    
+
     try {
       await base44.entities.Case.update(caseItem.id, {
         status: 'withdrawn'
       });
-      
+
       setSuccess('Case withdrawn');
       refetch();
     } catch (err) {
@@ -169,9 +169,9 @@ export default function AdminCases() {
 
   const handleCreateCase = async () => {
     if (!newCase.title || !newCase.state || !newCase.practice_area) return;
-    
+
     setSaving(true);
-    
+
     try {
       const caseData = {
         title: newCase.title,
@@ -180,14 +180,14 @@ export default function AdminCases() {
         practice_area: newCase.practice_area,
         estimated_value: newCase.estimated_value ? parseFloat(newCase.estimated_value) : null,
         is_trending: newCase.is_trending,
-        key_facts: newCase.key_facts ? newCase.key_facts.split('\n').filter(f => f.trim()) : [],
+        key_facts: newCase.key_facts ? newCase.key_facts.split('\n').filter((f) => f.trim()) : [],
         status: 'published',
         published_at: new Date().toISOString(),
         published_by: user.email
       };
-      
+
       await base44.entities.Case.create(caseData);
-      
+
       setSuccess('Case created and published!');
       setShowCreateModal(false);
       setNewCase({
@@ -218,7 +218,7 @@ export default function AdminCases() {
 
   const handleSaveChanges = async () => {
     if (!viewingCase) return;
-    
+
     setSaving(true);
     try {
       await base44.entities.Case.update(viewingCase.id, {
@@ -226,7 +226,7 @@ export default function AdminCases() {
         estimated_value: viewingCase.estimated_value ? parseFloat(viewingCase.estimated_value) : null,
         lawyer_notes: viewingCase.lawyer_notes
       });
-      
+
       setSuccess('Case updated successfully!');
       setViewingCase(null);
       refetch();
@@ -241,8 +241,8 @@ export default function AdminCases() {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#7e277e]" />
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -264,38 +264,38 @@ export default function AdminCases() {
           </div>
 
           {/* Success Message */}
-          {success && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 flex items-center gap-2 p-4 bg-emerald-50 text-emerald-700 rounded-xl"
-            >
+          {success &&
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 flex items-center gap-2 p-4 bg-emerald-50 text-emerald-700 rounded-xl">
+
               <CheckCircle2 className="w-5 h-5" />
               <span>{success}</span>
               <button onClick={() => setSuccess(null)} className="ml-auto">
                 <X className="w-4 h-4" />
               </button>
             </motion.div>
-          )}
+          }
 
           {/* Quick Status Tabs */}
           <div className="flex flex-wrap gap-2 mb-6">
-            {quickFilters.map((qf) => (
-              <button
-                key={qf.value}
-                onClick={() => setFilters({ ...filters, status: qf.value })}
-                className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                  filters.status === qf.value
-                    ? 'bg-[#7e277e] text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'
-                }`}
-              >
+            {quickFilters.map((qf) =>
+            <button
+              key={qf.value}
+              onClick={() => setFilters({ ...filters, status: qf.value })}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              filters.status === qf.value ?
+              'bg-[#7e277e] text-white' :
+              'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`
+              }>
+
                 {qf.label}
                 <span className={`ml-2 ${filters.status === qf.value ? 'text-white/80' : 'text-gray-400'}`}>
                   ({qf.count})
                 </span>
               </button>
-            ))}
+            )}
           </div>
 
           {/* Search and Filters */}
@@ -308,55 +308,55 @@ export default function AdminCases() {
                   placeholder="Search cases..."
                   value={filters.search}
                   onChange={(e) => setFilters({ ...filters, search: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#7e277e]/20 focus:border-[#7e277e]"
-                />
+                  className="w-full pl-12 pr-4 py-3 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#7e277e]/20 focus:border-[#7e277e]" />
+
               </div>
               
-              <TMLButton 
-                variant={showFilters ? 'primary' : 'outline'} 
-                onClick={() => setShowFilters(!showFilters)}
-              >
+              <TMLButton
+                variant={showFilters ? 'primary' : 'outline'}
+                onClick={() => setShowFilters(!showFilters)}>
+
                 <Filter className="w-4 h-4 mr-2" />
                 More Filters
               </TMLButton>
             </div>
 
-            {showFilters && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                className="mt-4 pt-4 border-t border-gray-100"
-              >
+            {showFilters &&
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="mt-4 pt-4 border-t border-gray-100">
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <TMLSelect
-                    label="State"
-                    placeholder="All States"
-                    options={[{ value: '', label: 'All States' }, ...US_STATES.map(s => ({ value: s, label: s }))]}
-                    value={filters.state}
-                    onChange={(e) => setFilters({ ...filters, state: e.target.value })}
-                  />
+                  label="State"
+                  placeholder="All States"
+                  options={[{ value: '', label: 'All States' }, ...US_STATES.map((s) => ({ value: s, label: s }))]}
+                  value={filters.state}
+                  onChange={(e) => setFilters({ ...filters, state: e.target.value })} />
+
                   
                   <TMLSelect
-                    label="Practice Area"
-                    placeholder="All Areas"
-                    options={[{ value: '', label: 'All Areas' }, ...PRACTICE_AREAS.map(p => ({ value: p, label: p }))]}
-                    value={filters.practice_area}
-                    onChange={(e) => setFilters({ ...filters, practice_area: e.target.value })}
-                  />
+                  label="Practice Area"
+                  placeholder="All Areas"
+                  options={[{ value: '', label: 'All Areas' }, ...PRACTICE_AREAS.map((p) => ({ value: p, label: p }))]}
+                  value={filters.practice_area}
+                  onChange={(e) => setFilters({ ...filters, practice_area: e.target.value })} />
+
                 </div>
                 
-                {hasActiveFilters && (
-                  <div className="flex justify-end mt-4">
+                {hasActiveFilters &&
+              <div className="flex justify-end mt-4">
                     <button
-                      onClick={clearFilters}
-                      className="text-sm text-[#7e277e] hover:underline flex items-center gap-1"
-                    >
+                  onClick={clearFilters}
+                  className="text-sm text-[#7e277e] hover:underline flex items-center gap-1">
+
                       <X className="w-4 h-4" /> Clear filters
                     </button>
                   </div>
-                )}
+              }
               </motion.div>
-            )}
+            }
           </div>
 
           {/* Results */}
@@ -367,49 +367,49 @@ export default function AdminCases() {
           </div>
 
           {/* Cases List */}
-          {casesLoading ? (
-            <div className="flex items-center justify-center py-12">
+          {casesLoading ?
+          <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-[#7e277e]" />
-            </div>
-          ) : filteredCases.length === 0 ? (
-            <TMLCard variant="cream" className="text-center py-12">
+            </div> :
+          filteredCases.length === 0 ?
+          <TMLCard variant="cream" className="text-center py-12">
               <Scale className="w-12 h-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 mb-2">No Cases Found</h3>
               <p className="text-gray-600">
-                {hasActiveFilters || filters.search
-                  ? 'Try adjusting your filters.'
-                  : 'Create a case to get started.'}
+                {hasActiveFilters || filters.search ?
+              'Try adjusting your filters.' :
+              'Create a case to get started.'}
               </p>
-            </TMLCard>
-          ) : (
-            <div className="grid gap-4">
-              {filteredCases.map((caseItem, index) => (
-                <motion.div
-                  key={caseItem.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.03 }}
-                >
+            </TMLCard> :
+
+          <div className="grid gap-4">
+              {filteredCases.map((caseItem, index) =>
+            <motion.div
+              key={caseItem.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: index * 0.03 }}>
+
                   <TMLCard hover className="transition-all duration-200 hover:shadow-md">
                     <TMLCardContent className="p-5">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            {caseItem.is_trending && (
-                              <TMLBadge variant="trending" size="sm">
+                            {caseItem.is_trending &&
+                        <TMLBadge variant="trending" size="sm">
                                 <TrendingUp className="w-3 h-3 mr-1" />
                                 Trending
                               </TMLBadge>
-                            )}
-                            <TMLBadge 
-                              variant={
-                                caseItem.status === 'published' ? 'success' :
-                                caseItem.status === 'accepted' ? 'info' :
-                                caseItem.status === 'withdrawn' ? 'danger' :
-                                'default'
-                              }
-                              size="sm"
-                            >
+                        }
+                            <TMLBadge
+                          variant={
+                          caseItem.status === 'published' ? 'success' :
+                          caseItem.status === 'accepted' ? 'info' :
+                          caseItem.status === 'withdrawn' ? 'danger' :
+                          'default'
+                          }
+                          size="sm">
+
                               {CASE_STATUSES[caseItem.status]?.label || caseItem.status}
                             </TMLBadge>
                           </div>
@@ -425,128 +425,128 @@ export default function AdminCases() {
                               <MapPin className="w-4 h-4" />
                               {caseItem.state}
                             </span>
-                            {caseItem.estimated_value && (
-                              <span className="flex items-center gap-1 text-emerald-600 font-medium">
+                            {caseItem.estimated_value &&
+                        <span className="flex items-center gap-1 text-emerald-600 font-medium">
                                 <DollarSign className="w-4 h-4" />
                                 ${caseItem.estimated_value.toLocaleString()}
                               </span>
-                            )}
-                            {caseItem.accepted_by_email && (
-                              <span className="flex items-center gap-1">
+                        }
+                            {caseItem.accepted_by_email &&
+                        <span className="flex items-center gap-1">
                                 <User className="w-4 h-4" />
                                 {caseItem.accepted_by_email}
                               </span>
-                            )}
+                        }
                           </div>
                         </div>
                         
                         <div className="flex items-center gap-2">
-                          <TMLButton 
-                            variant="primary" 
-                            size="sm"
-                            onClick={() => handleViewCase(caseItem)}
-                          >
+                          <TMLButton
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleViewCase(caseItem)}>
+
                             <Eye className="w-4 h-4" />
                           </TMLButton>
                           
-                          <TMLButton 
-                            variant={caseItem.is_trending ? 'primary' : 'outline'} 
-                            size="sm"
-                            onClick={() => handleToggleTrending(caseItem)}
-                            loading={saving}
-                          >
+                          <TMLButton
+                        variant={caseItem.is_trending ? 'primary' : 'outline'}
+                        size="sm"
+                        onClick={() => handleToggleTrending(caseItem)}
+                        loading={saving}>
+
                             <TrendingUp className="w-4 h-4" />
                           </TMLButton>
                           
-                          {caseItem.status === 'published' && (
-                            <TMLButton 
-                              variant="outline" 
-                              size="sm"
-                              onClick={() => handleWithdraw(caseItem)}
-                              loading={saving}
-                            >
+                          {caseItem.status === 'published' &&
+                      <TMLButton
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleWithdraw(caseItem)}
+                        loading={saving}>
+
                               Withdraw
                             </TMLButton>
-                          )}
+                      }
                         </div>
                       </div>
                     </TMLCardContent>
                   </TMLCard>
                 </motion.div>
-              ))}
+            )}
             </div>
-          )}
+          }
         </div>
       </main>
 
       {/* Create Case Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      {showCreateModal &&
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto"
-          >
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+
             <h3 className="text-xl font-bold text-gray-900 mb-6">Create New Case</h3>
             
             <div className="space-y-4">
               <TMLInput
-                label="Case Title"
-                placeholder="e.g., Personal Injury Case - Texas"
-                value={newCase.title}
-                onChange={(e) => setNewCase({ ...newCase, title: e.target.value })}
-                required
-              />
+              label="Case Title"
+              placeholder="e.g., Personal Injury Case - Texas"
+              value={newCase.title}
+              onChange={(e) => setNewCase({ ...newCase, title: e.target.value })}
+              required />
+
               
               <TMLTextarea
-                label="Description"
-                placeholder="Describe the case details..."
-                value={newCase.description}
-                onChange={(e) => setNewCase({ ...newCase, description: e.target.value })}
-                rows={4}
-              />
+              label="Description"
+              placeholder="Describe the case details..."
+              value={newCase.description}
+              onChange={(e) => setNewCase({ ...newCase, description: e.target.value })}
+              rows={4} />
+
               
               <div className="grid grid-cols-2 gap-4">
                 <TMLSelect
-                  label="State"
-                  placeholder="Select state"
-                  options={US_STATES.map(s => ({ value: s, label: s }))}
-                  value={newCase.state}
-                  onChange={(e) => setNewCase({ ...newCase, state: e.target.value })}
-                  required
-                />
+                label="State"
+                placeholder="Select state"
+                options={US_STATES.map((s) => ({ value: s, label: s }))}
+                value={newCase.state}
+                onChange={(e) => setNewCase({ ...newCase, state: e.target.value })}
+                required />
+
                 
                 <TMLSelect
-                  label="Practice Area"
-                  placeholder="Select practice area"
-                  options={PRACTICE_AREAS.map(p => ({ value: p, label: p }))}
-                  value={newCase.practice_area}
-                  onChange={(e) => setNewCase({ ...newCase, practice_area: e.target.value })}
-                  required
-                />
+                label="Practice Area"
+                placeholder="Select practice area"
+                options={PRACTICE_AREAS.map((p) => ({ value: p, label: p }))}
+                value={newCase.practice_area}
+                onChange={(e) => setNewCase({ ...newCase, practice_area: e.target.value })}
+                required />
+
               </div>
               
               <TMLInput
-                label="Estimated Value ($)"
-                type="number"
-                placeholder="Enter estimated case value"
-                value={newCase.estimated_value}
-                onChange={(e) => setNewCase({ ...newCase, estimated_value: e.target.value })}
-              />
+              label="Estimated Value ($)"
+              type="number"
+              placeholder="Enter estimated case value"
+              value={newCase.estimated_value}
+              onChange={(e) => setNewCase({ ...newCase, estimated_value: e.target.value })} />
+
               
               <TMLTextarea
-                label="Key Facts (one per line)"
-                placeholder="Enter key facts, one per line..."
-                value={newCase.key_facts}
-                onChange={(e) => setNewCase({ ...newCase, key_facts: e.target.value })}
-                rows={3}
-              />
+              label="Key Facts (one per line)"
+              placeholder="Enter key facts, one per line..."
+              value={newCase.key_facts}
+              onChange={(e) => setNewCase({ ...newCase, key_facts: e.target.value })}
+              rows={3} />
+
               
               <label className="flex items-center gap-3 cursor-pointer">
                 <Checkbox
-                  checked={newCase.is_trending}
-                  onCheckedChange={(checked) => setNewCase({ ...newCase, is_trending: checked })}
-                />
+                checked={newCase.is_trending}
+                onCheckedChange={(checked) => setNewCase({ ...newCase, is_trending: checked })} />
+
                 <span className="text-sm text-gray-700">Mark as trending</span>
               </label>
             </div>
@@ -555,28 +555,28 @@ export default function AdminCases() {
               <TMLButton variant="outline" onClick={() => setShowCreateModal(false)} className="flex-1">
                 Cancel
               </TMLButton>
-              <TMLButton 
-                variant="primary" 
-                onClick={handleCreateCase} 
-                className="flex-1"
-                loading={saving}
-                disabled={!newCase.title || !newCase.state || !newCase.practice_area}
-              >
+              <TMLButton
+              variant="primary"
+              onClick={handleCreateCase}
+              className="flex-1"
+              loading={saving}
+              disabled={!newCase.title || !newCase.state || !newCase.practice_area}>
+
                 Create & Publish
               </TMLButton>
             </div>
           </motion.div>
         </div>
-      )}
+      }
 
       {/* View/Edit Case Modal */}
-      {viewingCase && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      {viewingCase &&
+      <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-          >
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+
             <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-900">{viewingCase.title}</h3>
@@ -591,50 +591,50 @@ export default function AdminCases() {
             
             <div className="p-6 space-y-6">
               {/* Client Information */}
-              {(viewingCase.client_first_name || viewingCase.client_email || viewingCase.client_phone) && (
-                <div className="bg-gray-50 rounded-lg p-4">
+              {(viewingCase.client_first_name || viewingCase.client_email || viewingCase.client_phone) &&
+            <div className="bg-gray-50 rounded-lg p-4">
                   <h4 className="font-semibold text-gray-900 mb-3">Client Contact</h4>
                   <div className="grid md:grid-cols-3 gap-3">
-                    {viewingCase.client_first_name && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                    {viewingCase.client_first_name &&
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                         <User className="w-4 h-4" />
                         <span>{viewingCase.client_first_name} {viewingCase.client_last_name}</span>
                       </div>
-                    )}
-                    {viewingCase.client_email && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                }
+                    {viewingCase.client_email &&
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Mail className="w-4 h-4" />
                         <a href={`mailto:${viewingCase.client_email}`} className="hover:text-[#7e277e]">
                           {viewingCase.client_email}
                         </a>
                       </div>
-                    )}
-                    {viewingCase.client_phone && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                }
+                    {viewingCase.client_phone &&
+                <div className="flex items-center gap-2 text-sm text-gray-600">
                         <Phone className="w-4 h-4" />
                         <a href={`tel:${viewingCase.client_phone}`} className="hover:text-[#7e277e]">
                           {viewingCase.client_phone}
                         </a>
                       </div>
-                    )}
+                }
                   </div>
                 </div>
-              )}
+            }
 
               {/* Key Facts */}
-              {viewingCase.key_facts && viewingCase.key_facts.length > 0 && (
-                <div>
+              {viewingCase.key_facts && viewingCase.key_facts.length > 0 &&
+            <div>
                   <h4 className="font-semibold text-gray-900 mb-3">Key Facts</h4>
                   <ul className="space-y-2">
-                    {viewingCase.key_facts.map((fact, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
+                    {viewingCase.key_facts.map((fact, idx) =>
+                <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
                         <CheckCircle2 className="w-4 h-4 text-emerald-600 mt-0.5 flex-shrink-0" />
                         <span>{fact}</span>
                       </li>
-                    ))}
+                )}
                   </ul>
                 </div>
-              )}
+            }
 
               {/* Case Status Info */}
               <div className="bg-blue-50 rounded-lg p-4">
@@ -645,12 +645,12 @@ export default function AdminCases() {
                       {CASE_STATUSES[viewingCase.status]?.label || viewingCase.status}
                     </span>
                   </div>
-                  {viewingCase.accepted_by_email && (
-                    <div>
+                  {viewingCase.accepted_by_email &&
+                <div>
                       <span className="text-gray-500">Accepted by:</span>
                       <span className="ml-2 font-medium text-gray-900">{viewingCase.accepted_by_email}</span>
                     </div>
-                  )}
+                }
                 </div>
               </div>
 
@@ -659,29 +659,29 @@ export default function AdminCases() {
                 <h4 className="font-semibold text-gray-900">Case Details</h4>
                 
                 <TMLTextarea
-                  label="Case Notes / Description"
-                  placeholder="Add notes or update case description..."
-                  value={viewingCase.description}
-                  onChange={(e) => setViewingCase({ ...viewingCase, description: e.target.value })}
-                  rows={4}
-                />
+                label="Case Notes / Description"
+                placeholder="Add notes or update case description..."
+                value={viewingCase.description}
+                onChange={(e) => setViewingCase({ ...viewingCase, description: e.target.value })}
+                rows={4} />
+
                 
-                <TMLInput
-                  label="Estimated Value ($)"
-                  type="number"
-                  placeholder="Enter estimated case value"
-                  value={viewingCase.estimated_value}
-                  onChange={(e) => setViewingCase({ ...viewingCase, estimated_value: e.target.value })}
-                />
+                
+
+
+
+
+
+
 
                 <TMLTextarea
-                  label="Attorney Notes / Questions"
-                  placeholder="Notes or questions from the accepting attorney..."
-                  helperText="This field shows communications from the attorney who accepted this case"
-                  value={viewingCase.lawyer_notes}
-                  onChange={(e) => setViewingCase({ ...viewingCase, lawyer_notes: e.target.value })}
-                  rows={4}
-                />
+                label="Attorney Notes / Questions"
+                placeholder="Notes or questions from the accepting attorney..."
+                helperText="This field shows communications from the attorney who accepted this case"
+                value={viewingCase.lawyer_notes}
+                onChange={(e) => setViewingCase({ ...viewingCase, lawyer_notes: e.target.value })}
+                rows={4} />
+
               </div>
             </div>
             
@@ -689,19 +689,19 @@ export default function AdminCases() {
               <TMLButton variant="outline" onClick={() => setViewingCase(null)} className="flex-1">
                 Close
               </TMLButton>
-              <TMLButton 
-                variant="primary" 
-                onClick={handleSaveChanges} 
-                className="flex-1"
-                loading={saving}
-              >
+              <TMLButton
+              variant="primary"
+              onClick={handleSaveChanges}
+              className="flex-1"
+              loading={saving}>
+
                 <Edit className="w-4 h-4 mr-2" />
                 Save Changes
               </TMLButton>
             </div>
           </motion.div>
         </div>
-      )}
-    </div>
-  );
+      }
+    </div>);
+
 }
