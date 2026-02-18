@@ -320,6 +320,74 @@ export default function ForLawyers() {
   }];
 
 
+  if (awaitingVerification && !submitted) {
+    return (
+      <div className="min-h-screen bg-[#faf8f5]">
+        <PublicNav />
+        <div className="pt-32 pb-24 px-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="max-w-md mx-auto">
+            <TMLCard variant="elevated" className="text-center">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-[#3a164d]/10 flex items-center justify-center">
+                <Mail className="w-10 h-10 text-[#3a164d]" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">Verify Your Email</h1>
+              <p className="text-gray-600 mb-6">
+                We sent a 6-digit verification code to <strong>{formData.email}</strong>.
+                Enter it below to complete your application.
+              </p>
+
+              <TMLInput
+                label="Verification Code"
+                placeholder="000000"
+                value={verificationCode}
+                onChange={(e) => {
+                  setVerificationCode(e.target.value.replace(/\D/g, '').slice(0, 6));
+                  setVerifyError('');
+                }}
+                className="text-center text-2xl tracking-widest font-mono"
+              />
+
+              {verifyError && (
+                <div className="flex items-center gap-2 p-3 mt-3 bg-red-50 text-red-700 rounded-xl text-sm">
+                  <AlertCircle className="w-4 h-4 shrink-0" />
+                  <span>{verifyError}</span>
+                </div>
+              )}
+
+              <TMLButton
+                variant="primary"
+                className="w-full mt-4"
+                onClick={handleVerifyAndComplete}
+                loading={verifyLoading}
+              >
+                Verify & Submit Application
+              </TMLButton>
+
+              <div className="mt-4 text-sm text-gray-500">
+                Didn't receive a code?{' '}
+                {resendCooldown > 0 ? (
+                  <span className="text-gray-400">Resend in {resendCooldown}s</span>
+                ) : (
+                  <button
+                    onClick={handleResendCode}
+                    disabled={resendLoading}
+                    className="text-[#3a164d] font-semibold hover:underline disabled:opacity-50"
+                  >
+                    {resendLoading ? 'Sending...' : 'Resend Code'}
+                  </button>
+                )}
+              </div>
+            </TMLCard>
+          </motion.div>
+        </div>
+        <PublicFooter />
+      </div>
+    );
+  }
+
   if (submitted) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
