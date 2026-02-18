@@ -169,50 +169,42 @@ export default function AdminLawyers() {
       
       // Send approval email with login instructions
       try {
-        const loginUrl = `${window.location.origin}${createPageUrl('Login')}`;
-        await base44.integrations.Core.SendEmail({
+        const loginUrl = `${window.location.origin}/login`;
+        await base44.functions.invoke('sendApplicationEmails', {
           to: lawyer.created_by,
+          from_name: 'Taylor Made Law Network',
           subject: "You're Approved — Access Your TML Account",
           body: `
-Congratulations ${lawyer.firm_name}!
-
-Your application to join the Taylor Made Law attorney network has been approved!
-
-🎉 You now have full access to:
-• Browse and accept case referrals
-• Access the Case Exchange marketplace
-• Manage your profile and preferences
-• Connect with our attorney community
-
-${parseInt(freeTrialMonths) > 0 ? `🎁 SPECIAL WELCOME OFFER\nAs a welcome gift, you have ${freeTrialMonths} months of FREE membership! No payment required during your trial period.` : ''}
-
-📲 LOG IN TO YOUR ACCOUNT
-Click here to access your attorney dashboard:
-${loginUrl}
-
-Use the email address: ${lawyer.created_by}
-
-If you haven't set your password yet, use the "Forgot Password" link to create one.
-
-💼 NEXT STEPS:
-1. Log in to your account
-2. Complete your profile
-3. Start browsing available cases
-4. Accept your first referral
-
-Need help getting started? Reply to this email or contact our support team at support@taylormadelaw.com
-
-We're excited to have you in our network!
-
-Best regards,
-The Taylor Made Law Team
-
----
-Questions? Contact us at support@taylormadelaw.com
-          `.trim()
+            <div style="font-family: Inter, system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #faf8f5;">
+              <div style="text-align: center; margin-bottom: 28px;">
+                <img src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" alt="Taylor Made Law" style="height: 48px;" />
+              </div>
+              <div style="background: white; border-radius: 16px; padding: 36px; box-shadow: 0 2px 12px rgba(0,0,0,0.07);">
+                <div style="text-align: center; margin-bottom: 28px;">
+                  <div style="width: 64px; height: 64px; background: #d1fae5; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px; font-size: 28px;">🎉</div>
+                  <h1 style="color: #111827; font-size: 24px; font-weight: 700; margin: 0 0 8px;">You're Approved!</h1>
+                  <p style="color: #6b7280; margin: 0;">Welcome to the Taylor Made Law Network, ${lawyer.firm_name}.</p>
+                </div>
+                <p style="color: #374151; font-size: 15px; line-height: 1.7; margin-bottom: 20px;">Your application has been reviewed and approved. You now have full access to browse and accept case referrals in the Case Exchange.</p>
+                ${parseInt(freeTrialMonths) > 0 ? `<div style="background: #f5f0fa; border-radius: 10px; padding: 16px; margin-bottom: 24px;"><p style="color: #3a164d; font-weight: 700; margin: 0 0 6px;">🎁 Special Welcome Offer</p><p style="color: #374151; font-size: 14px; margin: 0;">You have <strong>${freeTrialMonths} months FREE</strong> membership. No payment required during your trial.</p></div>` : ''}
+                <div style="margin-bottom: 24px;">
+                  <p style="color: #374151; font-size: 14px; font-weight: 600; margin-bottom: 10px;">Next steps:</p>
+                  <ul style="color: #374151; font-size: 14px; line-height: 2; padding-left: 0; list-style: none; margin: 0;">
+                    <li>✓ Log in to your dashboard</li>
+                    <li>✓ Complete your profile</li>
+                    <li>✓ Browse available cases in the Case Exchange</li>
+                    <li>✓ Accept your first referral</li>
+                  </ul>
+                </div>
+                <a href="${loginUrl}" style="display: block; background: #3a164d; color: white; text-align: center; padding: 14px; border-radius: 50px; font-weight: 700; text-decoration: none; margin-bottom: 16px;">Log In to Your Dashboard →</a>
+                <p style="color: #9ca3af; font-size: 12px; text-align: center;">Questions? <a href="mailto:support@taylormadelaw.com" style="color: #3a164d;">support@taylormadelaw.com</a></p>
+              </div>
+              <p style="text-align: center; color: #9ca3af; font-size: 11px; margin-top: 24px;">© ${new Date().getFullYear()} Taylor Made Law. All rights reserved.</p>
+            </div>
+          `
         });
       } catch (emailErr) {
-        console.log('Email send attempted');
+        console.log('Approval email attempted');
       }
       
       setSuccess(`${lawyer.firm_name} approved successfully!`);
