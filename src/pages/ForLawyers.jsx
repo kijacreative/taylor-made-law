@@ -167,6 +167,11 @@ export default function ForLawyers() {
   };
 
   const nextStep = () => {
+    if (step === 1) {
+      // Step 1 goes through email verification flow
+      handleSendVerificationEmail();
+      return;
+    }
     if (validateStep(step)) {
       setStep(step + 1);
     }
