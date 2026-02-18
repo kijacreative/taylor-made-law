@@ -48,8 +48,7 @@ export default function ForLawyers() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
-  const [awaitingEmailVerification, setAwaitingEmailVerification] = useState(false);
-  const [sendingVerification, setSendingVerification] = useState(false);
+
 
   const [formData, setFormData] = useState({
     full_name: '',
