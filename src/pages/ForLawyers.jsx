@@ -718,10 +718,12 @@ Taylor Made Law Team
 
 
                   <TMLInput
-                  label="Bar Number (Optional)"
+                  label="Bar Number"
                   placeholder="Your bar registration number"
                   value={formData.bar_number}
-                  onChange={(e) => updateField('bar_number', e.target.value)} />
+                  onChange={(e) => updateField('bar_number', e.target.value)}
+                  error={errors.bar_number}
+                  required />
 
 
                   <div className="flex justify-end pt-4">
