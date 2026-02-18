@@ -112,20 +112,17 @@ export default function LawyerDashboard() {
               animate={{ opacity: 1, y: 0 }}
               className="mb-8"
             >
-              <TMLCard variant="gradient" className="border-l-4 border-l-amber-400">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-white/10 rounded-xl">
-                    <Clock className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-white text-lg">Application Under Review</h3>
-                    <p className="text-white/80 mt-1">
-                      Your application is being reviewed by our team. You'll be able to accept cases once approved.
-                      This typically takes 2-3 business days.
-                    </p>
-                  </div>
+              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
+                <div className="p-2.5 bg-amber-100 rounded-xl shrink-0">
+                  <Clock className="w-5 h-5 text-amber-600" />
                 </div>
-              </TMLCard>
+                <div>
+                  <h3 className="font-semibold text-amber-900 text-base">Your account is pending approval.</h3>
+                  <p className="text-amber-700 text-sm mt-1">
+                    You can explore the platform, but you can't accept or post cases until approved. Our team typically reviews applications within 2–3 business days.
+                  </p>
+                </div>
+              </div>
             </motion.div>
           )}
 
