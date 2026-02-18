@@ -78,44 +78,37 @@ export default function ForLawyers() {
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: null }));
     }
-    // Reset email verification if email changes
-    if (field === 'email' && value !== emailVerifiedFor) {
-      setEmailVerified(false);
-      setEmailVerifiedFor('');
-      setOtpSent(false);
+    // Reset email verification state if email changes
+    if (field === 'email') {
+      setAwaitingEmailVerification(false);
     }
   };
 
-  const handleSendOtp = async () => {
-    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      setErrors((prev) => ({ ...prev, email: 'Please enter a valid email address first' }));
+  const handleSendVerificationEmail = async () => {
+    const stepErrors = {};
+    if (!formData.full_name) stepErrors.full_name = 'Full name is required';
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) stepErrors.email = 'Valid email is required';
+    if (!formData.password || formData.password.length < 8) stepErrors.password = 'Password must be at least 8 characters';
+    if (formData.password !== formData.confirm_password) stepErrors.confirm_password = 'Passwords do not match';
+    if (!formData.phone || formData.phone.length < 10) stepErrors.phone = 'Valid phone number is required';
+    if (!formData.firm_name) stepErrors.firm_name = 'Firm name is required';
+    if (!formData.bar_number) stepErrors.bar_number = 'Bar number is required';
+
+    if (Object.keys(stepErrors).length > 0) {
+      setErrors(stepErrors);
       return;
     }
-    setSendingOtp(true);
+
+    setSendingVerification(true);
     try {
       await base44.functions.invoke('sendEmailOtp', { email: formData.email });
-      setOtpSent(true);
-      setShowOtpModal(true);
-      // Start cooldown
-      setOtpCooldown(60);
-      clearInterval(otpTimerRef.current);
-      otpTimerRef.current = setInterval(() => {
-        setOtpCooldown((prev) => {
-          if (prev <= 1) {clearInterval(otpTimerRef.current);return 0;}
-          return prev - 1;
-        });
-      }, 1000);
+      setAwaitingEmailVerification(true);
+      setErrors({});
     } catch (err) {
-      setErrors((prev) => ({ ...prev, email: err.response?.data?.error || 'Failed to send code' }));
+      setErrors((prev) => ({ ...prev, email: err.response?.data?.error || 'Failed to send verification email' }));
     } finally {
-      setSendingOtp(false);
+      setSendingVerification(false);
     }
-  };
-
-  const handleEmailVerified = (verifiedEmail) => {
-    setEmailVerified(true);
-    setEmailVerifiedFor(verifiedEmail);
-    setShowOtpModal(false);
   };
 
   const toggleArrayItem = (field, item) => {
