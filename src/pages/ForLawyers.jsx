@@ -80,33 +80,6 @@ export default function ForLawyers() {
     }
   };
 
-  const handleSendVerificationEmail = async () => {
-    const stepErrors = {};
-    if (!formData.full_name) stepErrors.full_name = 'Full name is required';
-    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) stepErrors.email = 'Valid email is required';
-    if (!formData.password || formData.password.length < 8) stepErrors.password = 'Password must be at least 8 characters';
-    if (formData.password !== formData.confirm_password) stepErrors.confirm_password = 'Passwords do not match';
-    if (!formData.phone || formData.phone.length < 10) stepErrors.phone = 'Valid phone number is required';
-    if (!formData.firm_name) stepErrors.firm_name = 'Firm name is required';
-    if (!formData.bar_number) stepErrors.bar_number = 'Bar number is required';
-
-    if (Object.keys(stepErrors).length > 0) {
-      setErrors(stepErrors);
-      return;
-    }
-
-    setSendingVerification(true);
-    try {
-      await base44.functions.invoke('sendEmailOtp', { email: formData.email });
-      setAwaitingEmailVerification(true);
-      setErrors({});
-    } catch (err) {
-      setErrors((prev) => ({ ...prev, email: err.response?.data?.error || 'Failed to send verification email' }));
-    } finally {
-      setSendingVerification(false);
-    }
-  };
-
   const toggleArrayItem = (field, item) => {
     const current = formData[field] || [];
     if (current.includes(item)) {
