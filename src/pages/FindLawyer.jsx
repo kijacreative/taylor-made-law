@@ -166,9 +166,9 @@ export default function FindLawyer() {
         consented_at: new Date().toISOString()
       });
 
-      // Send confirmation email to client
+      // Send confirmation email to client (via backend function to bypass auth restriction)
       try {
-        await base44.integrations.Core.SendEmail({
+        await base44.functions.invoke('sendApplicationEmails', {
           to: formData.email,
           from_name: 'Taylor Made Law',
           subject: 'We Received Your Request — Taylor Made Law',
