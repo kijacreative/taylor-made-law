@@ -798,6 +798,19 @@ Taylor Made Law Team
                     </div>
                 }
 
+                  {/* Email Verification Code */}
+                  <div className="pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-600 mb-3">
+                      If you received a verification code by email, enter it below:
+                    </p>
+                    <TMLInput
+                      label="Email Verification Code"
+                      placeholder="Enter code (optional)"
+                      value={verificationCode}
+                      onChange={(e) => setVerificationCode(e.target.value)}
+                    />
+                  </div>
+
                   <div className="flex justify-between pt-4">
                     <TMLButton variant="outline" onClick={prevStep}>
                       <ArrowLeft className="mr-2 w-5 h-5" />
