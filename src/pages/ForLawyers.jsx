@@ -152,6 +152,7 @@ export default function ForLawyers() {
         newErrors.phone = 'Valid phone number is required';
       }
       if (!formData.firm_name) newErrors.firm_name = 'Firm name is required';
+      if (!formData.bar_number) newErrors.bar_number = 'Bar number is required';
     }
 
     if (currentStep === 2) {
