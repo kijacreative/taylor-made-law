@@ -403,8 +403,8 @@ export default function ForLawyers() {
             </div>
             <h1 className="text-3xl font-bold text-gray-900 mb-4">Application Submitted!</h1>
             <p className="text-xl text-gray-600 mb-8">
-              Thank you for applying to join Taylor Made Law. We'll review your application 
-              and get back to you within 2-3 business days.
+              Your email is verified and your application is now in the review queue. 
+              We'll get back to you within 2-3 business days.
             </p>
             <TMLCard variant="cream" className="text-left mb-8">
               <h3 className="font-semibold text-gray-900 mb-4">What happens next?</h3>
@@ -415,7 +415,7 @@ export default function ForLawyers() {
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-[#3a164d] mt-0.5" />
-                  <span className="text-gray-700">If approved, you'll receive account setup instructions</span>
+                  <span className="text-gray-700">You'll receive an email once your application is approved</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <CheckCircle2 className="w-5 h-5 text-[#3a164d] mt-0.5" />
@@ -423,11 +423,14 @@ export default function ForLawyers() {
                 </li>
               </ul>
             </TMLCard>
-            <Link to={createPageUrl('Home')}>
-              <TMLButton variant="primary">
-                Return to Home
-              </TMLButton>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <Link to={createPageUrl('LawyerDashboard')}>
+                <TMLButton variant="primary">Go to My Dashboard</TMLButton>
+              </Link>
+              <Link to={createPageUrl('Home')}>
+                <TMLButton variant="outline">Return to Home</TMLButton>
+              </Link>
+            </div>
           </motion.div>
         </div>
         <PublicFooter />
