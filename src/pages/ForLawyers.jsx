@@ -151,25 +151,81 @@ export default function ForLawyers() {
 
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
-
     setLoading(true);
-
     try {
-      // Register user account with password
+      // Send OTP to verify email first
+      const res = await base44.functions.invoke('sendEmailOtp', { email: formData.email });
+      if (res.data?.error) {
+        setErrors({ submit: res.data.error });
+        return;
+      }
+      // Show verification screen
+      setAwaitingVerification(true);
+      setResendCooldown(60);
+      const interval = setInterval(() => {
+        setResendCooldown((prev) => {
+          if (prev <= 1) { clearInterval(interval); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
+    } catch (error) {
+      setErrors({ submit: error.message || 'An error occurred. Please try again.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    setResendLoading(true);
+    try {
+      const res = await base44.functions.invoke('sendEmailOtp', { email: formData.email });
+      if (res.data?.error) {
+        setVerifyError(res.data.error);
+      } else {
+        setResendCooldown(60);
+        const interval = setInterval(() => {
+          setResendCooldown((prev) => {
+            if (prev <= 1) { clearInterval(interval); return 0; }
+            return prev - 1;
+          });
+        }, 1000);
+        setVerifyError('');
+      }
+    } catch (err) {
+      setVerifyError('Failed to resend code. Please try again.');
+    } finally {
+      setResendLoading(false);
+    }
+  };
+
+  const handleVerifyAndComplete = async () => {
+    if (!verificationCode || verificationCode.length < 6) {
+      setVerifyError('Please enter the 6-digit code sent to your email.');
+      return;
+    }
+    setVerifyLoading(true);
+    setVerifyError('');
+    try {
+      // Verify OTP
+      const verifyRes = await base44.functions.invoke('verifyEmailOtp', {
+        email: formData.email,
+        code: verificationCode
+      });
+      if (!verifyRes.data?.verified) {
+        setVerifyError(verifyRes.data?.error || 'Invalid code. Please try again.');
+        return;
+      }
+
+      // OTP verified — now register + create profile
       await base44.auth.register({
         email: formData.email,
         password: formData.password,
         full_name: formData.full_name
       });
-
-      // Login immediately after registration
       await base44.auth.loginViaEmailPassword(formData.email, formData.password);
-
-      // Get the newly created user
       const user = await base44.auth.me();
 
-      // Create lawyer profile
-      const profileData = {
+      const profile = await base44.entities.LawyerProfile.create({
         user_id: user.id,
         firm_name: formData.firm_name,
         bar_number: formData.bar_number,
@@ -180,11 +236,8 @@ export default function ForLawyers() {
         years_experience: parseInt(formData.years_experience) || 0,
         status: 'pending',
         subscription_status: 'none'
-      };
+      });
 
-      const profile = await base44.entities.LawyerProfile.create(profileData);
-
-      // Create consent log
       await base44.entities.ConsentLog.create({
         entity_type: 'LawyerProfile',
         entity_id: profile.id,
@@ -194,48 +247,6 @@ export default function ForLawyers() {
         consented_at: new Date().toISOString()
       });
 
-      // Send confirmation email via backend function (bypasses "outside app" restriction)
-      try {
-        await base44.functions.invoke('sendApplicationEmails', {
-          to: formData.email,
-          from_name: 'Taylor Made Law Network',
-          subject: 'Application Received — Taylor Made Law Network',
-          body: `
-Dear ${formData.full_name},
-
-Thank you for applying to join the Taylor Made Law attorney network!
-
-✓ Your application has been received and is under review.
-
-Application Summary:
-- Firm: ${formData.firm_name}
-- States: ${formData.states_licensed.join(', ')}
-- Practice Areas: ${formData.practice_areas.join(', ')}
-- Years of Experience: ${formData.years_experience}
-
-What Happens Next?
-Your application is being reviewed by our team. Once approved, you'll be able to log in and view/accept cases in the Case Exchange. This typically takes 2-3 business days.
-
-In the meantime, you can log in to:
-• View your dashboard
-• Update your profile
-• Explore the platform
-
-Login here: ${window.location.origin}
-
-Cases will unlock once your membership is approved.
-
-Questions? Contact us at support@taylormadelaw.com
-
-Best regards,
-The Taylor Made Law Team
-          `.trim()
-        });
-      } catch (emailErr) {
-        console.log('Confirmation email attempted');
-      }
-
-      // Create audit log
       await base44.entities.AuditLog.create({
         entity_type: 'LawyerProfile',
         entity_id: profile.id,
@@ -245,60 +256,44 @@ The Taylor Made Law Team
         notes: `New lawyer application: ${formData.full_name}`
       });
 
-      // Handle attorney invitation if provided
+      // Send confirmation email
+      try {
+        await base44.functions.invoke('sendApplicationEmails', {
+          to: formData.email,
+          from_name: 'Taylor Made Law Network',
+          subject: 'Application Received — Taylor Made Law Network',
+          body: `Dear ${formData.full_name},\n\nThank you for applying to join the Taylor Made Law attorney network!\n\nYour email has been verified and your application is now under review.\n\nApplication Summary:\n- Firm: ${formData.firm_name}\n- States: ${formData.states_licensed.join(', ')}\n- Practice Areas: ${formData.practice_areas.join(', ')}\n- Years of Experience: ${formData.years_experience}\n\nWhat Happens Next?\nOur team will review your credentials and get back to you within 2-3 business days.\n\nQuestions? Contact us at support@taylormadelaw.com\n\nBest regards,\nThe Taylor Made Law Team`
+        });
+      } catch (e) { /* non-critical */ }
+
+      // Optional attorney invitation
       if (formData.invite_attorney_email) {
         const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-
         await base44.entities.Invitation.create({
           inviter_email: formData.email,
           inviter_name: formData.full_name,
           invitee_email: formData.invite_attorney_email,
           invitee_name: formData.invite_attorney_name || '',
           message: formData.invite_message || 'I just applied to Taylor Made Law and thought you might be interested too.',
-          token: token,
+          token,
           status: 'pending',
           sent_at: new Date().toISOString(),
           expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
         });
-
         try {
           await base44.functions.invoke('sendApplicationEmails', {
             to: formData.invite_attorney_email,
             subject: `${formData.full_name} Invites You to Join Taylor Made Law`,
-            body: `
-Hello${formData.invite_attorney_name ? ' ' + formData.invite_attorney_name : ''},
-
-${formData.full_name} has invited you to join the Taylor Made Law attorney network.
-
-${formData.invite_message ? `Personal message: "${formData.invite_message}"` : ''}
-
-Taylor Made Law connects qualified attorneys with pre-screened clients seeking legal representation.
-
-Benefits:
-• Receive pre-screened, quality case referrals
-• Cases matched to your practice areas and jurisdiction
-• First 6 months FREE for qualified attorneys
-
-Apply now: ${window.location.origin}${createPageUrl('ForLawyers')}
-
-Best regards,
-Taylor Made Law Team
-            `.trim()
+            body: `Hello${formData.invite_attorney_name ? ' ' + formData.invite_attorney_name : ''},\n\n${formData.full_name} has invited you to join the Taylor Made Law attorney network.\n\nApply now: ${window.location.origin}${createPageUrl('ForLawyers')}\n\nBest regards,\nTaylor Made Law Team`
           });
-        } catch (inviteErr) {
-          console.log('Invitation email attempted');
-        }
+        } catch (e) { /* non-critical */ }
       }
 
-      // Redirect to dashboard after successful application
-      setTimeout(() => {
-        navigate(createPageUrl('LawyerDashboard'));
-      }, 2000);
+      setSubmitted(true);
     } catch (error) {
-      console.error('Error submitting form:', error);
-      setErrors({ submit: error.message || 'An error occurred. Please try again.' });
+      setVerifyError(error.message || 'An error occurred. Please try again.');
     } finally {
-      setLoading(false);
+      setVerifyLoading(false);
     }
   };
 
