@@ -27,7 +27,7 @@ import TMLTextarea from '@/components/ui/TMLTextarea';
 import TMLSelect from '@/components/ui/TMLSelect';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
-import EmailVerificationModal from '@/components/EmailVerificationModal';
+
 
 const LAWYER_CONSENT_VERSION = '1.0.0';
 
