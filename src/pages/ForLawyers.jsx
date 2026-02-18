@@ -537,7 +537,7 @@ Taylor Made Law Team
           <TMLCard variant="elevated" className="p-8">
             <AnimatePresence mode="wait">
               {/* Step 1: Basic Info */}
-              {step === 1 && !awaitingEmailVerification &&
+              {step === 1 &&
               <motion.div
                 key="step1"
                 initial={{ opacity: 0, x: 20 }}
