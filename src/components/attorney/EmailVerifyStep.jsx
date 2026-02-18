@@ -113,7 +113,7 @@ export default function EmailVerifyStep({ email, onVerified }) {
       )}
 
       {error && !codeSent && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-xl text-sm">
+        <div className="flex items-center gap-2 p-3 mt-3 bg-red-50 text-red-700 rounded-xl text-sm">
           <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{error}</span>
         </div>
