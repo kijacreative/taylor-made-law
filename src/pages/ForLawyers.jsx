@@ -258,7 +258,7 @@ The Taylor Made Law Team
         });
 
         try {
-          await base44.integrations.Core.SendEmail({
+          await base44.functions.invoke('sendApplicationEmails', {
             to: formData.invite_attorney_email,
             subject: `${formData.full_name} Invites You to Join Taylor Made Law`,
             body: `
@@ -282,7 +282,7 @@ Taylor Made Law Team
             `.trim()
           });
         } catch (inviteErr) {
-          console.log('Invitation email send attempted');
+          console.log('Invitation email attempted');
         }
       }
 
