@@ -77,7 +77,7 @@ Deno.serve(async (req) => {
     // Notify admins
     const allUsers = await base44.asServiceRole.entities.User.list();
     const adminUsers = allUsers.filter(u => u.role === 'admin');
-    const adminLink = `${req.headers.get('origin') || 'https://app.taylormadelaw.com'}/admin-lawyer-applications`;
+    const adminLink = `${req.headers.get('origin') || 'https://app.taylormadelaw.com'}/AdminLawyerApplications`;
 
     for (const admin of adminUsers) {
       await fetch('https://api.resend.com/emails', {
