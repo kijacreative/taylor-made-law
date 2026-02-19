@@ -477,30 +477,8 @@ export default function ForLawyers() {
                 </motion.div>
               )}
 
-              {/* ─ Step 2: Email Verification ─ */}
+              {/* ─ Step 2: Practice Details ─ */}
               {step === 2 && (
-                <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
-                  <EmailVerifyStep
-                    email={formData.email}
-                    onVerified={() => {
-                      setEmailVerified(true);
-                      setErrors({});
-                      setStep(3);
-                    }}
-                  />
-                  {errors.email_verify && (
-                    <div className="flex items-center gap-2 p-3 bg-red-50 text-red-700 rounded-xl text-sm">
-                      <AlertCircle className="w-4 h-4 shrink-0" /><span>{errors.email_verify}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-start pt-2">
-                    <TMLButton variant="outline" onClick={prevStep}><ArrowLeft className="mr-2 w-4 h-4" />Back</TMLButton>
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ─ Step 3: Practice Details ─ */}
-              {step === 3 && (
                 <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-11 h-11 rounded-xl bg-[#3a164d]/10 flex items-center justify-center">
