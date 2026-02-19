@@ -86,15 +86,15 @@ export default function ForLawyers() {
       if (!/[0-9]/.test(formData.password) && formData.password) e.password = 'Include at least one number';
       if (formData.password !== formData.confirm_password) e.confirm_password = 'Passwords do not match';
     }
-    if (s === 3) {
+    if (s === 2) {
       if (!formData.states_licensed || formData.states_licensed.length === 0) e.states_licensed = 'Select at least one state';
       if (!formData.practice_areas || formData.practice_areas.length === 0) e.practice_areas = 'Select at least one practice area';
       if (!formData.years_experience) e.years_experience = 'Years of experience is required';
     }
-    if (s === 4) {
+    if (s === 3) {
       if (!formData.bio || formData.bio.length < 50) e.bio = 'Please provide a bio (at least 50 characters)';
     }
-    if (s === 5) {
+    if (s === 4) {
       if (!formData.consent_terms) e.consent_terms = 'You must accept the Terms & Privacy Policy';
       if (!formData.consent_referral) e.consent_referral = 'You must accept the Referral Agreement';
     }
