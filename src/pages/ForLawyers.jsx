@@ -103,15 +103,6 @@ export default function ForLawyers() {
   };
 
   const nextStep = () => {
-    // Step 2 is email verification — handled separately
-    if (step === 2) {
-      if (!emailVerified) {
-        setErrors({ email_verify: 'Please verify your email to continue.' });
-        return;
-      }
-      setStep(3);
-      return;
-    }
     if (validateStep(step)) setStep(step + 1);
   };
 
