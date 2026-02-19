@@ -3,7 +3,6 @@ import { CheckCircle2 } from 'lucide-react';
 
 const STEPS = [
   { label: 'Account' },
-  { label: 'Verify Email' },
   { label: 'Practice' },
   { label: 'Bio & Referrals' },
   { label: 'Agreements' },
