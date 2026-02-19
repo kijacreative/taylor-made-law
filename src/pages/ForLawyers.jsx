@@ -32,7 +32,7 @@ export default function ForLawyers() {
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [emailVerified, setEmailVerified] = useState(false);
+
 
   const [formData, setFormData] = useState({
     full_name: '',
