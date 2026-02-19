@@ -109,7 +109,7 @@ export default function ForLawyers() {
   const prevStep = () => setStep(step - 1);
 
   const handleSubmit = async () => {
-    if (!validateStep(5)) return;
+    if (!validateStep(4)) return;
     setLoading(true);
     try {
       // Register + login
