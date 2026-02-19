@@ -111,13 +111,12 @@ export default function ForLawyers() {
     if (!validateStep(4)) return;
     setLoading(true);
     try {
-      // Register + login
+      // Register (automatically logs in)
       await base44.auth.register({
         email: formData.email,
         password: formData.password,
         full_name: formData.full_name
       });
-      await base44.auth.loginViaEmailPassword(formData.email, formData.password);
       const user = await base44.auth.me();
 
       // Create lawyer profile (pending)
