@@ -49,7 +49,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        from: 'Taylor Made Law <onboarding@resend.dev>',
+        from: 'Taylor Made Law <noreply@taylormadelaw.com>',
         to: [normalizedEmail],
         subject: 'Your Taylor Made Law Verification Code',
         html: `
