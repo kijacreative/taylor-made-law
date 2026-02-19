@@ -35,14 +35,6 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.EmailVerificationOtp.update(otp.id, {
         used_at: new Date().toISOString()
       });
-      await base44.asServiceRole.entities.AuditLog.create({
-        entity_type: 'EmailVerificationOtp',
-        entity_id: normalizedEmail,
-        action: 'code_expired',
-        actor_email: normalizedEmail,
-        actor_role: 'public',
-        notes: `Expired OTP attempted for ${normalizedEmail}`
-      });
       return Response.json({ error: 'Code expired. Please request a new one.' }, { status: 400 });
     }
 
@@ -63,14 +55,6 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.EmailVerificationOtp.update(otp.id, {
         attempts_count: newAttempts
       });
-      await base44.asServiceRole.entities.AuditLog.create({
-        entity_type: 'EmailVerificationOtp',
-        entity_id: normalizedEmail,
-        action: 'verification_attempt_failed',
-        actor_email: normalizedEmail,
-        actor_role: 'public',
-        notes: `Failed OTP attempt #${newAttempts} for ${normalizedEmail}`
-      });
       const remaining = 5 - newAttempts;
       return Response.json({
         error: remaining > 0
@@ -83,15 +67,6 @@ Deno.serve(async (req) => {
     await base44.asServiceRole.entities.EmailVerificationOtp.update(otp.id, {
       used_at: new Date().toISOString(),
       attempts_count: (otp.attempts_count || 0) + 1
-    });
-
-    await base44.asServiceRole.entities.AuditLog.create({
-      entity_type: 'EmailVerificationOtp',
-      entity_id: normalizedEmail,
-      action: 'verification_success',
-      actor_email: normalizedEmail,
-      actor_role: 'public',
-      notes: `Email verified: ${normalizedEmail}`
     });
 
     return Response.json({
