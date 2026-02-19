@@ -52,7 +52,9 @@ export default function EmailVerifyStep({ email, onVerified }) {
       }
       onVerified();
     } catch (e) {
-      setError('Verification failed. Please try again.');
+      // Extract error message from axios error response if available
+      const msg = e?.response?.data?.error || e?.message || 'Verification failed. Please try again.';
+      setError(msg);
     } finally {
       setVerifyLoading(false);
     }
