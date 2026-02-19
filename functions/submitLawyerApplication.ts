@@ -89,16 +89,32 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           from: 'Taylor Made Law Alerts <noreply@taylormadelaw.com>',
           to: [admin.email],
-          subject: `New Attorney Application — ${full_name} (${firm_name})`,
+          subject: `New Lawyer Application — Approval Needed`,
           html: `
-            <div style="font-family: Inter, system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-              <h2 style="color: #3a164d;">New Attorney Application</h2>
-              <p><strong>Name:</strong> ${full_name}</p>
-              <p><strong>Email:</strong> ${normalizedEmail}</p>
-              <p><strong>Firm:</strong> ${firm_name}</p>
-              <p><strong>States:</strong> ${(states_licensed || []).join(', ')}</p>
-              <p><strong>Practice Areas:</strong> ${(practice_areas || []).join(', ')}</p>
-              <a href="${adminLink}" style="display:inline-block; background:#3a164d; color:white; padding:12px 24px; border-radius:50px; text-decoration:none; font-weight:700;">Review Application →</a>
+            <div style="font-family: Inter, system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #faf8f5;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <img src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" alt="Taylor Made Law" style="height: 44px;" />
+              </div>
+              <div style="background: white; border-radius: 16px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.07);">
+                <div style="background: #fef3c7; border-radius: 8px; padding: 10px 16px; margin-bottom: 20px; display: inline-block;">
+                  <span style="font-weight: 700; color: #92400e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em;">⚖️ Action Required</span>
+                </div>
+                <h2 style="color: #111827; font-size: 20px; font-weight: 700; margin: 0 0 8px;">New Lawyer Application — Approval Needed</h2>
+                <p style="color: #6b7280; font-size: 14px; margin: 0 0 24px;">A new lawyer submitted an application and is waiting for approval.</p>
+                <div style="background: #f5f0fa; border-radius: 10px; padding: 18px; margin-bottom: 24px;">
+                  <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #374151;">
+                    <tr><td style="padding: 5px 0; color: #6b7280; width: 35%; font-weight: 500;">Name</td><td style="padding: 5px 0; font-weight: 600;">${full_name}</td></tr>
+                    <tr><td style="padding: 5px 0; color: #6b7280; font-weight: 500;">Email</td><td style="padding: 5px 0; font-weight: 600;">${normalizedEmail}</td></tr>
+                    <tr><td style="padding: 5px 0; color: #6b7280; font-weight: 500;">Firm</td><td style="padding: 5px 0; font-weight: 600;">${firm_name}</td></tr>
+                    <tr><td style="padding: 5px 0; color: #6b7280; font-weight: 500;">States</td><td style="padding: 5px 0; font-weight: 600;">${(states_licensed || []).join(', ') || '—'}</td></tr>
+                    <tr><td style="padding: 5px 0; color: #6b7280; font-weight: 500;">Practice Areas</td><td style="padding: 5px 0; font-weight: 600;">${(practice_areas || []).join(', ') || '—'}</td></tr>
+                  </table>
+                </div>
+                <p style="color: #374151; font-size: 14px; margin: 0 0 20px;">Review and approve here:</p>
+                <a href="${adminLink}" style="display:block; background:#3a164d; color:white; text-align:center; padding:14px 24px; border-radius:50px; font-weight:700; font-size:15px; text-decoration:none;">Review &amp; Approve in Admin Dashboard →</a>
+                <p style="color:#9ca3af; font-size:11px; text-align:center; margin-top:12px;">${adminLink}</p>
+              </div>
+              <p style="text-align:center; color:#9ca3af; font-size:11px; margin-top:20px;">© ${new Date().getFullYear()} Taylor Made Law. All rights reserved.</p>
             </div>
           `
         })
