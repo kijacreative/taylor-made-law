@@ -65,7 +65,8 @@ const AdminSidebar = ({ user }) => {
       label: 'Applications', 
       icon: FileText, 
       path: 'AdminLawyerApplications',
-      active: currentPath.includes('/AdminLawyerApplications')
+      active: currentPath.includes('/AdminLawyerApplications'),
+      count: pendingApps.length
     },
   ];
 
