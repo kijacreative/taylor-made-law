@@ -18,7 +18,6 @@ import TMLSelect from '@/components/ui/TMLSelect';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
 import StepProgress from '@/components/attorney/StepProgress';
-import EmailVerifyStep from '@/components/attorney/EmailVerifyStep';
 
 const LAWYER_CONSENT_VERSION = '1.0.0';
 const REFERRAL_AGREEMENT_VERSION = '1.0.0';
