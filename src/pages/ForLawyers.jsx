@@ -153,15 +153,17 @@ export default function ForLawyers() {
         })
       ]);
 
-      // Audit log
-      await base44.entities.AuditLog.create({
-        entity_type: 'LawyerProfile',
-        entity_id: profile.id,
-        action: 'lawyer_applied',
-        actor_email: formData.email,
-        actor_role: 'lawyer',
-        notes: `New lawyer application: ${formData.full_name} — ${formData.firm_name}`
-      });
+      // Audit log (non-critical)
+      try {
+        await base44.entities.AuditLog.create({
+          entity_type: 'LawyerProfile',
+          entity_id: profile.id,
+          action: 'lawyer_applied',
+          actor_email: formData.email,
+          actor_role: 'lawyer',
+          notes: `New lawyer application: ${formData.full_name} — ${formData.firm_name}`
+        });
+      } catch (e) { /* non-critical */ }
 
       // Handle referral invitations
       const validReferrals = formData.referrals.filter(r => r.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email));
