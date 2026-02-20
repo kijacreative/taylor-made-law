@@ -123,13 +123,9 @@ const PublicNav = () => {
                   <TMLButton variant="outline" className="w-full">My Dashboard</TMLButton>
                 </Link>
               ) : (
-                <TMLButton 
-                  variant="outline" 
-                  className="w-full"
-                  onClick={() => base44.auth.redirectToLogin()}
-                >
-                  Log In
-                </TMLButton>
+                <Link to={createPageUrl('LawyerLogin')} onClick={() => setMobileOpen(false)} className="block">
+                  <TMLButton variant="outline" className="w-full">Attorney Login</TMLButton>
+                </Link>
               )}
               <Link to={createPageUrl('FindLawyer')} onClick={() => setMobileOpen(false)}>
                 <TMLButton variant="primary" className="w-full">Find a Lawyer</TMLButton>
