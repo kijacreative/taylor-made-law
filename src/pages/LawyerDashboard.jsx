@@ -32,7 +32,7 @@ export default function LawyerDashboard() {
       try {
         const isAuth = await base44.auth.isAuthenticated();
         if (!isAuth) {
-          navigate(createPageUrl('Home'));
+          navigate(createPageUrl('LawyerLogin'));
           return;
         }
         const userData = await base44.auth.me();
