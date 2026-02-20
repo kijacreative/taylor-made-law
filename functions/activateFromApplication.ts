@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     }
 
     // Register the user account
-    await base44.asServiceRole.auth.register({
+    await base44.auth.register({
       email: normalizedEmail,
       password,
       full_name: application.full_name
