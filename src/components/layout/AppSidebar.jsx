@@ -52,7 +52,7 @@ const AppSidebar = ({ user, lawyerProfile }) => {
   ];
 
   const handleLogout = () => {
-    base44.auth.logout();
+    base44.auth.logout(createPageUrl('LawyerLogin'));
   };
 
   return (
