@@ -58,7 +58,7 @@ export default function Activate() {
 
       if (response.data?.success) {
         setSuccess(true);
-        setTimeout(() => base44.auth.redirectToLogin(), 2500);
+        setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1'), 2500);
       } else {
         setError(response.data?.error || 'Activation failed. Please try again or contact support.');
       }
