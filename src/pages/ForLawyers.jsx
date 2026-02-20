@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, ArrowLeft, CheckCircle2, AlertCircle,
   Briefcase, DollarSign, Users, Shield,
-  Mail, Plus, Trash2, Loader2
+  Plus, Trash2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import PublicNav from '@/components/layout/PublicNav';
