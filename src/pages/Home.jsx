@@ -273,14 +273,14 @@ export default function Home() {
                 <ArrowRight className="ml-2 w-5 h-5" />
               </TMLButton>
             </Link>
-            <a href="/login">
+            <Link to={createPageUrl('LawyerLogin')}>
               <TMLButton
                 variant="outline"
                 size="lg"
                 className="border-white/30 text-white hover:bg-white/10">
                 Attorney Login
               </TMLButton>
-            </a>
+            </Link>
           </div>
 
           <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-8">
