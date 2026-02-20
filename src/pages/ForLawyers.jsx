@@ -102,30 +102,6 @@ export default function ForLawyers() {
     setStep(2);
   };
 
-  const handleSendCode = async () => {
-    setSendingCode(true);
-    setErrors({});
-    try {
-      const res = await base44.functions.invoke('sendEmailOtp', { email: formData.email });
-      if (res.data?.success) {
-        setCodeSent(true);
-        setShowVerifyModal(true);
-      } else {
-        setErrors({ email_verify: res.data?.error || 'Failed to send code' });
-      }
-    } catch (err) {
-      setErrors({ email_verify: err.response?.data?.error || 'Failed to send code. Try again.' });
-    } finally {
-      setSendingCode(false);
-    }
-  };
-
-  const handleVerified = () => {
-    setEmailVerified(true);
-    setShowVerifyModal(false);
-    setStep(3);
-  };
-
   const nextStep = () => {
     if (validateStep(step)) setStep(step + 1);
   };
