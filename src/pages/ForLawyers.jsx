@@ -81,15 +81,15 @@ export default function ForLawyers() {
       if (!formData.firm_name.trim()) e.firm_name = 'Firm name is required';
       if (!formData.bar_number.trim()) e.bar_number = 'Bar number is required';
     }
-    if (s === 3) {
+    if (s === 2) {
       if (!formData.states_licensed.length) e.states_licensed = 'Select at least one state';
       if (!formData.practice_areas.length) e.practice_areas = 'Select at least one practice area';
       if (!formData.years_experience) e.years_experience = 'Years of experience is required';
     }
-    if (s === 4) {
+    if (s === 3) {
       if (!formData.bio || formData.bio.length < 50) e.bio = 'Please provide a bio (at least 50 characters)';
     }
-    if (s === 5) {
+    if (s === 4) {
       if (!formData.consent_terms) e.consent_terms = 'You must accept the Terms & Privacy Policy';
       if (!formData.consent_referral) e.consent_referral = 'You must accept the Referral Agreement';
     }
