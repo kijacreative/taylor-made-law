@@ -49,7 +49,7 @@ const AdminSidebar = ({ user }) => {
       active: currentPath.includes('/AdminLeads')
     },
     { 
-      label: 'Cases Queue', 
+      label: 'Manage Cases', 
       icon: Scale, 
       path: 'AdminCases',
       active: currentPath.includes('/AdminCases'),
