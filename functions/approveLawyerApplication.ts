@@ -78,8 +78,9 @@ Deno.serve(async (req) => {
               <p style="color: #374151; font-size: 15px; line-height: 1.7;">Hi ${application.full_name},</p>
               <p style="color: #374151; font-size: 15px; line-height: 1.7;">Your attorney profile has been approved for the Taylor Made Law Network. Set your password to access the platform and begin reviewing case opportunities.</p>
               ${parseInt(free_trial_months) > 0 ? `<div style="background:#f5f0fa;border-radius:10px;padding:16px;margin:20px 0;"><p style="color:#3a164d;font-weight:700;margin:0 0 6px;">🎁 ${free_trial_months} Months FREE Membership</p><p style="color:#374151;font-size:14px;margin:0;">No payment required during your trial period.</p></div>` : ''}
-              <a href="${activateUrl}" style="display:block;background:#3a164d;color:white;text-align:center;padding:16px 24px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;margin:28px 0;">Set Your Password →</a>
-              <p style="color:#9ca3af;font-size:12px;text-align:center;">This link expires in 7 days. If you did not apply, ignore this email.</p>
+              <p style="color:#374151;font-size:15px;line-height:1.7;">Click the magic link below to verify your email and set your password — then you'll be taken directly to the attorney login page.</p>
+              <a href="${activateUrl}" style="display:block;background:#3a164d;color:white;text-align:center;padding:16px 24px;border-radius:50px;font-weight:700;font-size:16px;text-decoration:none;margin:28px 0;">Verify Email &amp; Set Password →</a>
+              <p style="color:#9ca3af;font-size:12px;text-align:center;">This magic link expires in 7 days. If you did not apply, ignore this email.</p>
               <p style="color:#9ca3af;font-size:11px;text-align:center;margin-top:8px;">Or paste: ${activateUrl}</p>
             </div>
             <p style="text-align:center;color:#9ca3af;font-size:11px;margin-top:24px;">© ${new Date().getFullYear()} Taylor Made Law. All rights reserved.</p>
