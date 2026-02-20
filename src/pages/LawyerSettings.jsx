@@ -79,6 +79,7 @@ export default function LawyerSettings() {
     const checkAuth = async () => {
       try {
         const isAuth = await base44.auth.isAuthenticated();
+        if (!isAuth) { navigate(createPageUrl('LawyerLogin')); return; }
         if (!isAuth) {
           navigate(createPageUrl('Home'));
           return;
