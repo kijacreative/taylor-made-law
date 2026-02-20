@@ -80,14 +80,10 @@ export default function LawyerSettings() {
       try {
         const isAuth = await base44.auth.isAuthenticated();
         if (!isAuth) { navigate(createPageUrl('LawyerLogin')); return; }
-        if (!isAuth) {
-          navigate(createPageUrl('Home'));
-          return;
-        }
         const userData = await base44.auth.me();
         setUser(userData);
       } catch (e) {
-        navigate(createPageUrl('Home'));
+        navigate(createPageUrl('LawyerLogin'));
       } finally {
         setLoading(false);
       }
