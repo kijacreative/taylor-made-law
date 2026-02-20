@@ -21,10 +21,9 @@ import EmailVerifyModal from '@/components/attorney/EmailVerifyModal';
 
 const STEPS = [
   { number: 1, label: 'Account Setup' },
-  { number: 2, label: 'Verify Email' },
-  { number: 3, label: 'Practice Details' },
-  { number: 4, label: 'Bio & Referrals' },
-  { number: 5, label: 'Review & Agree' },
+  { number: 2, label: 'Practice Details' },
+  { number: 3, label: 'Bio & Referrals' },
+  { number: 4, label: 'Review & Agree' },
 ];
 
 export default function ForLawyers() {
