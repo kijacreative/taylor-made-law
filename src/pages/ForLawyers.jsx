@@ -257,13 +257,6 @@ export default function ForLawyers() {
     <div className="min-h-screen bg-[#faf8f5]">
       <PublicNav />
 
-      {showVerifyModal && (
-        <EmailVerifyModal
-          email={formData.email}
-          onVerified={handleVerified}
-          onClose={() => setShowVerifyModal(false)}
-        />
-      )}
 
       <div className="pt-24 pb-20 px-4">
         <div className="max-w-2xl mx-auto">
