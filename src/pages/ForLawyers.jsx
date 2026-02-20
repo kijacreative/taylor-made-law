@@ -357,8 +357,8 @@ export default function ForLawyers() {
                   </div>
                 )}
 
-                {/* Step 5: Review & Agree */}
-                {step === 5 && (
+                {/* Step 4: Review & Agree */}
+                {step === 4 && (
                   <div className="space-y-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-1">Review & Agree</h2>
 
