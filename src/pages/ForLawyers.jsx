@@ -17,7 +17,6 @@ import TMLTextarea from '@/components/ui/TMLTextarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
 import StepProgress from '@/components/attorney/StepProgress';
-import EmailVerifyModal from '@/components/attorney/EmailVerifyModal';
 
 const STEPS = [
   { number: 1, label: 'Account Setup' },
