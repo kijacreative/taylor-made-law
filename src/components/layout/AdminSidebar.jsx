@@ -56,7 +56,7 @@ const AdminSidebar = ({ user }) => {
       count: pendingCases.length
     },
     { 
-      label: 'Lawyers', 
+      label: 'Manage Lawyers', 
       icon: Users, 
       path: 'AdminLawyers',
       active: currentPath.includes('/AdminLawyers') && !currentPath.includes('Applications')
