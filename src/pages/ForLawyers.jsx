@@ -324,8 +324,8 @@ export default function ForLawyers() {
                   </div>
                 )}
 
-                {/* Step 4: Bio & Referrals */}
-                {step === 4 && (
+                {/* Step 3: Bio & Referrals */}
+                {step === 3 && (
                   <div className="space-y-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-1">Bio & Referrals</h2>
                     <TMLTextarea label="Professional Bio" required value={formData.bio} onChange={e => updateField('bio', e.target.value)} placeholder="Tell us about your legal background, specialties, and what makes you a great fit for our network..." rows={5} error={errors.bio} helperText={`${formData.bio.length} characters (min 50)`} />
