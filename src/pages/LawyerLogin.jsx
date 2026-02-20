@@ -22,9 +22,20 @@ export default function LawyerLogin() {
   const activated = urlParams.get('activated') === '1';
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then(auth => {
-      if (auth) navigate(createPageUrl('LawyerDashboard'), { replace: true });
-      else setCheckingAuth(false);
+    base44.auth.isAuthenticated().then(async (auth) => {
+      if (auth) {
+        const userData = await base44.auth.me();
+        // Admins should not use the attorney portal
+        if (userData.role === 'admin') {
+          await base44.auth.logout();
+          setCheckingAuth(false);
+          setError('This login is for attorneys only. Please use the admin portal.');
+        } else {
+          navigate(createPageUrl('LawyerDashboard'), { replace: true });
+        }
+      } else {
+        setCheckingAuth(false);
+      }
     });
   }, []);
 
@@ -38,6 +49,13 @@ export default function LawyerLogin() {
     setLoading(true);
     try {
       await base44.auth.login({ email: email.toLowerCase().trim(), password });
+      const userData = await base44.auth.me();
+      // Block admin users from using the attorney portal
+      if (userData.role === 'admin') {
+        await base44.auth.logout();
+        setError('This login is for attorneys only. Admin users must use the admin portal.');
+        return;
+      }
       navigate(createPageUrl('LawyerDashboard'), { replace: true });
     } catch (err) {
       setError('Invalid email or password. Please try again.');
