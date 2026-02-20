@@ -43,7 +43,7 @@ const AdminSidebar = ({ user }) => {
       active: currentPath.includes('/AdminDashboard')
     },
     { 
-      label: 'Leads Queue', 
+      label: 'Review Leads', 
       icon: Inbox, 
       path: 'AdminLeads',
       active: currentPath.includes('/AdminLeads')
