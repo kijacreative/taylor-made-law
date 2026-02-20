@@ -4,10 +4,10 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Scale, 
-  Inbox, 
+import {
+  Users,
+  Scale,
+  Inbox,
   DollarSign,
   TrendingUp,
   AlertCircle,
@@ -16,8 +16,8 @@ import {
   Clock,
   BarChart3,
   Loader2,
-  MapPin
-} from 'lucide-react';
+  MapPin } from
+'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
@@ -38,13 +38,13 @@ export default function AdminDashboard() {
           return;
         }
         const userData = await base44.auth.me();
-        
+
         // Only allow admin/associate users
         if (!['admin', 'senior_associate', 'junior_associate'].includes(userData.user_type) && userData.role !== 'admin') {
           navigate(createPageUrl('LawyerDashboard'));
           return;
         }
-        
+
         setUser(userData);
       } catch (e) {
         navigate(createPageUrl('Home'));
@@ -59,69 +59,69 @@ export default function AdminDashboard() {
   const { data: leads = [] } = useQuery({
     queryKey: ['allLeads'],
     queryFn: () => base44.entities.Lead.list('-created_date'),
-    enabled: !!user,
+    enabled: !!user
   });
 
   // Get cases
   const { data: cases = [] } = useQuery({
     queryKey: ['allCases'],
     queryFn: () => base44.entities.Case.list('-created_date'),
-    enabled: !!user,
+    enabled: !!user
   });
 
   // Get lawyers
   const { data: lawyers = [] } = useQuery({
     queryKey: ['allLawyers'],
     queryFn: () => base44.entities.LawyerProfile.list('-created_date'),
-    enabled: !!user,
+    enabled: !!user
   });
 
   // Stats calculations
-  const pendingLeads = leads.filter(l => ['new', 'junior_review', 'senior_review'].includes(l.status)).length;
-  const publishedCases = cases.filter(c => c.status === 'published').length;
-  const acceptedCases = cases.filter(c => c.status === 'accepted').length;
-  const pendingLawyers = lawyers.filter(l => l.status === 'pending').length;
-  const approvedLawyers = lawyers.filter(l => l.status === 'approved').length;
-  
-  const totalReferralValue = cases
-    .filter(c => ['accepted', 'in_progress', 'closed'].includes(c.status))
-    .reduce((sum, c) => sum + (c.estimated_value || 0), 0);
+  const pendingLeads = leads.filter((l) => ['new', 'junior_review', 'senior_review'].includes(l.status)).length;
+  const publishedCases = cases.filter((c) => c.status === 'published').length;
+  const acceptedCases = cases.filter((c) => c.status === 'accepted').length;
+  const pendingLawyers = lawyers.filter((l) => l.status === 'pending').length;
+  const approvedLawyers = lawyers.filter((l) => l.status === 'approved').length;
+
+  const totalReferralValue = cases.
+  filter((c) => ['accepted', 'in_progress', 'closed'].includes(c.status)).
+  reduce((sum, c) => sum + (c.estimated_value || 0), 0);
 
   // Lawyers by state
   const lawyersByState = lawyers.reduce((acc, l) => {
-    (l.states_licensed || []).forEach(state => {
+    (l.states_licensed || []).forEach((state) => {
       acc[state] = (acc[state] || 0) + 1;
     });
     return acc;
   }, {});
 
-  const topStates = Object.entries(lawyersByState)
-    .sort(([,a], [,b]) => b - a)
-    .slice(0, 5);
+  const topStates = Object.entries(lawyersByState).
+  sort(([, a], [, b]) => b - a).
+  slice(0, 5);
 
   // Lawyers by practice area
   const lawyersByArea = lawyers.reduce((acc, l) => {
-    (l.practice_areas || []).forEach(area => {
+    (l.practice_areas || []).forEach((area) => {
       acc[area] = (acc[area] || 0) + 1;
     });
     return acc;
   }, {});
 
-  const topAreas = Object.entries(lawyersByArea)
-    .sort(([,a], [,b]) => b - a)
-    .slice(0, 5);
+  const topAreas = Object.entries(lawyersByArea).
+  sort(([, a], [, b]) => b - a).
+  slice(0, 5);
 
   // Recent leads needing review
-  const recentPendingLeads = leads
-    .filter(l => ['new', 'junior_review'].includes(l.status))
-    .slice(0, 5);
+  const recentPendingLeads = leads.
+  filter((l) => ['new', 'junior_review'].includes(l.status)).
+  slice(0, 5);
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" />
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -137,12 +137,12 @@ export default function AdminDashboard() {
           </div>
 
           {/* Alert Banner */}
-          {pendingLeads > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
-            >
+          {pendingLeads > 0 &&
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-8">
+
               <TMLCard className="border-l-4 border-l-amber-500 bg-amber-50">
                 <TMLCardContent className="flex items-center justify-between py-4">
                   <div className="flex items-center gap-3">
@@ -163,7 +163,7 @@ export default function AdminDashboard() {
                 </TMLCardContent>
               </TMLCard>
             </motion.div>
-          )}
+          }
 
           {/* Stats Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -252,19 +252,19 @@ export default function AdminDashboard() {
                   </Link>
                 </TMLCardHeader>
                 <TMLCardContent>
-                  {recentPendingLeads.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
+                  {recentPendingLeads.length === 0 ?
+                  <div className="text-center py-8 text-gray-500">
                       <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-500" />
                       <p>All caught up! No pending leads.</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {recentPendingLeads.map((lead) => (
-                        <Link 
-                          key={lead.id}
-                          to={`${createPageUrl('AdminLeadDetail')}?id=${lead.id}`}
-                          className="block"
-                        >
+                    </div> :
+
+                  <div className="space-y-3">
+                      {recentPendingLeads.map((lead) =>
+                    <Link
+                      key={lead.id}
+                      to={`${createPageUrl('AdminLeadDetail')}?id=${lead.id}`}
+                      className="block">
+
                           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
                             <div className="flex-1">
                               <p className="font-medium text-gray-900">
@@ -276,17 +276,17 @@ export default function AdminDashboard() {
                                 <span>{lead.state}</span>
                               </div>
                             </div>
-                            <TMLBadge 
-                              variant={lead.status === 'new' ? 'info' : 'warning'}
-                              size="sm"
-                            >
+                            <TMLBadge
+                          variant={lead.status === 'new' ? 'info' : 'warning'}
+                          size="sm">
+
                               {LEAD_STATUSES[lead.status]?.label || lead.status}
                             </TMLBadge>
                           </div>
                         </Link>
-                      ))}
+                    )}
                     </div>
-                  )}
+                  }
                 </TMLCardContent>
               </TMLCard>
             </div>
@@ -302,18 +302,18 @@ export default function AdminDashboard() {
                   </TMLCardTitle>
                 </TMLCardHeader>
                 <TMLCardContent>
-                  {topStates.length === 0 ? (
-                    <p className="text-sm text-gray-500">No data yet</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {topStates.map(([state, count]) => (
-                        <div key={state} className="flex items-center justify-between">
+                  {topStates.length === 0 ?
+                  <p className="text-sm text-gray-500">No data yet</p> :
+
+                  <div className="space-y-3">
+                      {topStates.map(([state, count]) =>
+                    <div key={state} className="flex items-center justify-between">
                           <span className="text-sm text-gray-700">{state}</span>
                           <span className="text-sm font-semibold text-gray-900">{count}</span>
                         </div>
-                      ))}
+                    )}
                     </div>
-                  )}
+                  }
                 </TMLCardContent>
               </TMLCard>
 
@@ -326,51 +326,51 @@ export default function AdminDashboard() {
                   </TMLCardTitle>
                 </TMLCardHeader>
                 <TMLCardContent>
-                  {topAreas.length === 0 ? (
-                    <p className="text-sm text-gray-500">No data yet</p>
-                  ) : (
-                    <div className="space-y-3">
-                      {topAreas.map(([area, count]) => (
-                        <div key={area} className="flex items-center justify-between">
+                  {topAreas.length === 0 ?
+                  <p className="text-sm text-gray-500">No data yet</p> :
+
+                  <div className="space-y-3">
+                      {topAreas.map(([area, count]) =>
+                    <div key={area} className="flex items-center justify-between">
                           <span className="text-sm text-gray-700">{area}</span>
                           <span className="text-sm font-semibold text-gray-900">{count}</span>
                         </div>
-                      ))}
+                    )}
                     </div>
-                  )}
+                  }
                 </TMLCardContent>
               </TMLCard>
 
               {/* Quick Actions */}
-              <TMLCard variant="cream">
-                <TMLCardHeader>
-                  <TMLCardTitle className="text-base">Quick Actions</TMLCardTitle>
-                </TMLCardHeader>
-                <TMLCardContent className="space-y-2">
-                  <Link to={createPageUrl('AdminLeads')} className="block">
-                    <TMLButton variant="outline" className="w-full justify-start">
-                      <Inbox className="w-4 h-4 mr-2" />
-                      Review Leads
-                    </TMLButton>
-                  </Link>
-                  <Link to={createPageUrl('AdminLawyers')} className="block">
-                    <TMLButton variant="outline" className="w-full justify-start">
-                      <Users className="w-4 h-4 mr-2" />
-                      Manage Lawyers
-                    </TMLButton>
-                  </Link>
-                  <Link to={createPageUrl('AdminCases')} className="block">
-                    <TMLButton variant="outline" className="w-full justify-start">
-                      <Scale className="w-4 h-4 mr-2" />
-                      Manage Cases
-                    </TMLButton>
-                  </Link>
-                </TMLCardContent>
-              </TMLCard>
+              
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             </div>
           </div>
         </div>
       </main>
-    </div>
-  );
+    </div>);
+
 }
