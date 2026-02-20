@@ -434,17 +434,12 @@ export default function ForLawyers() {
                       Continue <ArrowRight className="w-4 h-4 ml-1" />
                     </TMLButton>
                   )}
-                  {step === 2 && emailVerified && (
-                    <TMLButton variant="primary" onClick={() => setStep(3)}>
-                      Continue <ArrowRight className="w-4 h-4 ml-1" />
-                    </TMLButton>
-                  )}
-                  {(step === 3 || step === 4) && (
+                  {(step === 2 || step === 3) && (
                     <TMLButton variant="primary" onClick={nextStep}>
                       Continue <ArrowRight className="w-4 h-4 ml-1" />
                     </TMLButton>
                   )}
-                  {step === 5 && (
+                  {step === 4 && (
                     <TMLButton variant="primary" loading={loading} onClick={handleSubmit}>
                       Submit Application
                     </TMLButton>
