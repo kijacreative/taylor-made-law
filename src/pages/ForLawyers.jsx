@@ -32,10 +32,7 @@ export default function ForLawyers() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
-  const [emailVerified, setEmailVerified] = useState(false);
-  const [showVerifyModal, setShowVerifyModal] = useState(false);
-  const [sendingCode, setSendingCode] = useState(false);
-  const [codeSent, setCodeSent] = useState(false);
+
 
   const [formData, setFormData] = useState({
     full_name: '',
