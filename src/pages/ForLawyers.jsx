@@ -292,44 +292,8 @@ export default function ForLawyers() {
                   </div>
                 )}
 
-                {/* Step 2: Verify Email */}
+                {/* Step 2: Practice Details */}
                 {step === 2 && (
-                  <div className="text-center space-y-6">
-                    <div className="w-16 h-16 bg-[#f5f0fa] rounded-full flex items-center justify-center mx-auto">
-                      <Mail className="w-8 h-8 text-[#3a164d]" />
-                    </div>
-                    <h2 className="text-xl font-bold text-gray-900">Verify Your Email</h2>
-                    <p className="text-gray-600">We'll send a 6-digit code to <strong>{formData.email}</strong></p>
-
-                    {emailVerified ? (
-                      <div className="flex items-center justify-center gap-2 text-emerald-600">
-                        <CheckCircle2 className="w-5 h-5" />
-                        <span className="font-semibold">Email verified!</span>
-                      </div>
-                    ) : (
-                      <>
-                        {errors.email_verify && (
-                          <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-left">
-                            <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
-                            <p className="text-sm text-red-800">{errors.email_verify}</p>
-                          </div>
-                        )}
-                        <TMLButton variant="primary" loading={sendingCode} onClick={handleSendCode} className="w-full">
-                          {codeSent ? 'Resend Verification Code' : 'Send Verification Code'}
-                        </TMLButton>
-                        {codeSent && (
-                          <p className="text-sm text-gray-500">
-                            Didn't get it?{' '}
-                            <button onClick={handleSendCode} className="text-[#3a164d] hover:underline font-medium">Resend</button>
-                          </p>
-                        )}
-                      </>
-                    )}
-                  </div>
-                )}
-
-                {/* Step 3: Practice Details */}
-                {step === 3 && (
                   <div className="space-y-6">
                     <h2 className="text-xl font-bold text-gray-900 mb-1">Practice Details</h2>
                     <div>
