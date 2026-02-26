@@ -69,6 +69,12 @@ const AdminSidebar = ({ user }) => {
       active: currentPath.includes('/AdminLawyerApplications'),
       count: pendingApps.length
     },
+    { 
+      label: 'Blog & Resources', 
+      icon: BookOpen, 
+      path: 'AdminBlog',
+      active: currentPath.includes('/AdminBlog')
+    },
   ];
 
   const handleLogout = () => {
