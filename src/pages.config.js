@@ -67,12 +67,12 @@ import GroupDetail from './pages/GroupDetail';
 import Groups from './pages/Groups';
 import Home from './pages/Home';
 import LawyerDashboard from './pages/LawyerDashboard';
+import LawyerLogin from './pages/LawyerLogin';
 import LawyerSettings from './pages/LawyerSettings';
 import MassTortDetail from './pages/MassTortDetail';
 import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
-import LawyerLogin from './pages/LawyerLogin';
 import __Layout from './Layout.jsx';
 
 
@@ -97,12 +97,12 @@ export const PAGES = {
     "Groups": Groups,
     "Home": Home,
     "LawyerDashboard": LawyerDashboard,
+    "LawyerLogin": LawyerLogin,
     "LawyerSettings": LawyerSettings,
     "MassTortDetail": MassTortDetail,
     "MassTorts": MassTorts,
     "MyCases": MyCases,
     "ResetPassword": ResetPassword,
-    "LawyerLogin": LawyerLogin,
 }
 
 export const pagesConfig = {
