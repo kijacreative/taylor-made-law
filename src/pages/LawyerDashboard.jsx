@@ -62,12 +62,18 @@ export default function LawyerDashboard() {
 
   const lawyerProfile = profiles[0] || null;
 
-  // Get available cases
-  const { data: availableCases = [] } = useQuery({
-    queryKey: ['availableCases'],
-    queryFn: () => base44.entities.Case.filter({ status: 'published' }),
+  // Use server-enforced endpoint — teaser-safe for pending lawyers
+  const { data: caseData } = useQuery({
+    queryKey: ['casesForLawyer', user?.id],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getCasesForLawyer', {});
+      return res.data;
+    },
     enabled: !!user,
   });
+
+  const availableCases = caseData?.cases || [];
+  const caseStats = caseData?.stats || { total: 0, byState: {}, byPracticeArea: {} };
 
   // Get my cases
   const { data: myCases = [] } = useQuery({
@@ -76,7 +82,7 @@ export default function LawyerDashboard() {
     enabled: !!user?.email,
   });
 
-  // Get trending cases (cases marked as trending)
+  // Trending cases — only title/state/practice_area exposed even for pending
   const trendingCases = availableCases.filter(c => c.is_trending).slice(0, 3);
 
   if (loading) {
@@ -98,32 +104,32 @@ export default function LawyerDashboard() {
       <main className="ml-64 p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900">
-              Welcome{user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}
-            </h1>
-            <p className="text-gray-600 mt-1">Here's what's happening with your cases today.</p>
+          <div className="mb-6">
+          <h1 className="text-3xl font-bold text-gray-900">
+          Welcome{user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}
+          </h1>
+          <p className="text-gray-600 mt-1">Here's what's happening with your cases today.</p>
           </div>
 
           {/* Status Banners */}
           {isPending && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
-            >
-              <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
-                <div className="p-2.5 bg-amber-100 rounded-xl shrink-0">
-                  <Clock className="w-5 h-5 text-amber-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-amber-900 text-base">Your account is pending approval.</h3>
-                  <p className="text-amber-700 text-sm mt-1">
-                    You can explore the platform, but you can't accept or post cases until approved. Our team typically reviews applications within 2–3 business days.
-                  </p>
-                </div>
-              </div>
-            </motion.div>
+          <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-6"
+          >
+          <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 flex items-start gap-4">
+            <div className="p-2.5 bg-amber-100 rounded-xl shrink-0">
+              <Clock className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h3 className="font-semibold text-amber-900 text-base">Pending Approval — You can explore the platform, but full case details unlock after approval.</h3>
+              <p className="text-amber-700 text-sm mt-1">
+                Our team typically reviews applications within 2–3 business days. In the meantime, you can browse blog posts, mass torts, and see a preview of the case marketplace below.
+              </p>
+            </div>
+          </div>
+          </motion.div>
           )}
 
           {needsReferralAgreement && (
@@ -160,14 +166,15 @@ export default function LawyerDashboard() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-500 mb-1">Available Cases</p>
-                    <p className="text-3xl font-bold text-gray-900">{availableCases.length}</p>
+                    <p className="text-3xl font-bold text-gray-900">{caseStats.total}</p>
+                    {isPending && <p className="text-xs text-amber-600 mt-0.5">Preview only</p>}
                   </div>
                   <div className="p-3 bg-emerald-100 rounded-xl">
                     <Scale className="w-6 h-6 text-emerald-600" />
                   </div>
                 </div>
                 <Link to={createPageUrl('CaseExchange')} className="text-[#3a164d] text-sm font-medium mt-4 flex items-center gap-1 hover:underline">
-                  Browse Cases <ArrowRight className="w-4 h-4" />
+                  {isPending ? 'Preview Marketplace' : 'Browse Cases'} <ArrowRight className="w-4 h-4" />
                 </Link>
               </TMLCardContent>
             </TMLCard>
@@ -219,6 +226,7 @@ export default function LawyerDashboard() {
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-[#3a164d]" />
                   <h2 className="text-xl font-bold text-gray-900">Trending Cases</h2>
+                  {isPending && <span className="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Preview</span>}
                 </div>
                 <Link to={createPageUrl('CaseExchange')} className="text-[#3a164d] text-sm font-medium hover:underline">
                   View All
@@ -227,30 +235,47 @@ export default function LawyerDashboard() {
               
               <div className="grid md:grid-cols-3 gap-4">
                 {trendingCases.map((caseItem) => (
-                  <Link 
-                    key={caseItem.id} 
-                    to={`${createPageUrl('CaseDetail')}?id=${caseItem.id}`}
-                  >
-                    <TMLCard hover className="h-full">
+                  isPending ? (
+                    <TMLCard key={caseItem.id} className="h-full opacity-90">
                       <TMLCardContent>
                         <div className="flex items-start justify-between mb-3">
                           <TMLBadge variant="trending" size="sm">
                             <TrendingUp className="w-3 h-3 mr-1" /> Trending
                           </TMLBadge>
-                          {caseItem.estimated_value && (
-                            <span className="text-sm font-semibold text-emerald-600">
-                              ${caseItem.estimated_value.toLocaleString()}
-                            </span>
-                          )}
                         </div>
                         <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{caseItem.title}</h3>
-                        <div className="flex flex-wrap gap-2">
+                        <div className="flex flex-wrap gap-2 mb-2">
                           <TMLBadge variant="primary" size="sm">{caseItem.practice_area}</TMLBadge>
                           <TMLBadge variant="default" size="sm">{caseItem.state}</TMLBadge>
                         </div>
+                        <p className="text-xs text-amber-600 flex items-center gap-1 mt-2">
+                          <Shield className="w-3 h-3" /> Details unlock after approval
+                        </p>
                       </TMLCardContent>
                     </TMLCard>
-                  </Link>
+                  ) : (
+                    <Link key={caseItem.id} to={`${createPageUrl('CaseDetail')}?id=${caseItem.id}`}>
+                      <TMLCard hover className="h-full">
+                        <TMLCardContent>
+                          <div className="flex items-start justify-between mb-3">
+                            <TMLBadge variant="trending" size="sm">
+                              <TrendingUp className="w-3 h-3 mr-1" /> Trending
+                            </TMLBadge>
+                            {caseItem.estimated_value && (
+                              <span className="text-sm font-semibold text-emerald-600">
+                                ${caseItem.estimated_value.toLocaleString()}
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{caseItem.title}</h3>
+                          <div className="flex flex-wrap gap-2">
+                            <TMLBadge variant="primary" size="sm">{caseItem.practice_area}</TMLBadge>
+                            <TMLBadge variant="default" size="sm">{caseItem.state}</TMLBadge>
+                          </div>
+                        </TMLCardContent>
+                      </TMLCard>
+                    </Link>
+                  )
                 ))}
               </div>
             </div>
@@ -259,7 +284,10 @@ export default function LawyerDashboard() {
           {/* Recent Cases */}
           <div>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">Recent Available Cases</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold text-gray-900">Recent Available Cases</h2>
+                {isPending && <span className="text-xs font-medium bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">Preview Only</span>}
+              </div>
               <Link to={createPageUrl('CaseExchange')} className="text-[#3a164d] text-sm font-medium hover:underline">
                 View All
               </Link>
@@ -274,32 +302,45 @@ export default function LawyerDashboard() {
             ) : (
               <div className="space-y-4">
                 {availableCases.slice(0, 5).map((caseItem) => (
-                  <Link 
-                    key={caseItem.id} 
-                    to={`${createPageUrl('CaseDetail')}?id=${caseItem.id}`}
-                  >
-                    <TMLCard hover className="flex items-center justify-between">
-                      <TMLCardContent className="flex items-center gap-4 w-full py-2">
+                  isPending ? (
+                    <TMLCard key={caseItem.id} className="flex items-center justify-between opacity-90">
+                      <TMLCardContent className="flex items-center gap-4 w-full py-3">
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900">{caseItem.title}</h3>
                           <div className="flex flex-wrap gap-2 mt-2">
                             <TMLBadge variant="primary" size="sm">{caseItem.practice_area}</TMLBadge>
                             <TMLBadge variant="default" size="sm">{caseItem.state}</TMLBadge>
-                            {caseItem.is_trending && (
-                              <TMLBadge variant="trending" size="sm">Trending</TMLBadge>
-                            )}
+                            {caseItem.is_trending && <TMLBadge variant="trending" size="sm">Trending</TMLBadge>}
                           </div>
                         </div>
-                        {caseItem.estimated_value && (
-                          <div className="text-right">
-                            <p className="text-sm text-gray-500">Est. Value</p>
-                            <p className="font-semibold text-emerald-600">${caseItem.estimated_value.toLocaleString()}</p>
-                          </div>
-                        )}
-                        <ArrowRight className="w-5 h-5 text-gray-400" />
+                        <div className="flex items-center gap-1.5 text-amber-600 text-sm font-medium">
+                          <Shield className="w-4 h-4" /> Locked
+                        </div>
                       </TMLCardContent>
                     </TMLCard>
-                  </Link>
+                  ) : (
+                    <Link key={caseItem.id} to={`${createPageUrl('CaseDetail')}?id=${caseItem.id}`}>
+                      <TMLCard hover className="flex items-center justify-between">
+                        <TMLCardContent className="flex items-center gap-4 w-full py-2">
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-900">{caseItem.title}</h3>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <TMLBadge variant="primary" size="sm">{caseItem.practice_area}</TMLBadge>
+                              <TMLBadge variant="default" size="sm">{caseItem.state}</TMLBadge>
+                              {caseItem.is_trending && <TMLBadge variant="trending" size="sm">Trending</TMLBadge>}
+                            </div>
+                          </div>
+                          {caseItem.estimated_value && (
+                            <div className="text-right">
+                              <p className="text-sm text-gray-500">Est. Value</p>
+                              <p className="font-semibold text-emerald-600">${caseItem.estimated_value.toLocaleString()}</p>
+                            </div>
+                          )}
+                          <ArrowRight className="w-5 h-5 text-gray-400" />
+                        </TMLCardContent>
+                      </TMLCard>
+                    </Link>
+                  )
                 ))}
               </div>
             )}
