@@ -64,8 +64,14 @@ export default function LawyerLogin() {
     }
     setLoading(true);
     try {
-      await base44.auth.login({ email: email.toLowerCase().trim(), password });
-      // If login succeeds without OTP, check role and redirect
+      const result = await base44.auth.login({ email: email.toLowerCase().trim(), password });
+      // Some SDK versions return an OTP-required signal in the response
+      if (result && (result.otp_required || result.requires_otp || result.mfa_required)) {
+        setStep('otp');
+        setResendCooldown(60);
+        return;
+      }
+      // If login succeeds, check role and redirect
       const userData = await base44.auth.me();
       if (userData.role === 'admin') {
         await base44.auth.logout();
@@ -75,13 +81,15 @@ export default function LawyerLogin() {
       navigate(createPageUrl('LawyerDashboard'), { replace: true });
     } catch (err) {
       // Check if error indicates OTP is needed
-      const msg = err.response?.data?.error || err.message || '';
-      if (msg.toLowerCase().includes('otp') || msg.toLowerCase().includes('verif') || msg.toLowerCase().includes('code')) {
-        // OTP required — move to OTP step
+      const msg = (err.response?.data?.error || err.response?.data?.message || err.message || '').toLowerCase();
+      if (msg.includes('otp') || msg.includes('verif') || msg.includes('code') || msg.includes('two') || msg.includes('mfa')) {
         setStep('otp');
         setResendCooldown(60);
-      } else {
+      } else if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('password') || msg.includes('credentials') || msg.includes('not found')) {
         setError('Invalid email or password. Please try again.');
+      } else {
+        // Unknown error — show it directly to help debug
+        setError(err.response?.data?.message || err.response?.data?.error || err.message || 'Login failed. Please try again.');
       }
     } finally {
       setLoading(false);

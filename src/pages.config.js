@@ -48,12 +48,18 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import Activate from './pages/Activate';
+import AdminBlog from './pages/AdminBlog';
+import AdminBlogEdit from './pages/AdminBlogEdit';
 import AdminCases from './pages/AdminCases';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLawyerApplications from './pages/AdminLawyerApplications';
 import AdminLawyers from './pages/AdminLawyers';
 import AdminLeadDetail from './pages/AdminLeadDetail';
 import AdminLeads from './pages/AdminLeads';
+import AdminPopupEdit from './pages/AdminPopupEdit';
+import AdminPopups from './pages/AdminPopups';
+import AdminResourceEdit from './pages/AdminResourceEdit';
+import AdminResources from './pages/AdminResources';
 import AuthRedirect from './pages/AuthRedirect';
 import CaseDetail from './pages/CaseDetail';
 import CaseExchange from './pages/CaseExchange';
@@ -66,34 +72,34 @@ import ForgotPassword from './pages/ForgotPassword';
 import GroupDetail from './pages/GroupDetail';
 import Groups from './pages/Groups';
 import Home from './pages/Home';
+import LawyerBlog from './pages/LawyerBlog';
+import LawyerBlogDetail from './pages/LawyerBlogDetail';
 import LawyerDashboard from './pages/LawyerDashboard';
 import LawyerLogin from './pages/LawyerLogin';
+import LawyerResourceDetail from './pages/LawyerResourceDetail';
+import LawyerResources from './pages/LawyerResources';
 import LawyerSettings from './pages/LawyerSettings';
 import MassTortDetail from './pages/MassTortDetail';
 import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
-import AdminBlog from './pages/AdminBlog';
-import AdminBlogEdit from './pages/AdminBlogEdit';
-import LawyerBlog from './pages/LawyerBlog';
-import LawyerBlogDetail from './pages/LawyerBlogDetail';
-import AdminPopups from './pages/AdminPopups';
-import AdminPopupEdit from './pages/AdminPopupEdit';
-import AdminResources from './pages/AdminResources';
-import AdminResourceEdit from './pages/AdminResourceEdit';
-import LawyerResources from './pages/LawyerResources';
-import LawyerResourceDetail from './pages/LawyerResourceDetail';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "Activate": Activate,
+    "AdminBlog": AdminBlog,
+    "AdminBlogEdit": AdminBlogEdit,
     "AdminCases": AdminCases,
     "AdminDashboard": AdminDashboard,
     "AdminLawyerApplications": AdminLawyerApplications,
     "AdminLawyers": AdminLawyers,
     "AdminLeadDetail": AdminLeadDetail,
     "AdminLeads": AdminLeads,
+    "AdminPopupEdit": AdminPopupEdit,
+    "AdminPopups": AdminPopups,
+    "AdminResourceEdit": AdminResourceEdit,
+    "AdminResources": AdminResources,
     "AuthRedirect": AuthRedirect,
     "CaseDetail": CaseDetail,
     "CaseExchange": CaseExchange,
@@ -106,23 +112,17 @@ export const PAGES = {
     "GroupDetail": GroupDetail,
     "Groups": Groups,
     "Home": Home,
+    "LawyerBlog": LawyerBlog,
+    "LawyerBlogDetail": LawyerBlogDetail,
     "LawyerDashboard": LawyerDashboard,
     "LawyerLogin": LawyerLogin,
+    "LawyerResourceDetail": LawyerResourceDetail,
+    "LawyerResources": LawyerResources,
     "LawyerSettings": LawyerSettings,
     "MassTortDetail": MassTortDetail,
     "MassTorts": MassTorts,
     "MyCases": MyCases,
     "ResetPassword": ResetPassword,
-    "AdminBlog": AdminBlog,
-    "AdminBlogEdit": AdminBlogEdit,
-    "LawyerBlog": LawyerBlog,
-    "LawyerBlogDetail": LawyerBlogDetail,
-    "AdminPopups": AdminPopups,
-    "AdminPopupEdit": AdminPopupEdit,
-    "AdminResources": AdminResources,
-    "AdminResourceEdit": AdminResourceEdit,
-    "LawyerResources": LawyerResources,
-    "LawyerResourceDetail": LawyerResourceDetail,
 }
 
 export const pagesConfig = {
