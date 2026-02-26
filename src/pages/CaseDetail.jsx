@@ -62,15 +62,23 @@ export default function CaseDetail() {
 
   const lawyerProfile = profiles[0] || null;
   const isPending = !lawyerProfile || lawyerProfile.status === 'pending';
+  const isApproved = lawyerProfile?.status === 'approved';
 
-  // Get case
+  // Redirect pending lawyers immediately — don't even fetch case data
+  useEffect(() => {
+    if (!loading && isPending && lawyerProfile !== undefined) {
+      navigate(createPageUrl('CaseExchange') + '?blocked=1', { replace: true });
+    }
+  }, [loading, isPending, lawyerProfile]);
+
+  // Get case — only for approved lawyers
   const { data: caseItem, isLoading: caseLoading } = useQuery({
     queryKey: ['case', caseId],
     queryFn: async () => {
       const cases = await base44.entities.Case.filter({ id: caseId });
       return cases[0] || null;
     },
-    enabled: !!caseId && !isPending,
+    enabled: !!caseId && !!user && isApproved,
   });
 
   const handleAcceptCase = async () => {
@@ -157,43 +165,10 @@ Taylor Made Law Team
     }
   };
 
-  if (loading || caseLoading) {
+  if (loading || caseLoading || (isPending && lawyerProfile !== undefined)) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#7e277e]" />
-      </div>
-    );
-  }
-
-  // Block pending lawyers from viewing case details
-  if (isPending) {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <AppSidebar user={user} lawyerProfile={lawyerProfile} />
-        <main className="ml-64 p-8">
-          <div className="max-w-4xl mx-auto">
-            <Link to={createPageUrl('CaseExchange')} className="inline-flex items-center text-gray-600 hover:text-[#7e277e] mb-6">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Case Exchange
-            </Link>
-            
-            <TMLCard className="border-l-4 border-l-amber-500 bg-amber-50">
-              <TMLCardContent className="p-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
-                  <Shield className="w-8 h-8 text-amber-600" />
-                </div>
-                <h2 className="text-2xl font-bold text-gray-900 mb-3">This Case Is Not Available Until Your Account Is Approved</h2>
-                <p className="text-gray-700 mb-6 max-w-lg mx-auto">
-                  Your application is currently under review. Once approved, you'll be able to view case details and accept cases. This typically takes 2-3 business days.
-                </p>
-                <div className="flex items-center justify-center gap-2 text-gray-600">
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Application under review...</span>
-                </div>
-              </TMLCardContent>
-            </TMLCard>
-          </div>
-        </main>
       </div>
     );
   }
