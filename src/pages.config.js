@@ -73,6 +73,10 @@ import MassTortDetail from './pages/MassTortDetail';
 import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
+import AdminBlog from './pages/AdminBlog';
+import AdminBlogEdit from './pages/AdminBlogEdit';
+import LawyerBlog from './pages/LawyerBlog';
+import LawyerBlogDetail from './pages/LawyerBlogDetail';
 import __Layout from './Layout.jsx';
 
 
@@ -103,6 +107,10 @@ export const PAGES = {
     "MassTorts": MassTorts,
     "MyCases": MyCases,
     "ResetPassword": ResetPassword,
+    "AdminBlog": AdminBlog,
+    "AdminBlogEdit": AdminBlogEdit,
+    "LawyerBlog": LawyerBlog,
+    "LawyerBlogDetail": LawyerBlogDetail,
 }
 
 export const pagesConfig = {

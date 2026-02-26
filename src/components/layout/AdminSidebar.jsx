@@ -10,7 +10,8 @@ import {
   LogOut,
   ChevronLeft,
   Inbox,
-  BarChart3
+  BarChart3,
+  BookOpen
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
