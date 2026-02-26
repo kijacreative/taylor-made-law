@@ -58,7 +58,7 @@ Deno.serve(async (req) => {
 
     // Create the user account via platform invite (so they can actually log in)
     try {
-      await base44.asServiceRole.users.inviteUser(email.toLowerCase(), 'user');
+      await base44.auth.inviteUser(email.toLowerCase(), 'user');
     } catch (inviteErr) {
       // User may already exist — that's fine, continue
       console.log('User invite note:', inviteErr.message);
