@@ -1,5 +1,46 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+const LOGO = 'https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png';
+const YEAR = new Date().getFullYear();
+
+function buildOtpEmail(code) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f4f1ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f1ee;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
+      <tr><td style="text-align:center;padding-bottom:28px;">
+        <img src="${LOGO}" width="200" alt="Taylor Made Law" style="width:200px;max-width:200px;height:auto;display:block;margin:0 auto;" />
+      </td></tr>
+      <tr><td style="background:#ffffff;border-radius:16px;padding:40px 48px;box-shadow:0 2px 16px rgba(0,0,0,0.08);">
+        <h1 style="margin:0 0 8px;color:#111827;font-size:24px;font-weight:700;line-height:1.3;">Email Verification</h1>
+        <p style="margin:0 0 24px;color:#6b7280;font-size:15px;">Enter the code below to verify your email address.</p>
+        <p style="margin:0 0 20px;color:#333333;font-size:15px;line-height:1.7;">Your 6-digit verification code is:</p>
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+          <tr><td align="center">
+            <div style="display:inline-block;background:#f5f0fa;border:2px solid #3a164d;border-radius:12px;padding:24px 32px;text-align:center;">
+              <span style="font-size:44px;font-weight:800;letter-spacing:14px;color:#3a164d;font-variant-numeric:tabular-nums;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">${code}</span>
+            </div>
+          </td></tr>
+        </table>
+        <p style="margin:0 0 8px;color:#4b5563;font-size:14px;line-height:1.7;">This code expires in <strong>10 minutes</strong>.</p>
+        <p style="margin:0;color:#9ca3af;font-size:13px;line-height:1.7;">If you did not request this code, you can safely ignore this email.</p>
+      </td></tr>
+      <tr><td style="padding:28px 0 0;text-align:center;">
+        <p style="margin:0 0 4px;color:#9ca3af;font-size:12px;">Taylor Made Law</p>
+        <p style="margin:0 0 4px;color:#9ca3af;font-size:12px;">This is an automated message from the Taylor Made Law Network.</p>
+        <p style="margin:0;color:#9ca3af;font-size:12px;">Questions? <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;text-decoration:none;">support@taylormadelaw.com</a></p>
+        <p style="margin:8px 0 0;color:#bbb;font-size:11px;">© ${YEAR} Taylor Made Law. All rights reserved.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
@@ -40,37 +81,15 @@ Deno.serve(async (req) => {
       attempts_count: 0
     });
 
-    // Send via Resend
     const resendKey = Deno.env.get('RESEND_API_KEY');
     const emailRes = await fetch('https://api.resend.com/emails', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${resendKey}`,
-        'Content-Type': 'application/json'
-      },
+      headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
         from: 'Taylor Made Law <noreply@taylormadelaw.com>',
         to: [normalizedEmail],
         subject: 'Your Taylor Made Law Verification Code',
-        html: `
-          <div style="font-family: Inter, system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
-            <div style="text-align: center; margin-bottom: 32px;">
-              <img src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" alt="Taylor Made Law" style="height: 50px;" />
-            </div>
-            <h2 style="color: #3a164d; font-size: 22px; margin-bottom: 16px;">Email Verification</h2>
-            <p style="color: #333; font-size: 16px; line-height: 1.6; margin-bottom: 24px;">Your verification code is:</p>
-            <div style="background: #f5f0fa; border: 2px solid #3a164d; border-radius: 12px; padding: 24px; text-align: center; margin-bottom: 24px;">
-              <span style="font-size: 42px; font-weight: 800; letter-spacing: 14px; color: #3a164d; font-variant-numeric: tabular-nums;">${code}</span>
-            </div>
-            <p style="color: #666; font-size: 14px; line-height: 1.6;">
-              This code expires in <strong>10 minutes</strong>.<br>
-              If you did not request this code, you can safely ignore this email.
-            </p>
-            <div style="margin-top: 48px; padding-top: 20px; border-top: 1px solid #e5e5e5; text-align: center; color: #999; font-size: 12px;">
-              <p>© ${new Date().getFullYear()} Taylor Made Law. All rights reserved.</p>
-            </div>
-          </div>
-        `
+        html: buildOtpEmail(code)
       })
     });
 
