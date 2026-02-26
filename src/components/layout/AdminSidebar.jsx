@@ -82,6 +82,12 @@ const AdminSidebar = ({ user }) => {
       path: 'AdminPopups',
       active: currentPath.includes('/AdminPopup')
     },
+    { 
+      label: 'Resources', 
+      icon: FileText, 
+      path: 'AdminResources',
+      active: currentPath.includes('/AdminResource')
+    },
   ];
 
   const handleLogout = () => {

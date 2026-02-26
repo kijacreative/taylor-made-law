@@ -51,6 +51,12 @@ const AppSidebar = ({ user, lawyerProfile }) => {
       active: currentPath.includes('/LawyerBlog')
     },
     { 
+      label: 'Resource Library', 
+      icon: FileText, 
+      path: 'LawyerResources',
+      active: currentPath.includes('/LawyerResource')
+    },
+    { 
       label: 'Settings', 
       icon: Settings, 
       path: 'LawyerSettings',

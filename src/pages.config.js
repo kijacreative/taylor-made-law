@@ -79,6 +79,10 @@ import LawyerBlog from './pages/LawyerBlog';
 import LawyerBlogDetail from './pages/LawyerBlogDetail';
 import AdminPopups from './pages/AdminPopups';
 import AdminPopupEdit from './pages/AdminPopupEdit';
+import AdminResources from './pages/AdminResources';
+import AdminResourceEdit from './pages/AdminResourceEdit';
+import LawyerResources from './pages/LawyerResources';
+import LawyerResourceDetail from './pages/LawyerResourceDetail';
 import __Layout from './Layout.jsx';
 
 
@@ -115,6 +119,10 @@ export const PAGES = {
     "LawyerBlogDetail": LawyerBlogDetail,
     "AdminPopups": AdminPopups,
     "AdminPopupEdit": AdminPopupEdit,
+    "AdminResources": AdminResources,
+    "AdminResourceEdit": AdminResourceEdit,
+    "LawyerResources": LawyerResources,
+    "LawyerResourceDetail": LawyerResourceDetail,
 }
 
 export const pagesConfig = {
