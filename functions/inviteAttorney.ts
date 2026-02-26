@@ -56,6 +56,14 @@ Deno.serve(async (req) => {
       invitation_type: 'admin_invite'
     });
 
+    // Create the user account via platform invite (so they can actually log in)
+    try {
+      await base44.asServiceRole.users.inviteUser(email.toLowerCase(), 'user');
+    } catch (inviteErr) {
+      // User may already exist — that's fine, continue
+      console.log('User invite note:', inviteErr.message);
+    }
+
     // Send invitation email
     if (send_email) {
       const activationUrl = `${Deno.env.get('BASE44_APP_URL') || 'https://app.base44.com'}/activate?token=${token}`;
