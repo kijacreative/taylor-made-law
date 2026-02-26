@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
+import PopupModal from '@/components/popups/PopupModal';
 import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
 import TMLBadge from '@/components/ui/TMLBadge';
 import { CASE_STATUSES } from '@/components/design/DesignTokens';
@@ -100,6 +101,7 @@ export default function LawyerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50">
       <AppSidebar user={user} lawyerProfile={lawyerProfile} />
+      <PopupModal user={user} lawyerProfile={lawyerProfile} placement="dashboard" />
       
       <main className="ml-64 p-8">
         <div className="max-w-6xl mx-auto">

@@ -77,6 +77,8 @@ import AdminBlog from './pages/AdminBlog';
 import AdminBlogEdit from './pages/AdminBlogEdit';
 import LawyerBlog from './pages/LawyerBlog';
 import LawyerBlogDetail from './pages/LawyerBlogDetail';
+import AdminPopups from './pages/AdminPopups';
+import AdminPopupEdit from './pages/AdminPopupEdit';
 import __Layout from './Layout.jsx';
 
 
@@ -111,6 +113,8 @@ export const PAGES = {
     "AdminBlogEdit": AdminBlogEdit,
     "LawyerBlog": LawyerBlog,
     "LawyerBlogDetail": LawyerBlogDetail,
+    "AdminPopups": AdminPopups,
+    "AdminPopupEdit": AdminPopupEdit,
 }
 
 export const pagesConfig = {

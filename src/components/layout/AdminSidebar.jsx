@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   Inbox,
   BarChart3,
-  BookOpen
+  BookOpen,
+  Layers
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -74,6 +75,12 @@ const AdminSidebar = ({ user }) => {
       icon: BookOpen, 
       path: 'AdminBlog',
       active: currentPath.includes('/AdminBlog')
+    },
+    { 
+      label: 'Pop-up Manager', 
+      icon: Layers, 
+      path: 'AdminPopups',
+      active: currentPath.includes('/AdminPopup')
     },
   ];
 
