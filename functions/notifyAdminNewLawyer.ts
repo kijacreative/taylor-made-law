@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
     const allUsers = await base44.asServiceRole.entities.User.list();
     const adminUsers = allUsers.filter(u => u.role === 'admin');
 
-    const adminLink = `${req.headers.get('origin') || 'https://app.base44.com'}/admin-lawyers`;
+    const adminLink = `https://app.taylormadelaw.com/admin-lawyers`;
 
     const emailBody = `<!DOCTYPE html>
 <html lang="en">
