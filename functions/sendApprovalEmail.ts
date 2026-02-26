@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
     const lawyerUser = users[0];
 
     if (has_password) {
-      const loginUrl = `${Deno.env.get('BASE44_APP_URL') || 'https://app.base44.com'}/login`;
+      const loginUrl = `https://app.taylormadelaw.com/login`;
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: lawyerUser.email,
         subject: "You're Approved — You Can Now Access Cases",
@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
         invitation_type: 'approval_activation'
       });
 
-      const activationUrl = `${Deno.env.get('BASE44_APP_URL') || 'https://app.base44.com'}/activate?token=${token}`;
+      const activationUrl = `https://app.taylormadelaw.com/activate?token=${token}`;
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: lawyerUser.email,
         subject: "You're Approved — Activate Your TML Account",

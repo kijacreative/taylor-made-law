@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
       console.log('User invite note:', inviteErr.message);
     }
 
-    const origin = req.headers.get('origin') || 'https://app.taylormadelaw.com';
+    const origin = 'https://app.taylormadelaw.com';
     const activateUrl = `${origin}/activate?token=${token}&email=${encodeURIComponent(application.email)}`;
 
     const resendKey = Deno.env.get('RESEND_API_KEY');

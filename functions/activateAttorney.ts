@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
     const emailBody = `
       <div style="font-family: Inter, system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="text-align: center; margin-bottom: 40px;">
-          <img src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" alt="Taylor Made Law" style="height: 60px;" />
+          <img src="https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png" width="200" alt="Taylor Made Law" style="width:200px;max-width:200px;height:auto;" />
         </div>
         
         <h1 style="color: #3a164d; font-size: 28px; margin-bottom: 20px;">Application Received — Taylor Made Law Network</h1>

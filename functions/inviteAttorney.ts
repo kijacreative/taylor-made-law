@@ -99,7 +99,7 @@ Deno.serve(async (req) => {
     }
 
     if (send_email) {
-      const activationUrl = `${Deno.env.get('BASE44_APP_URL') || 'https://app.base44.com'}/activate?token=${token}`;
+      const activationUrl = `https://app.taylormadelaw.com/activate?token=${token}`;
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: email,
         subject: "You're Invited to Join the Taylor Made Law Network",
