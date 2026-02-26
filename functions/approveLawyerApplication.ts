@@ -48,6 +48,14 @@ Deno.serve(async (req) => {
       activation_token_used: false
     });
 
+    // Create the platform user account (so they can actually log in)
+    try {
+      await base44.auth.inviteUser(application.email.toLowerCase(), 'user');
+    } catch (inviteErr) {
+      // User may already exist — that's fine, continue
+      console.log('User invite note:', inviteErr.message);
+    }
+
     // Build activation URL
     const origin = req.headers.get('origin') || 'https://app.taylormadelaw.com';
     const activateUrl = `${origin}/activate?token=${token}&email=${encodeURIComponent(application.email)}`;
