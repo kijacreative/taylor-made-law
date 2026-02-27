@@ -64,6 +64,22 @@ export default function LawyerSettings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+  const [billingForm, setBillingForm] = useState({
+    cardholder_name: '',
+    card_number: '',
+    expiry: '',
+    cvv: '',
+    billing_address: '',
+    billing_city: '',
+    billing_state: '',
+    billing_zip: ''
+  });
+  const [billingSaved, setBillingSaved] = useState(false);
+
+  const showSuccess = (msg) => {
+    setSuccess(msg);
+    setTimeout(() => setSuccess(null), 4000);
+  };
 
   const [profileForm, setProfileForm] = useState({
     firm_name: '',
