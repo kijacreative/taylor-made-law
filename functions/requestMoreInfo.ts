@@ -1,0 +1,112 @@
+/**
+ * requestMoreInfo — Admin-only. Sends a "we need more info" email to an applicant.
+ */
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+
+const LOGO = 'https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png';
+const YEAR = new Date().getFullYear();
+
+function buildMoreInfoEmail(firstName, checklistItems, adminNotes) {
+  const itemsHtml = (checklistItems || []).length > 0
+    ? `<ul style="margin:12px 0;padding-left:20px;color:#333333;font-size:15px;line-height:1.8;">
+        ${checklistItems.map(item => `<li>${item}</li>`).join('')}
+      </ul>`
+    : '';
+
+  const notesHtml = adminNotes
+    ? `<div style="background:#f5f0fa;border-left:4px solid #3a164d;border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0;">
+        <p style="margin:0;color:#374151;font-size:14px;line-height:1.6;">${adminNotes}</p>
+      </div>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background-color:#f4f1ee;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f1ee;padding:40px 16px;">
+  <tr><td align="center">
+    <table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;">
+      <tr><td style="text-align:center;padding-bottom:28px;">
+        <img src="${LOGO}" width="200" alt="Taylor Made Law" style="width:200px;max-width:200px;height:auto;display:block;margin:0 auto;" />
+      </td></tr>
+      <tr><td style="background:#ffffff;border-radius:16px;padding:40px 48px;box-shadow:0 2px 16px rgba(0,0,0,0.08);">
+        <h1 style="margin:0 0 8px;color:#111827;font-size:26px;font-weight:700;">Additional Information Needed</h1>
+        <p style="margin:0 0 28px;color:#6b7280;font-size:15px;">Taylor Made Law Network</p>
+        <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${firstName},</p>
+        <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Before we can complete our review of your application, we need the following additional information:</p>
+        ${itemsHtml}
+        ${notesHtml}
+        <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Please reply to this email or update your profile once logged in.</p>
+        <p style="margin:0;color:#4b5563;font-size:15px;line-height:1.7;">— Taylor Made Law</p>
+      </td></tr>
+      <tr><td style="padding:28px 0 0;text-align:center;">
+        <p style="margin:0;color:#9ca3af;font-size:12px;">Questions? <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;text-decoration:none;">support@taylormadelaw.com</a></p>
+        <p style="margin:8px 0 0;color:#bbb;font-size:11px;">© ${YEAR} Taylor Made Law. All rights reserved.</p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>`;
+}
+
+Deno.serve(async (req) => {
+  try {
+    const base44 = createClientFromRequest(req);
+    const adminUser = await base44.auth.me();
+
+    if (!adminUser || adminUser.role !== 'admin') {
+      return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
+    }
+
+    const body = await req.json();
+    const { user_id, checklist_items = [], admin_notes = '' } = body;
+
+    if (!user_id) {
+      return Response.json({ error: 'user_id is required' }, { status: 400 });
+    }
+    if (!checklist_items.length && !admin_notes) {
+      return Response.json({ error: 'checklist_items or admin_notes is required' }, { status: 400 });
+    }
+
+    const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
+    const lawyerUser = users[0];
+    if (!lawyerUser) return Response.json({ error: 'User not found' }, { status: 404 });
+
+    await base44.asServiceRole.entities.User.update(user_id, {
+      more_info_requested_at: new Date().toISOString(),
+      more_info_requested_by: adminUser.email
+    });
+
+    const resendKey = Deno.env.get('RESEND_API_KEY');
+    let emailSent = false;
+    if (resendKey) {
+      const firstName = (lawyerUser.full_name || '').split(' ')[0] || 'there';
+      const res = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'Taylor Made Law <noreply@taylormadelaw.com>',
+          to: [lawyerUser.email],
+          subject: 'Additional Information Needed — Taylor Made Law',
+          html: buildMoreInfoEmail(firstName, checklist_items, admin_notes)
+        })
+      });
+      emailSent = res.ok;
+    }
+
+    await base44.asServiceRole.entities.AuditLog.create({
+      entity_type: 'User',
+      entity_id: user_id,
+      action: 'application_info_requested',
+      actor_email: adminUser.email,
+      actor_role: 'admin',
+      notes: `More info requested. Items: ${checklist_items.join(', ')}. Notes: ${admin_notes}`
+    });
+
+    return Response.json({ success: true, email_sent: emailSent });
+  } catch (error) {
+    console.error('requestMoreInfo error:', error);
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+});
