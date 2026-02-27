@@ -421,14 +421,25 @@ export default function LawyerSettings() {
                       </pre>
                     </div>
                     
-                    <TMLButton 
-                      variant="primary" 
-                      onClick={handleAcceptAgreement}
-                      loading={saving}
-                    >
-                      <Shield className="w-4 h-4 mr-2" />
-                      I Accept the Referral Agreement
-                    </TMLButton>
+                    <div className="flex items-center gap-3">
+                      <TMLButton 
+                        variant="primary" 
+                        onClick={handleAcceptAgreement}
+                        loading={saving}
+                      >
+                        <Shield className="w-4 h-4 mr-2" />
+                        I Accept the Referral Agreement
+                      </TMLButton>
+                      {success && activeTab === 'agreement' && (
+                        <motion.span
+                          initial={{ opacity: 0, x: -8 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium"
+                        >
+                          <CheckCircle2 className="w-4 h-4" /> Accepted!
+                        </motion.span>
+                      )}
+                    </div>
                   </div>
                 )}
               </TMLCardContent>
