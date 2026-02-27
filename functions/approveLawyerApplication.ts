@@ -112,13 +112,56 @@ Deno.serve(async (req) => {
       console.log('User invite note:', inviteErr.message);
     }
 
-    // Store token in ActivationToken entity so activateAccount.js can validate it
     const normalizedEmail = application.email.toLowerCase().trim();
+
+    // Store token in ActivationToken entity so activateAccount.js can validate it
     await base44.asServiceRole.entities.ActivationToken.create({
       token_hash: tokenHash,
       token_type: 'activation',
       user_email: normalizedEmail,
       expires_at: expiresAt,
+    });
+
+    // Create or update a User record so this attorney appears in Manage Lawyers immediately
+    const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+    if (existingUsers && existingUsers.length > 0) {
+      await base44.asServiceRole.entities.User.update(existingUsers[0].id, {
+        user_status: 'approved',
+        approved_at: new Date().toISOString(),
+        approved_by: user.email,
+        full_name: application.full_name,
+        firm_name: application.firm_name,
+        phone: application.phone,
+        bar_number: application.bar_number,
+        states_licensed: application.states_licensed,
+        practice_areas: application.practice_areas,
+        years_experience: application.years_experience,
+        bio: application.bio,
+        free_trial_months: parseInt(free_trial_months) || 0,
+      });
+    } else {
+      await base44.asServiceRole.entities.User.create({
+        email: normalizedEmail,
+        full_name: application.full_name,
+        firm_name: application.firm_name,
+        phone: application.phone,
+        bar_number: application.bar_number,
+        states_licensed: application.states_licensed,
+        practice_areas: application.practice_areas,
+        years_experience: application.years_experience,
+        bio: application.bio,
+        user_status: 'approved',
+        approved_at: new Date().toISOString(),
+        approved_by: user.email,
+        free_trial_months: parseInt(free_trial_months) || 0,
+        password_set: false,
+        email_verified: false,
+      });
+    }
+
+    // Mark the application as having a user created
+    await base44.asServiceRole.entities.LawyerApplication.update(application_id, {
+      user_created: true,
     });
 
     const origin = 'https://app.taylormadelaw.com';
