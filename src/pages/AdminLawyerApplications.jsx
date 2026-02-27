@@ -325,6 +325,15 @@ export default function AdminLawyerApplications() {
                             <button onClick={() => openDetail(app)} className="p-1.5 rounded-lg text-gray-400 hover:text-[#3a164d] hover:bg-gray-100 transition-colors">
                               <Eye className="w-4 h-4" />
                             </button>
+                            {app.status === 'approved' && (
+                              <button
+                                onClick={() => handleResendActivation(app)}
+                                disabled={actionLoading}
+                                className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors disabled:opacity-50 flex items-center gap-1"
+                              >
+                                <Send className="w-3 h-3" /> Resend
+                              </button>
+                            )}
                             {app.status === 'pending' && (
                               <>
                                 <button
