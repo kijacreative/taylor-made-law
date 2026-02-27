@@ -8,7 +8,7 @@ import {
   Search, CheckCircle2, XCircle, Clock, Eye, Loader2,
   Mail, Phone, Building2, Scale, MapPin, X, Shield,
   ChevronRight, CalendarDays, BadgeCheck, AlertTriangle,
-  Users, FileText, ArrowLeft
+  Users, FileText, ArrowLeft, Send
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
