@@ -276,12 +276,14 @@ export default function LawyerSettings() {
                 <div className="grid md:grid-cols-2 gap-4">
                   <TMLInput
                     label="Firm Name"
+                    placeholder="e.g. Smith & Associates Law Firm"
                     value={profileForm.firm_name}
                     onChange={(e) => setProfileForm({ ...profileForm, firm_name: e.target.value })}
                     required
                   />
                   <TMLInput
                     label="Bar Number"
+                    placeholder="e.g. TX-123456"
                     value={profileForm.bar_number}
                     onChange={(e) => setProfileForm({ ...profileForm, bar_number: e.target.value })}
                   />
@@ -289,6 +291,7 @@ export default function LawyerSettings() {
                 
                 <TMLInput
                   label="Phone Number"
+                  placeholder="e.g. (555) 123-4567"
                   value={profileForm.phone}
                   onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
                   required
@@ -296,6 +299,7 @@ export default function LawyerSettings() {
                 
                 <TMLTextarea
                   label="Professional Bio"
+                  placeholder="e.g. I am a licensed attorney with X years of experience specializing in personal injury and civil litigation. I am dedicated to providing compassionate and effective legal representation..."
                   value={profileForm.bio}
                   onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
                   rows={4}
