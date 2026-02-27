@@ -357,7 +357,7 @@ export default function LawyerSettings() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-gray-100">
+                <div className="pt-4 border-t border-gray-100 flex items-center gap-3">
                   <TMLButton 
                     variant="primary" 
                     onClick={handleSaveProfile}
@@ -366,6 +366,15 @@ export default function LawyerSettings() {
                     <Save className="w-4 h-4 mr-2" />
                     Save Changes
                   </TMLButton>
+                  {success && activeTab === 'profile' && (
+                    <motion.span
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium"
+                    >
+                      <CheckCircle2 className="w-4 h-4" /> Saved!
+                    </motion.span>
+                  )}
                 </div>
               </TMLCardContent>
             </TMLCard>
