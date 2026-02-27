@@ -105,11 +105,21 @@ Deno.serve(async (req) => {
       activation_token_used: false
     });
 
+    // Invite the user so their account exists in the auth system
     try {
       await base44.auth.inviteUser(application.email.toLowerCase(), 'user');
     } catch (inviteErr) {
       console.log('User invite note:', inviteErr.message);
     }
+
+    // Store token in ActivationToken entity so activateAccount.js can validate it
+    const normalizedEmail = application.email.toLowerCase().trim();
+    await base44.asServiceRole.entities.ActivationToken.create({
+      token_hash: tokenHash,
+      token_type: 'activation',
+      user_email: normalizedEmail,
+      expires_at: expiresAt,
+    });
 
     const origin = 'https://app.taylormadelaw.com';
     const activateUrl = `${origin}/activate?token=${token}&email=${encodeURIComponent(application.email)}`;
