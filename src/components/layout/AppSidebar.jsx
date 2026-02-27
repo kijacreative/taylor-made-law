@@ -10,7 +10,8 @@ import {
   ChevronLeft,
   Scale,
   Users,
-  BookOpen
+  BookOpen,
+  FileText
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 
