@@ -124,6 +124,19 @@ Deno.serve(async (req) => {
     const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
     let lawyerUser = existingUsers[0] || null;
 
+    const profileFields = {
+      firm_name: firm_name || '',
+      phone: phone || '',
+      bar_number: bar_number || '',
+      bio: bio || '',
+      states_licensed: states_licensed || [],
+      practice_areas: practice_areas || [],
+      years_experience: years_experience ? parseInt(years_experience) : 0,
+      referral_agreement_accepted: !!consent_referral,
+      consent_terms_at: consent_terms ? new Date().toISOString() : null
+    };
+    if (consent_referral) profileFields.referral_agreement_accepted_at = new Date().toISOString();
+
     if (lawyerUser) {
       if (lawyerUser.user_status === 'disabled') {
         return Response.json({ 
@@ -134,50 +147,100 @@ Deno.serve(async (req) => {
       const newStatus = maxStatus(lawyerUser.user_status || 'invited', 'pending');
       const updates = {
         user_status: newStatus,
-        full_name: full_name || lawyerUser.full_name,
-        firm_name: firm_name || lawyerUser.firm_name,
-        phone: phone || lawyerUser.phone,
-        bar_number: bar_number || lawyerUser.bar_number,
-        bio: bio || lawyerUser.bio,
-        states_licensed: states_licensed?.length ? states_licensed : (lawyerUser.states_licensed || []),
-        practice_areas: practice_areas?.length ? practice_areas : (lawyerUser.practice_areas || []),
-        years_experience: years_experience ? parseInt(years_experience) : lawyerUser.years_experience,
-        referral_agreement_accepted: !!consent_referral,
-        consent_terms_at: consent_terms ? new Date().toISOString() : lawyerUser.consent_terms_at
+        ...profileFields
       };
-      if (consent_referral) updates.referral_agreement_accepted_at = new Date().toISOString();
       await base44.asServiceRole.entities.User.update(lawyerUser.id, updates);
       lawyerUser = { ...lawyerUser, ...updates };
     } else {
-      // Create via invite
+      // Create a pending LawyerApplication record to store the submission
+      // The actual user account will be created when admin approves OR we use the platform invite
+      // Store application in LawyerApplication entity first, then try to create user
+      const appData = {
+        full_name,
+        email: normalizedEmail,
+        phone: phone || '',
+        firm_name,
+        bar_number: bar_number || '',
+        years_experience: years_experience ? parseInt(years_experience) : 0,
+        states_licensed: states_licensed || [],
+        practice_areas: practice_areas || [],
+        bio: bio || '',
+        referrals: referrals || [],
+        consent_terms: !!consent_terms,
+        consent_referral: !!consent_referral,
+        email_verified: false,
+        status: 'pending'
+      };
+
+      // Try to create a user via invite first (may fail if already invited)
+      let userCreated = false;
       try {
         await base44.users.inviteUser(normalizedEmail, 'user');
+        userCreated = true;
       } catch (e) {
-        console.log('inviteUser note:', e.message);
+        console.log('inviteUser result:', e.message);
+        userCreated = !e.message?.toLowerCase().includes('failed');
       }
-      await new Promise(r => setTimeout(r, 1000));
-      const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-      lawyerUser = newUsers[0] || null;
 
-      if (lawyerUser) {
-        const initData = {
-          user_status: 'pending',
-          email_verified: false,
-          password_set: false,
-          full_name,
-          firm_name,
-          phone: phone || '',
-          bar_number: bar_number || '',
-          bio: bio || '',
-          states_licensed: states_licensed || [],
-          practice_areas: practice_areas || [],
-          years_experience: years_experience ? parseInt(years_experience) : 0,
-          referral_agreement_accepted: !!consent_referral,
-          consent_terms_at: consent_terms ? new Date().toISOString() : null
-        };
-        if (consent_referral) initData.referral_agreement_accepted_at = new Date().toISOString();
-        await base44.asServiceRole.entities.User.update(lawyerUser.id, initData);
-        lawyerUser = { ...lawyerUser, ...initData };
+      if (userCreated) {
+        await new Promise(r => setTimeout(r, 1200));
+        const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+        lawyerUser = newUsers[0] || null;
+        if (lawyerUser) {
+          const initData = {
+            user_status: 'pending',
+            email_verified: false,
+            password_set: false,
+            ...profileFields
+          };
+          await base44.asServiceRole.entities.User.update(lawyerUser.id, initData);
+          lawyerUser = { ...lawyerUser, ...initData };
+        }
+      }
+
+      // Even if we can't create user right now, create the application record
+      if (!lawyerUser) {
+        // Store as LawyerApplication for manual processing
+        const application = await base44.asServiceRole.entities.LawyerApplication.create(appData);
+        
+        // Send emails based on application (not user record)
+        const firstName = full_name.split(' ')[0] || 'there';
+        // Can't create activation token without user ID, but we can still notify admin
+        if (resendKey) {
+          const adminLink = `${BASE_URL}/AdminLawyerApplications`;
+          const adminUsers = await base44.asServiceRole.entities.User.list();
+          const admins = adminUsers.filter(u => u.role === 'admin');
+          for (const admin of admins) {
+            await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                from: 'Taylor Made Law Alerts <noreply@taylormadelaw.com>',
+                to: [admin.email],
+                subject: `New Lawyer Application — Approval Needed`,
+                html: buildAdminAlertEmail(full_name, normalizedEmail, firm_name, states_licensed, practice_areas, adminLink)
+              })
+            });
+          }
+          // Send basic confirmation to applicant
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: 'Taylor Made Law <noreply@taylormadelaw.com>',
+              to: [normalizedEmail],
+              subject: 'Application Received — Taylor Made Law Network',
+              html: buildApplicationReceivedEmail(firstName, `${BASE_URL}/ForLawyers`)
+            })
+          });
+        }
+        return Response.json({ 
+          success: true, 
+          application_id: application.id,
+          user_id: null,
+          fallback: true,
+          message: 'Application received. You will receive an email when approved.'
+        });
       }
     }
 
