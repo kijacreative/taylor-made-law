@@ -100,8 +100,9 @@ export default function LawyerDashboard() {
     );
   }
 
-  const isPending = !lawyerProfile || lawyerProfile.status === 'pending';
-  const isApproved = lawyerProfile?.status === 'approved';
+  // Use unified user_status on the user record, fall back to lawyerProfile for legacy
+  const isPending = user?.user_status === 'pending' || user?.user_status === 'invited' || (!user?.user_status && (!lawyerProfile || lawyerProfile.status === 'pending'));
+  const isApproved = user?.user_status === 'approved' || (!user?.user_status && lawyerProfile?.status === 'approved');
   const needsReferralAgreement = isApproved && !lawyerProfile?.referral_agreement_accepted;
 
   return (
