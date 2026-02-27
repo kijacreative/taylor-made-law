@@ -159,7 +159,7 @@ export default function LawyerSettings() {
       });
       
       queryClient.invalidateQueries(['lawyerProfile']);
-      setSuccess('Profile updated successfully!');
+      showSuccess('Profile updated successfully!');
     } catch (err) {
       console.error('Error saving profile:', err);
       setError('Failed to save profile. Please try again.');
