@@ -38,9 +38,15 @@ export default function LawyerDashboard() {
         }
         const userData = await base44.auth.me();
         
-        // Only redirect actual admin users to admin dashboard
         if (userData.role === 'admin') {
           navigate(createPageUrl('AdminDashboard'));
+          return;
+        }
+
+        // Block disabled users
+        if (userData.user_status === 'disabled') {
+          await base44.auth.logout();
+          navigate(createPageUrl('LawyerLogin') + '?disabled=1');
           return;
         }
         
