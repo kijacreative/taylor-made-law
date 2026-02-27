@@ -241,23 +241,25 @@ export default function LawyerSettings() {
           {/* Success/Error Messages */}
           {success && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 flex items-center gap-2 p-4 bg-emerald-50 text-emerald-700 rounded-xl"
+              key={success}
+              initial={{ opacity: 0, y: -12, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -8 }}
+              className="mb-6 flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl shadow-sm"
             >
-              <CheckCircle2 className="w-5 h-5" />
-              <span>{success}</span>
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" />
+              <span className="font-medium">{success}</span>
             </motion.div>
           )}
           
           {error && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
+              initial={{ opacity: 0, y: -12 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 flex items-center gap-2 p-4 bg-red-50 text-red-700 rounded-xl"
+              className="mb-6 flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl shadow-sm"
             >
-              <AlertCircle className="w-5 h-5" />
-              <span>{error}</span>
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span className="font-medium">{error}</span>
             </motion.div>
           )}
 
