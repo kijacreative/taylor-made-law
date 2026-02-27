@@ -131,6 +131,7 @@ export default function ForLawyers() {
       } else {
         setErrors({ submit: res.data?.error || 'Submission failed. Please try again.' });
       }
+
     } catch (error) {
       setErrors({ submit: error.response?.data?.error || error.message || 'An error occurred. Please try again.' });
     } finally {
