@@ -504,6 +504,19 @@ export default function AdminLawyerApplications() {
                 )}
               </div>
 
+              {/* Resend activation for approved apps */}
+              {selectedApp.status === 'approved' && (
+                <div className="border-t border-gray-100 bg-white px-6 py-4">
+                  <div className="p-3 bg-blue-50 rounded-xl text-sm text-blue-800 border border-blue-100 mb-3">
+                    <p className="font-semibold mb-1">Resend Activation Email</p>
+                    <p>Send a fresh activation link to <strong>{selectedApp.email}</strong>.</p>
+                  </div>
+                  <TMLButton variant="info" className="w-full" loading={actionLoading} onClick={() => handleResendActivation(selectedApp)}>
+                    <Send className="w-4 h-4 mr-2" /> Resend Activation Email
+                  </TMLButton>
+                </div>
+              )}
+
               {/* Sticky action footer */}
               {selectedApp.status === 'pending' && (
                 <div className="border-t border-gray-100 bg-white px-6 py-4">
