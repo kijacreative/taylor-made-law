@@ -191,7 +191,7 @@ export default function LawyerSettings() {
       });
       
       queryClient.invalidateQueries(['lawyerProfile']);
-      setSuccess('Referral agreement accepted!');
+      showSuccess('Referral agreement accepted!');
     } catch (err) {
       console.error('Error accepting agreement:', err);
       setError('Failed to accept agreement. Please try again.');
