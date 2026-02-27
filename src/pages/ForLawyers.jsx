@@ -164,16 +164,25 @@ export default function ForLawyers() {
             <p className="text-xl text-gray-600 mb-4">
               Thank you, <strong>{formData.full_name}</strong>. Your application has been received.
             </p>
-            <p className="text-gray-600 mb-8">
-              Our team will review your credentials within <strong>2–3 business days</strong>.
-              Once approved, you'll receive an email with a link to set your password and access the platform.
+            <p className="text-gray-600 mb-4">
+              Check your email — we sent you an activation link so you can set your password while you wait.
             </p>
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 flex items-start gap-3">
+              <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p className="text-sm text-emerald-800">
+                <strong>Check your inbox</strong> for an email from Taylor Made Law. Click "Activate Account" to set your password now.
+              </p>
+            </div>
             <div className="bg-[#f5f0fa] rounded-xl p-6 mb-8 text-left">
               <p className="font-semibold text-[#3a164d] mb-3">What happens next:</p>
               <ul className="space-y-2 text-gray-700 text-sm">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Admin reviews your application</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> You receive an approval email with a password setup link</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Set your password and log in to access the platform</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Activate your account via the email we just sent</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Admin reviews your application (2–3 business days)</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Upon approval, you get full access to the Case Exchange</li>
                 <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Browse and accept case referrals</li>
               </ul>
             </div>
