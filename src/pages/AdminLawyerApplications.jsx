@@ -125,6 +125,22 @@ export default function AdminLawyerApplications() {
     }
   };
 
+  const handleResendActivation = async (app) => {
+    setActionLoading(true);
+    try {
+      const res = await base44.functions.invoke('resendActivation', { application_id: app.id });
+      if (res.data?.success) {
+        showToast(`Activation email resent to ${app.email}`);
+      } else {
+        showToast(res.data?.error || 'Failed to resend.', 'error');
+      }
+    } catch (err) {
+      showToast(err.response?.data?.error || err.message || 'Error resending.', 'error');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleReject = async () => {
     setActionLoading(true);
     try {
