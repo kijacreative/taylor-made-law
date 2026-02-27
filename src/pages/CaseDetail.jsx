@@ -54,22 +54,23 @@ export default function CaseDetail() {
   }, [navigate]);
 
   // Get lawyer profile
-  const { data: profiles = [] } = useQuery({
+  const { data: profiles, isLoading: profileLoading } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
     queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
     enabled: !!user?.id,
   });
 
-  const lawyerProfile = profiles[0] || null;
-  const isPending = !lawyerProfile || lawyerProfile.status === 'pending';
-  const isApproved = lawyerProfile?.status === 'approved';
+  const lawyerProfile = profiles?.[0] || null;
+  const profileLoaded = !profileLoading && profiles !== undefined;
+  const isPending = profileLoaded && (!lawyerProfile || lawyerProfile.status === 'pending');
+  const isApproved = profileLoaded && lawyerProfile?.status === 'approved';
 
-  // Redirect pending lawyers immediately — don't even fetch case data
+  // Redirect pending lawyers — only once profile is loaded
   useEffect(() => {
-    if (!loading && isPending && lawyerProfile !== undefined) {
+    if (!loading && profileLoaded && isPending) {
       navigate(createPageUrl('CaseExchange') + '?blocked=1', { replace: true });
     }
-  }, [loading, isPending, lawyerProfile]);
+  }, [loading, profileLoaded, isPending]);
 
   // Get case — only for approved lawyers
   const { data: caseItem, isLoading: caseLoading } = useQuery({
