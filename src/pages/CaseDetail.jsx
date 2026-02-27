@@ -79,7 +79,7 @@ export default function CaseDetail() {
       const cases = await base44.entities.Case.filter({ id: caseId });
       return cases[0] || null;
     },
-    enabled: !!caseId && !!user && isApproved,
+    enabled: !!caseId && !!user && profileLoaded && isApproved,
   });
 
   const handleAcceptCase = async () => {
