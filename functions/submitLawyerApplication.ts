@@ -172,17 +172,10 @@ Deno.serve(async (req) => {
         status: 'pending'
       };
 
-      // Try to create a user via platform invite using service role
-      try {
-        await base44.asServiceRole.inviteUser(normalizedEmail, 'user');
-      } catch (e) {
-        console.log('inviteUser result:', e.message);
-      }
-
-      // Wait briefly for user to be provisioned, then fetch
-      await new Promise(r => setTimeout(r, 1500));
-      const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-      lawyerUser = newUsers[0] || null;
+      // Note: User creation via invite requires admin auth context which isn't available in public submissions.
+      // The application is stored in LawyerApplication entity; admin will approve via AdminLawyerApplications.
+      // After approval, approveLawyerApplication creates the user record and sends the activation email.
+      lawyerUser = null;
 
       if (lawyerUser) {
         const initData = {
