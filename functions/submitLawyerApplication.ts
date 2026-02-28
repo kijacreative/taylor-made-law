@@ -172,9 +172,9 @@ Deno.serve(async (req) => {
         status: 'pending'
       };
 
-      // Try to create a user via asServiceRole invite (works without auth)
+      // Try to create a user via platform invite using service role
       try {
-        await base44.asServiceRole.users.inviteUser(normalizedEmail, 'user');
+        await base44.asServiceRole.inviteUser(normalizedEmail, 'user');
       } catch (e) {
         console.log('inviteUser result:', e.message);
       }
