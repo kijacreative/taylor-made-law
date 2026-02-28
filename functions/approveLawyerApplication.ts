@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
 
     // Invite the user so their account exists in the auth system
     try {
-      await base44.auth.inviteUser(application.email.toLowerCase(), 'user');
+      await base44.users.inviteUser(application.email.toLowerCase(), 'user');
     } catch (inviteErr) {
       console.log('User invite note:', inviteErr.message);
     }

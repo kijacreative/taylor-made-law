@@ -213,8 +213,8 @@ export default function LawyerDashboard() {
                   <div>
                     <p className="text-sm text-gray-500 mb-1">Membership Status</p>
                     <p className="text-xl font-bold text-gray-900">
-                      {lawyerProfile?.status === 'approved' ? 'Active' : 
-                       lawyerProfile?.status === 'pending' ? 'Pending' : 'Inactive'}
+                      {(user?.user_status === 'approved' || lawyerProfile?.status === 'approved') ? 'Active' : 
+                       (user?.user_status === 'pending' || lawyerProfile?.status === 'pending') ? 'Pending' : 'Inactive'}
                     </p>
                   </div>
                   <div className="p-3 bg-purple-100 rounded-xl">
