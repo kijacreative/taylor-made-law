@@ -40,6 +40,11 @@ const PublicFooter = () => {
                   For Attorneys
                 </Link>
               </li>
+              <li>
+                <Link to={createPageUrl('Blog')} className="text-gray-400 hover:text-[#a47864] transition-colors text-sm">
+                  Blog
+                </Link>
+              </li>
             </ul>
           </div>
 
