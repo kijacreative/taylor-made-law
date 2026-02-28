@@ -200,15 +200,12 @@ Deno.serve(async (req) => {
 
       // Even if we can't create user right now, fall back gracefully
       if (!lawyerUser) {
-        // Store as LawyerApplication for manual processing — already done above
-        
-        // Send emails based on application (not user record)
+        // Send emails using application record only (no activation token without user ID)
         const firstName = full_name.split(' ')[0] || 'there';
-        // Can't create activation token without user ID, but we can still notify admin
         if (resendKey) {
           const adminLink = `${BASE_URL}/AdminLawyerApplications`;
-          const adminUsers = await base44.asServiceRole.entities.User.list();
-          const admins = adminUsers.filter(u => u.role === 'admin');
+          const adminUsersList = await base44.asServiceRole.entities.User.list();
+          const admins = adminUsersList.filter(u => u.role === 'admin');
           for (const admin of admins) {
             await fetch('https://api.resend.com/emails', {
               method: 'POST',
@@ -221,7 +218,7 @@ Deno.serve(async (req) => {
               })
             });
           }
-          // Send basic confirmation to applicant
+          // Send confirmation to applicant — link goes to For Lawyers page since no user exists yet
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
@@ -233,6 +230,14 @@ Deno.serve(async (req) => {
             })
           });
         }
+        await base44.asServiceRole.entities.AuditLog.create({
+          entity_type: 'LawyerApplication',
+          entity_id: application.id,
+          action: 'application_submitted',
+          actor_email: normalizedEmail,
+          actor_role: 'system',
+          notes: `Application submitted (no user created yet) by ${full_name} from ${firm_name}`
+        });
         return Response.json({ 
           success: true, 
           application_id: application.id,
