@@ -85,6 +85,7 @@ import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
 import AdminLogin from './pages/AdminLogin';
 import AdminTeam from './pages/AdminTeam';
+import Blog from './pages/Blog';
 import __Layout from './Layout.jsx';
 
 
@@ -127,6 +128,7 @@ export const PAGES = {
     "ResetPassword": ResetPassword,
     "AdminLogin": AdminLogin,
     "AdminTeam": AdminTeam,
+    "Blog": Blog,
 }
 
 export const pagesConfig = {
