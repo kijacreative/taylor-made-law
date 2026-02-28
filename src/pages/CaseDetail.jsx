@@ -130,37 +130,42 @@ export default function CaseDetail() {
         notes: `Case accepted by ${user.full_name || user.email}`
       });
       
-      // Send notification email (placeholder)
+      // Send confirmation email via backend function
       try {
-        await base44.integrations.Core.SendEmail({
+        await base44.functions.invoke('sendApplicationEmails', {
           to: user.email,
-          subject: 'Taylor Made Law - Case Accepted',
+          from_name: 'Taylor Made Law',
+          subject: `Case Accepted — ${caseItem.title}`,
           body: `
-Congratulations!
-
-You have successfully accepted the following case:
-
-Case: ${caseItem.title}
-Practice Area: ${caseItem.practice_area}
-State: ${caseItem.state}
-${caseItem.estimated_value ? `Estimated Value: $${caseItem.estimated_value.toLocaleString()}` : ''}
-
-Next Steps:
-1. Review the full case details in your dashboard
-2. Contact the client within 24-48 hours
-3. Document all communications for compliance
-
-Client Contact Information:
-${caseItem.client_first_name ? `Name: ${caseItem.client_first_name} ${caseItem.client_last_name}` : 'Will be provided shortly'}
-${caseItem.client_email ? `Email: ${caseItem.client_email}` : ''}
-${caseItem.client_phone ? `Phone: ${caseItem.client_phone}` : ''}
-
-Best regards,
-Taylor Made Law Team
-          `.trim()
+            <div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;padding:24px;background:#f4f1ee;">
+              <div style="text-align:center;margin-bottom:24px;">
+                <img src="https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png" alt="Taylor Made Law" style="height:50px;" />
+              </div>
+              <div style="background:#fff;border-radius:16px;padding:40px;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+                <h1 style="color:#111827;font-size:24px;font-weight:700;margin:0 0 8px;">Case Accepted!</h1>
+                <p style="color:#6b7280;margin:0 0 24px;">You have successfully accepted a new case referral.</p>
+                <div style="background:#f5f0fa;border-radius:10px;padding:18px;margin-bottom:24px;">
+                  <table style="width:100%;font-size:14px;color:#374151;border-collapse:collapse;">
+                    <tr><td style="padding:5px 0;color:#6b7280;width:40%;">Case</td><td style="padding:5px 0;font-weight:600;">${caseItem.title}</td></tr>
+                    <tr><td style="padding:5px 0;color:#6b7280;">Practice Area</td><td style="padding:5px 0;font-weight:600;">${caseItem.practice_area}</td></tr>
+                    <tr><td style="padding:5px 0;color:#6b7280;">State</td><td style="padding:5px 0;font-weight:600;">${caseItem.state}</td></tr>
+                    ${caseItem.estimated_value ? `<tr><td style="padding:5px 0;color:#6b7280;">Est. Value</td><td style="padding:5px 0;font-weight:600;color:#059669;">$${caseItem.estimated_value.toLocaleString()}</td></tr>` : ''}
+                  </table>
+                </div>
+                <p style="color:#374151;font-size:14px;line-height:1.7;margin:0 0 12px;">Next steps:</p>
+                <ul style="color:#374151;font-size:14px;line-height:1.8;padding-left:20px;margin:0 0 24px;">
+                  <li>Review full case details in your dashboard</li>
+                  <li>Contact the client within 24–48 hours</li>
+                  <li>Document all communications for compliance</li>
+                </ul>
+                <p style="color:#6b7280;font-size:13px;margin:0;">Questions? <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;">support@taylormadelaw.com</a></p>
+              </div>
+              <p style="text-align:center;color:#9ca3af;font-size:12px;margin-top:20px;">© ${new Date().getFullYear()} Taylor Made Law. All rights reserved.</p>
+            </div>
+          `
         });
       } catch (emailErr) {
-        console.log('Email send attempted');
+        console.log('Case acceptance email attempted');
       }
       
       queryClient.invalidateQueries(['case', caseId]);
@@ -203,7 +208,9 @@ Taylor Made Law Team
   }
 
   const isAvailable = caseItem.status === 'published';
-  const canAccept = lawyerProfile?.status === 'approved' && lawyerProfile?.referral_agreement_accepted && isAvailable;
+  const userApproved = user?.user_status === 'approved' || lawyerProfile?.status === 'approved';
+  const agreementOk = !lawyerProfile || lawyerProfile.referral_agreement_accepted;
+  const canAccept = userApproved && agreementOk && isAvailable;
 
   return (
     <div className="min-h-screen bg-gray-50">
