@@ -89,6 +89,12 @@ const AdminSidebar = ({ user }) => {
       path: 'AdminResources',
       active: currentPath.includes('/AdminResource')
     },
+    { 
+      label: 'Admin Team', 
+      icon: ShieldCheck, 
+      path: 'AdminTeam',
+      active: currentPath.includes('/AdminTeam')
+    },
   ];
 
   const handleLogout = () => {
