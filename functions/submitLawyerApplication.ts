@@ -177,18 +177,7 @@ Deno.serve(async (req) => {
       // After approval, approveLawyerApplication creates the user record and sends the activation email.
       lawyerUser = null;
 
-      if (lawyerUser) {
-        const initData = {
-          user_status: 'pending',
-          email_verified: false,
-          password_set: false,
-          ...profileFields
-        };
-        await base44.asServiceRole.entities.User.update(lawyerUser.id, initData);
-        lawyerUser = { ...lawyerUser, ...initData };
-      }
-
-      // Store application record regardless (for admin review UI)
+      // Store application record for admin review
       const application = await base44.asServiceRole.entities.LawyerApplication.create(appData);
 
       // Even if we can't create user right now, fall back gracefully
