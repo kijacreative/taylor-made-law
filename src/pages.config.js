@@ -56,11 +56,14 @@ import AdminLawyerApplications from './pages/AdminLawyerApplications';
 import AdminLawyers from './pages/AdminLawyers';
 import AdminLeadDetail from './pages/AdminLeadDetail';
 import AdminLeads from './pages/AdminLeads';
+import AdminLogin from './pages/AdminLogin';
 import AdminPopupEdit from './pages/AdminPopupEdit';
 import AdminPopups from './pages/AdminPopups';
 import AdminResourceEdit from './pages/AdminResourceEdit';
 import AdminResources from './pages/AdminResources';
+import AdminTeam from './pages/AdminTeam';
 import AuthRedirect from './pages/AuthRedirect';
+import Blog from './pages/Blog';
 import CaseDetail from './pages/CaseDetail';
 import CaseExchange from './pages/CaseExchange';
 import Content from './pages/Content';
@@ -83,9 +86,6 @@ import MassTortDetail from './pages/MassTortDetail';
 import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
-import AdminLogin from './pages/AdminLogin';
-import AdminTeam from './pages/AdminTeam';
-import Blog from './pages/Blog';
 import __Layout from './Layout.jsx';
 
 
@@ -99,11 +99,14 @@ export const PAGES = {
     "AdminLawyers": AdminLawyers,
     "AdminLeadDetail": AdminLeadDetail,
     "AdminLeads": AdminLeads,
+    "AdminLogin": AdminLogin,
     "AdminPopupEdit": AdminPopupEdit,
     "AdminPopups": AdminPopups,
     "AdminResourceEdit": AdminResourceEdit,
     "AdminResources": AdminResources,
+    "AdminTeam": AdminTeam,
     "AuthRedirect": AuthRedirect,
+    "Blog": Blog,
     "CaseDetail": CaseDetail,
     "CaseExchange": CaseExchange,
     "Content": Content,
@@ -126,9 +129,6 @@ export const PAGES = {
     "MassTorts": MassTorts,
     "MyCases": MyCases,
     "ResetPassword": ResetPassword,
-    "AdminLogin": AdminLogin,
-    "AdminTeam": AdminTeam,
-    "Blog": Blog,
 }
 
 export const pagesConfig = {
