@@ -27,8 +27,7 @@ Deno.serve(async (req) => {
     // Legacy fallback: if no user_status field, check LawyerProfile
     if (!userStatus) {
       const profiles = await base44.entities.LawyerProfile.filter({ user_id: user.id });
-      const lawyerProfile = profiles[0] || null;
-      isApproved = lawyerProfile?.status === 'approved';
+      isApproved = profiles[0]?.status === 'approved';
     }
 
     // Fetch all published cases
