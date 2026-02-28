@@ -12,7 +12,8 @@ import {
   Inbox,
   BarChart3,
   BookOpen,
-  Layers
+  Layers,
+  ShieldCheck
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';

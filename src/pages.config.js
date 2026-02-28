@@ -84,6 +84,7 @@ import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
 import AdminLogin from './pages/AdminLogin';
+import AdminTeam from './pages/AdminTeam';
 import __Layout from './Layout.jsx';
 
 
@@ -125,6 +126,7 @@ export const PAGES = {
     "MyCases": MyCases,
     "ResetPassword": ResetPassword,
     "AdminLogin": AdminLogin,
+    "AdminTeam": AdminTeam,
 }
 
 export const pagesConfig = {
