@@ -230,8 +230,9 @@ Deno.serve(async (req) => {
       }
     }
 
+    // This path only reached for re-applicants who already have a User record (upsert path)
     if (!lawyerUser) {
-      return Response.json({ error: 'Failed to create user record. Please try again.' }, { status: 500 });
+      return Response.json({ error: 'Unexpected error. Please try again.' }, { status: 500 });
     }
 
     // Audit log
@@ -241,10 +242,10 @@ Deno.serve(async (req) => {
       action: 'application_submitted',
       actor_email: normalizedEmail,
       actor_role: 'system',
-      notes: `Application submitted by ${full_name} from ${firm_name}`
+      notes: `Re-application submitted by ${full_name} from ${firm_name}`
     });
 
-    // Create activation token and send activation email immediately
+    // Create activation token and send activation email if not yet activated
     let activationSent = false;
     if (!lawyerUser.email_verified || !lawyerUser.password_set) {
       const { rawToken, tokenHash } = await generateTokenPair();
@@ -257,15 +258,6 @@ Deno.serve(async (req) => {
         token_type: 'activation',
         expires_at: expiresAt,
         created_by_admin: null
-      });
-
-      await base44.asServiceRole.entities.AuditLog.create({
-        entity_type: 'ActivationToken',
-        entity_id: tokenRecord.id,
-        action: 'activation_token_created',
-        actor_email: normalizedEmail,
-        actor_role: 'system',
-        notes: `Self-apply token for ${normalizedEmail}`
       });
 
       if (resendKey) {
@@ -282,6 +274,14 @@ Deno.serve(async (req) => {
           })
         });
         activationSent = emailRes.ok;
+        await base44.asServiceRole.entities.AuditLog.create({
+          entity_type: 'ActivationToken',
+          entity_id: tokenRecord.id,
+          action: 'activation_email_sent',
+          actor_email: normalizedEmail,
+          actor_role: 'system',
+          notes: `Activation email sent to ${normalizedEmail}`
+        });
       }
     }
 
@@ -289,7 +289,6 @@ Deno.serve(async (req) => {
     const adminLink = `${BASE_URL}/AdminLawyers`;
     const allUsers = await base44.asServiceRole.entities.User.list();
     const adminUsers = allUsers.filter(u => u.role === 'admin');
-
     for (const admin of adminUsers) {
       if (resendKey) {
         await fetch('https://api.resend.com/emails', {
@@ -298,7 +297,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             from: 'Taylor Made Law Alerts <noreply@taylormadelaw.com>',
             to: [admin.email],
-            subject: `New Lawyer Application — Approval Needed`,
+            subject: 'New Lawyer Application — Approval Needed',
             html: buildAdminAlertEmail(full_name, normalizedEmail, firm_name, states_licensed, practice_areas, adminLink)
           })
         });
@@ -311,10 +310,10 @@ Deno.serve(async (req) => {
       action: 'admin_alert_sent',
       actor_email: normalizedEmail,
       actor_role: 'system',
-      notes: `Admin alert sent for application from ${normalizedEmail}`
+      notes: `Admin alert sent for re-application from ${normalizedEmail}`
     });
 
-    // Send referral invites (non-blocking)
+    // Send referral invites
     if (referrals && referrals.length > 0 && resendKey) {
       const validRefs = referrals.filter(r => r.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email));
       for (const ref of validRefs) {
