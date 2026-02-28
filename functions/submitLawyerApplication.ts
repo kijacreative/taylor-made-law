@@ -172,36 +172,35 @@ Deno.serve(async (req) => {
         status: 'pending'
       };
 
-      // Try to create a user via invite first (may fail if already invited)
-      let userCreated = false;
+      // Try to create a user via asServiceRole invite (works without auth)
       try {
-        await base44.users.inviteUser(normalizedEmail, 'user');
-        userCreated = true;
+        await base44.asServiceRole.users.inviteUser(normalizedEmail, 'user');
       } catch (e) {
         console.log('inviteUser result:', e.message);
-        userCreated = !e.message?.toLowerCase().includes('failed');
       }
 
-      if (userCreated) {
-        await new Promise(r => setTimeout(r, 1200));
-        const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-        lawyerUser = newUsers[0] || null;
-        if (lawyerUser) {
-          const initData = {
-            user_status: 'pending',
-            email_verified: false,
-            password_set: false,
-            ...profileFields
-          };
-          await base44.asServiceRole.entities.User.update(lawyerUser.id, initData);
-          lawyerUser = { ...lawyerUser, ...initData };
-        }
+      // Wait briefly for user to be provisioned, then fetch
+      await new Promise(r => setTimeout(r, 1500));
+      const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+      lawyerUser = newUsers[0] || null;
+
+      if (lawyerUser) {
+        const initData = {
+          user_status: 'pending',
+          email_verified: false,
+          password_set: false,
+          ...profileFields
+        };
+        await base44.asServiceRole.entities.User.update(lawyerUser.id, initData);
+        lawyerUser = { ...lawyerUser, ...initData };
       }
 
-      // Even if we can't create user right now, create the application record
+      // Store application record regardless (for admin review UI)
+      const application = await base44.asServiceRole.entities.LawyerApplication.create(appData);
+
+      // Even if we can't create user right now, fall back gracefully
       if (!lawyerUser) {
-        // Store as LawyerApplication for manual processing
-        const application = await base44.asServiceRole.entities.LawyerApplication.create(appData);
+        // Store as LawyerApplication for manual processing — already done above
         
         // Send emails based on application (not user record)
         const firstName = full_name.split(' ')[0] || 'there';
