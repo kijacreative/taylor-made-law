@@ -19,7 +19,6 @@ const PublicNav = () => {
   }, []);
 
   const navLinks = [
-    { label: 'Home', path: 'Home' },
     { label: 'Find a Lawyer', path: 'FindLawyer' },
     { label: 'Join the Attorney Network', path: 'ForLawyers' },
   ];
