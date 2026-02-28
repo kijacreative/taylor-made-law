@@ -62,8 +62,12 @@ export default function CaseDetail() {
 
   const lawyerProfile = profiles?.[0] || null;
   const profileLoaded = !profileLoading && profiles !== undefined;
-  const isPending = profileLoaded && (!lawyerProfile || lawyerProfile.status === 'pending');
-  const isApproved = profileLoaded && lawyerProfile?.status === 'approved';
+
+  // Use unified user_status if available (new identity system), fall back to LawyerProfile legacy
+  const userStatusApproved = user?.user_status === 'approved';
+  const profileStatusApproved = lawyerProfile?.status === 'approved';
+  const isApproved = profileLoaded && (userStatusApproved || (!user?.user_status && profileStatusApproved));
+  const isPending = profileLoaded && !isApproved;
 
   // Redirect pending lawyers — only once profile is loaded
   useEffect(() => {
@@ -83,15 +87,18 @@ export default function CaseDetail() {
   });
 
   const handleAcceptCase = async () => {
-    if (!caseItem || !lawyerProfile || !user) return;
-    
-    // Validation checks
-    if (lawyerProfile.status !== 'approved') {
+    if (!caseItem || !user) return;
+
+    // Validation: check approval via user_status OR lawyerProfile (legacy)
+    const approvedViaUserStatus = user?.user_status === 'approved';
+    const approvedViaProfile = lawyerProfile?.status === 'approved';
+    if (!approvedViaUserStatus && !approvedViaProfile) {
       setError('Your application must be approved before accepting cases.');
       return;
     }
-    
-    if (!lawyerProfile.referral_agreement_accepted) {
+
+    // Referral agreement check — only enforce if lawyerProfile exists
+    if (lawyerProfile && !lawyerProfile.referral_agreement_accepted) {
       setError('Please accept the referral agreement before accepting cases.');
       return;
     }
