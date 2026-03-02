@@ -76,7 +76,7 @@ const PublicFooter = () => {
         {/* Legal Disclaimer */}
         <div className="mt-12 pt-8 border-t border-gray-800">
           <p className="text-gray-500 text-xs leading-relaxed mb-6">
-            <strong>Legal Disclaimer:</strong> Taylor Made Law is a lawyer referral and marketing service, not a law firm. 
+            <strong>Legal Disclaimer:</strong> Taylor Made Law is a lawyer referral and marketing service. 
             We connect individuals seeking legal representation with qualified attorneys in our network. 
             The information provided on this website is for general informational purposes only and should not be construed as legal advice. 
             An attorney-client relationship is not formed until you retain an attorney. 
