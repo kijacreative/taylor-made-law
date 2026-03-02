@@ -67,6 +67,8 @@ export default function LawyerSettings() {
   const [activeTab, setActiveTab] = useState('profile');
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+  const [accountForm, setAccountForm] = useState({ full_name: '', email: '', phone: '' });
+  const [passwordForm, setPasswordForm] = useState({ new_password: '', confirm_password: '' });
   const [billingForm, setBillingForm] = useState({
     cardholder_name: '',
     card_number: '',
