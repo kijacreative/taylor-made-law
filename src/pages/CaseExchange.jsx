@@ -106,12 +106,24 @@ export default function CaseExchange() {
       <main className="ml-64 p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900">Case Exchange</h1>
-            <p className="text-gray-600 mt-1">
-              {isApproved ? 'Browse and accept verified case referrals.' : 'Preview the marketplace — full access unlocks upon approval.'}
-            </p>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Case Exchange</h1>
+              <p className="text-gray-600 mt-1">
+                {isApproved ? 'Browse and accept verified case referrals.' : 'Preview the marketplace — full access unlocks upon approval.'}
+              </p>
+            </div>
+            {isApproved && (
+              <TMLButton variant="primary" onClick={() => setShowSubmitModal(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Submit a Case
+              </TMLButton>
+            )}
           </div>
+
+          {showSubmitModal && (
+            <SubmitCaseModal user={user} onClose={() => setShowSubmitModal(false)} />
+          )}
 
           {/* Pending Banner */}
           {isPending && (
