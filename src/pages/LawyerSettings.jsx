@@ -103,6 +103,7 @@ export default function LawyerSettings() {
         if (!isAuth) { navigate(createPageUrl('LawyerLogin')); return; }
         const userData = await base44.auth.me();
         setUser(userData);
+        setAccountForm({ full_name: userData.full_name || '', email: userData.email || '', phone: userData.phone || '' });
       } catch (e) {
         navigate(createPageUrl('LawyerLogin'));
       } finally {
