@@ -113,16 +113,14 @@ const AppSidebar = ({ user, lawyerProfile }) => {
               <p className="text-xs text-gray-500 truncate">{user.email}</p>
             </div>
           </div>
-          {lawyerProfile && (
-            <div className={`mt-2 px-2 py-1 rounded-full text-xs font-medium text-center ${
-              lawyerProfile.status === 'approved' 
-                ? 'bg-emerald-100 text-emerald-700'
-                : lawyerProfile.status === 'pending'
-                ? 'bg-yellow-100 text-yellow-700'
-                : 'bg-red-100 text-red-700'
-            }`}>
-              {lawyerProfile.status === 'approved' ? 'Approved Attorney' : 
-               lawyerProfile.status === 'pending' ? 'Pending Approval' : 'Restricted'}
+          {(user?.user_status === 'pending' || user?.user_status === 'invited') && (
+            <div className="mt-2 px-2 py-1 rounded-full text-xs font-medium text-center bg-yellow-100 text-yellow-700">
+              Pending Approval
+            </div>
+          )}
+          {(user?.user_status === 'restricted' || user?.user_status === 'disabled') && (
+            <div className="mt-2 px-2 py-1 rounded-full text-xs font-medium text-center bg-red-100 text-red-700">
+              Restricted
             </div>
           )}
         </div>
