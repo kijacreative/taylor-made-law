@@ -20,7 +20,7 @@ const PublicNav = () => {
 
   const navLinks = [
     { label: 'Find a Lawyer', path: 'FindLawyer' },
-    { label: 'Join the Attorney Network', path: 'ForLawyers' },
+    { label: 'Join the Attorney Network', path: 'JoinNetwork' },
     { label: 'Blog', path: 'Blog' },
   ];
 
