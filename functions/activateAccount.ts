@@ -66,9 +66,11 @@ Deno.serve(async (req) => {
       }, { status: 403 });
     }
 
-    // Try to set the password. For invited users, base44.users.inviteUser already created
-    // an auth record, so register() will throw "already exists". In that case,
-    // we use resetPassword which works without needing the old password.
+    // Set the password.
+    // For invited users (via inviteUser), an auth record already exists, so register() will fail.
+    // In that case, trigger a password reset email so the user can set their password via the
+    // standard reset flow.
+    let usedResetFlow = false;
     try {
       await base44.auth.register({
         email: normalizedEmail,
@@ -78,23 +80,31 @@ Deno.serve(async (req) => {
     } catch (regErr) {
       const msg = (regErr.message || '').toLowerCase();
       if (msg.includes('already') || msg.includes('exists')) {
-        // User already has an auth account (was invited via inviteUser).
-        // Use resetPassword to set their new password.
-        try {
-          await base44.auth.resetPassword({ email: normalizedEmail, new_password: password });
-        } catch (resetErr) {
-          // resetPassword may not be available in all SDK versions; try updatePassword
-          try {
-            await base44.auth.updatePassword({ email: normalizedEmail, password });
-          } catch {
-            // If all password-setting approaches fail, log but don't block activation.
-            // The admin can manually assist. Log the failure.
-            console.error('Password set failed (user exists path):', resetErr.message);
-          }
-        }
+        // Auth account already exists (invited user). Send a password reset email
+        // so they can set their password.
+        await base44.auth.resetPasswordRequest(normalizedEmail);
+        usedResetFlow = true;
       } else {
         throw regErr;
       }
+    }
+
+    // If we had to fall back to the reset flow, mark token used and return a special response
+    // so the frontend can show the right message.
+    if (usedResetFlow) {
+      await base44.asServiceRole.entities.User.update(lawyerUser.id, {
+        email_verified: true,
+        email_verified_at: new Date().toISOString(),
+      });
+      await base44.asServiceRole.entities.ActivationToken.update(tokenRecord.id, {
+        used_at: new Date().toISOString()
+      });
+      return Response.json({
+        success: true,
+        reset_email_sent: true,
+        message: 'A password reset email has been sent to your address. Please check your inbox to set your password.',
+        user_status: lawyerUser.user_status
+      });
     }
 
     // Mark user as activated
