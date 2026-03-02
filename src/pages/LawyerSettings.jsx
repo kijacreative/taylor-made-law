@@ -157,11 +157,27 @@ export default function LawyerSettings() {
       years_experience: parseInt(profileForm.years_experience) || 0
     };
 
+    // Check if profile is complete (all required fields filled)
+    const isProfileComplete = 
+      profileForm.firm_name?.trim() &&
+      profileForm.bar_number?.trim() &&
+      profileForm.phone?.trim() &&
+      profileForm.bio?.trim() &&
+      profileForm.states_licensed?.length > 0 &&
+      profileForm.practice_areas?.length > 0 &&
+      profileForm.years_experience;
+
     try {
       if (lawyerProfile) {
         await base44.entities.LawyerProfile.update(lawyerProfile.id, profileData);
       } else {
         await base44.entities.LawyerProfile.create({ ...profileData, user_id: user.id });
+      }
+
+      // Mark profile as complete on the user record if all fields are filled
+      if (isProfileComplete && !user.profile_completed_at) {
+        await base44.auth.updateMe({ profile_completed_at: new Date().toISOString() });
+        setUser(prev => ({ ...prev, profile_completed_at: new Date().toISOString() }));
       }
       
       queryClient.invalidateQueries(['lawyerProfile']);
