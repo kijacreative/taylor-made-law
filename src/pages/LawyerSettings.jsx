@@ -253,8 +253,44 @@ export default function LawyerSettings() {
     );
   }
 
+  const handleSaveAccount = async () => {
+    setSaving(true);
+    setError(null);
+    try {
+      await base44.auth.updateMe({ 
+        full_name: accountForm.full_name,
+        phone: accountForm.phone
+      });
+      setUser(prev => ({ ...prev, full_name: accountForm.full_name, phone: accountForm.phone }));
+      showSuccess('Account info updated!');
+    } catch (err) {
+      setError('Failed to update account info.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!passwordForm.new_password || passwordForm.new_password !== passwordForm.confirm_password) {
+      setError('Passwords do not match or are empty.');
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    try {
+      await base44.auth.updateMe({ password: passwordForm.new_password });
+      setPasswordForm({ new_password: '', confirm_password: '' });
+      showSuccess('Password updated successfully!');
+    } catch (err) {
+      setError('Failed to update password.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'account', label: 'Account', icon: User },
+    { id: 'profile', label: 'Profile', icon: Building2 },
     { id: 'agreement', label: 'Referral Agreement', icon: FileText },
     { id: 'billing', label: 'Billing', icon: CreditCard },
   ];
