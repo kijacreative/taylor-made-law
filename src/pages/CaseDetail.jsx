@@ -112,23 +112,8 @@ export default function CaseDetail() {
     setError(null);
     
     try {
-      // Update case
-      await base44.entities.Case.update(caseId, {
-        status: 'accepted',
-        accepted_by: lawyerProfile.id,
-        accepted_by_email: user.email,
-        accepted_at: new Date().toISOString()
-      });
-      
-      // Create audit log
-      await base44.entities.AuditLog.create({
-        entity_type: 'Case',
-        entity_id: caseId,
-        action: 'accept_case',
-        actor_email: user.email,
-        actor_role: 'lawyer',
-        notes: `Case accepted by ${user.full_name || user.email}`
-      });
+      // Accept case via backend function (bypasses RLS)
+      await base44.functions.invoke('acceptCase', { caseId });
       
       // Send confirmation email via backend function
       try {
