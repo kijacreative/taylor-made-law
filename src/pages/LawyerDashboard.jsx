@@ -28,6 +28,17 @@ export default function LawyerDashboard() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const refreshUser = async () => {
+    const userData = await base44.auth.me();
+    if (userData.user_status === 'disabled') {
+      await base44.auth.logout();
+      navigate(createPageUrl('LawyerLogin') + '?disabled=1');
+      return;
+    }
+    setUser(userData);
+    return userData;
+  };
+
   useEffect(() => {
     const checkAuth = async () => {
       try {
@@ -36,21 +47,13 @@ export default function LawyerDashboard() {
           navigate(createPageUrl('LawyerLogin'));
           return;
         }
-        const userData = await base44.auth.me();
+        const userData = await refreshUser();
+        if (!userData) return;
         
         if (userData.role === 'admin') {
           navigate(createPageUrl('AdminDashboard'));
           return;
         }
-
-        // Block disabled users
-        if (userData.user_status === 'disabled') {
-          await base44.auth.logout();
-          navigate(createPageUrl('LawyerLogin') + '?disabled=1');
-          return;
-        }
-        
-        setUser(userData);
       } catch (e) {
         navigate(createPageUrl('Home'));
       } finally {
@@ -59,6 +62,17 @@ export default function LawyerDashboard() {
     };
     checkAuth();
   }, [navigate]);
+
+  // Poll for status changes while pending (every 30 seconds)
+  useEffect(() => {
+    if (!user || user.user_status === 'approved' || user.role === 'admin') return;
+    const interval = setInterval(async () => {
+      try {
+        await refreshUser();
+      } catch {}
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [user?.user_status]);
 
   // Get lawyer profile
   const { data: profiles = [] } = useQuery({
