@@ -114,16 +114,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'An account with this email already exists. Please log in instead.' }, { status: 409 });
     }
 
-    // Invite user via platform (creates account)
-    await base44.users.inviteUser(normalizedEmail, 'user');
+    // Register user with email + password
+    await base44.auth.register({ email: normalizedEmail, password });
 
-    // Poll for user creation (up to 10 seconds)
-    let newUser = null;
-    for (let i = 0; i < 5; i++) {
-      await new Promise(r => setTimeout(r, 2000));
-      const found = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-      if (found.length > 0) { newUser = found[0]; break; }
-    }
+    // Wait briefly for user creation, then fetch
+    await new Promise(r => setTimeout(r, 1500));
+    const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+    const newUser = newUsers[0];
 
     if (!newUser) {
       return Response.json({ error: 'Account creation failed. Please try again.' }, { status: 500 });
