@@ -82,7 +82,7 @@ const PublicNav = () => {
                     Find a Lawyer
                   </Link>
                   <Link 
-                    to={createPageUrl('ForLawyers')}
+                    to={createPageUrl('JoinNetwork')}
                     className="block px-6 py-3 text-white hover:bg-[#2a1038] transition-colors border-t border-white/10"
                     onClick={() => setDropdownOpen(false)}
                   >
