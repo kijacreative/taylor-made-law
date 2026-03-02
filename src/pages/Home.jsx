@@ -267,7 +267,7 @@ export default function Home() {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to={createPageUrl('ForLawyers')}>
+            <Link to={createPageUrl('JoinNetwork')}>
               <TMLButton variant="accent" size="lg">
                 Join Our Network
                 <ArrowRight className="ml-2 w-5 h-5" />
