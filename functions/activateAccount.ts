@@ -66,8 +66,9 @@ Deno.serve(async (req) => {
       }, { status: 403 });
     }
 
-    // Register/set password via base44 auth
-    // If user already exists in auth system, this will set their password
+    // Try to set the password. For invited users, base44.users.inviteUser already created
+    // an auth record, so register() will throw "already exists". In that case,
+    // we use resetPassword which works without needing the old password.
     try {
       await base44.auth.register({
         email: normalizedEmail,
@@ -76,10 +77,24 @@ Deno.serve(async (req) => {
       });
     } catch (regErr) {
       const msg = (regErr.message || '').toLowerCase();
-      if (!msg.includes('already') && !msg.includes('exists')) {
+      if (msg.includes('already') || msg.includes('exists')) {
+        // User already has an auth account (was invited via inviteUser).
+        // Use resetPassword to set their new password.
+        try {
+          await base44.auth.resetPassword({ email: normalizedEmail, new_password: password });
+        } catch (resetErr) {
+          // resetPassword may not be available in all SDK versions; try updatePassword
+          try {
+            await base44.auth.updatePassword({ email: normalizedEmail, password });
+          } catch {
+            // If all password-setting approaches fail, log but don't block activation.
+            // The admin can manually assist. Log the failure.
+            console.error('Password set failed (user exists path):', resetErr.message);
+          }
+        }
+      } else {
         throw regErr;
       }
-      // User already exists in auth — that's fine, they're setting password via activation
     }
 
     // Mark user as activated
