@@ -65,7 +65,7 @@ const AdminSidebar = ({ user }) => {
       active: currentPath.includes('/AdminLawyers') && !currentPath.includes('Applications')
     },
     { 
-      label: 'Applications & Review', 
+      label: 'Network Review', 
       icon: FileText, 
       path: 'AdminLawyerApplications',
       active: currentPath.includes('/AdminLawyerApplications') || currentPath.includes('/AdminNetworkReview'),
