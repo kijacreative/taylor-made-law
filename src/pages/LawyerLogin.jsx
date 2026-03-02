@@ -343,7 +343,7 @@ export default function LawyerLogin() {
               <div className="mt-6 pt-6 border-t border-gray-100 text-center space-y-3">
                 <p className="text-sm text-gray-500">
                   Not yet a member?{' '}
-                  <Link to={createPageUrl('ForLawyers')} className="text-[#3a164d] font-semibold hover:underline">
+                  <Link to={createPageUrl('JoinNetwork')} className="text-[#3a164d] font-semibold hover:underline">
                     Apply to join the network
                   </Link>
                 </p>
