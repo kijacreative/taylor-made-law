@@ -149,7 +149,7 @@ export default function Home() {
               </Link>
               <Link to={createPageUrl('ForLawyers')}>
                 <TMLButton variant="secondary" size="lg" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
-                  Join Our Network
+                  For Lawyers
                 </TMLButton>
               </Link>
             </motion.div>
