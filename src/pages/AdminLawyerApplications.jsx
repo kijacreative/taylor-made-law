@@ -14,19 +14,6 @@ import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLTextarea from '@/components/ui/TMLTextarea';
 
-// ── Applications config ──────────────────────────────────────────────────────
-const APP_STATUS_CONFIG = {
-  pending:  { label: 'Pending',  icon: Clock,        bg: 'bg-amber-50',   text: 'text-amber-700' },
-  approved: { label: 'Approved', icon: CheckCircle2, bg: 'bg-emerald-50', text: 'text-emerald-700' },
-  rejected: { label: 'Rejected', icon: XCircle,      bg: 'bg-red-50',     text: 'text-red-700' },
-};
-const APP_TABS = [
-  { value: 'pending',  label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-  { value: '',         label: 'All' },
-];
-
 // ── Network Review config ────────────────────────────────────────────────────
 const REVIEW_CONFIG = {
   pending:  { label: 'Pending Review', bg: 'bg-amber-50',   text: 'text-amber-700' },
