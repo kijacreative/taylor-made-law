@@ -65,10 +65,10 @@ const AdminSidebar = ({ user }) => {
       active: currentPath.includes('/AdminLawyers') && !currentPath.includes('Applications')
     },
     { 
-      label: 'Applications', 
+      label: 'Applications & Review', 
       icon: FileText, 
       path: 'AdminLawyerApplications',
-      active: currentPath.includes('/AdminLawyerApplications'),
+      active: currentPath.includes('/AdminLawyerApplications') || currentPath.includes('/AdminNetworkReview'),
       count: pendingApps.length
     },
     { 
