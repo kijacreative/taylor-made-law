@@ -33,6 +33,7 @@ export default function CaseExchange() {
   const [lawyerProfile, setLawyerProfile] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [showSubmitModal, setShowSubmitModal] = useState(false);
 
   const [filters, setFilters] = useState({
     search: '',
