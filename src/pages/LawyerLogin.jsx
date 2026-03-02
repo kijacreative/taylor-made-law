@@ -72,7 +72,7 @@ export default function LawyerLogin() {
     }
     setLoading(true);
     try {
-      await base44.auth.login({ email: email.toLowerCase().trim(), password });
+      await base44.auth.loginViaEmailPassword(email.toLowerCase().trim(), password);
 
       const userData = await base44.auth.me();
 
