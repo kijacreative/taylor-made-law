@@ -308,13 +308,14 @@ export default function LawyerSettings() {
           </div>
 
           {/* Status Badge - only show if not approved */}
-          {lawyerProfile && lawyerProfile.status !== 'approved' && (
+          {user && user.user_status && user.user_status !== 'approved' && (
             <div className="mb-6">
               <TMLBadge 
-                variant={lawyerProfile.status === 'pending' ? 'warning' : 'danger'}
+                variant={user.user_status === 'pending' || user.user_status === 'invited' ? 'warning' : 'danger'}
                 size="lg"
               >
-                {LAWYER_STATUSES[lawyerProfile.status]?.label || lawyerProfile.status}
+                {user.user_status === 'pending' ? 'Pending Approval' : 
+                 user.user_status === 'invited' ? 'Pending Approval' : 'Restricted'}
               </TMLBadge>
             </div>
           )}
