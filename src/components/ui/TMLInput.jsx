@@ -1,23 +1,16 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-const TMLInput = React.forwardRef(({
-  label,
-  error,
-  helperText,
-  className,
-  containerClassName,
-  required,
-  ...props
-}, ref) => {
+const TMLInput = React.forwardRef(function TMLInput(props, ref) {
+  const { label, error, helperText, className, containerClassName, required, ...rest } = props;
   return (
     <div className={cn('space-y-1.5', containerClassName)}>
-      
-
-
-
-
-
+      {label && (
+        <label className="block text-sm font-medium text-gray-700">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+      )}
       <input
         ref={ref}
         className={cn(
@@ -29,16 +22,12 @@ const TMLInput = React.forwardRef(({
           error && 'border-red-500 focus:ring-red-500/20 focus:border-red-500',
           className
         )}
-        {...props} />
-
-      {error &&
-      <p className="text-sm text-red-600">{error}</p>
-      }
-      {helperText && !error &&
-      <p className="text-sm text-gray-500">{helperText}</p>
-      }
-    </div>);
-
+        {...rest}
+      />
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      {helperText && !error && <p className="text-sm text-gray-500">{helperText}</p>}
+    </div>
+  );
 });
 
 TMLInput.displayName = 'TMLInput';

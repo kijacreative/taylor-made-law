@@ -2,17 +2,8 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 import { ChevronDown } from 'lucide-react';
 
-const TMLSelect = React.forwardRef(({ 
-  label,
-  error,
-  helperText,
-  options = [],
-  placeholder = 'Select an option',
-  className,
-  containerClassName,
-  required,
-  ...props 
-}, ref) => {
+const TMLSelect = React.forwardRef(function TMLSelect(props, ref) {
+  const { label, error, helperText, options = [], placeholder = 'Select an option', className, containerClassName, required, ...rest } = props;
   return (
     <div className={cn('space-y-1.5', containerClassName)}>
       {label && (
@@ -33,7 +24,7 @@ const TMLSelect = React.forwardRef(({
             error && 'border-red-500 focus:ring-red-500/20 focus:border-red-500',
             className
           )}
-          {...props}
+          {...rest}
         >
           <option value="" disabled>{placeholder}</option>
           {options.map((option) => (
@@ -44,12 +35,8 @@ const TMLSelect = React.forwardRef(({
         </select>
         <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
       </div>
-      {error && (
-        <p className="text-sm text-red-600">{error}</p>
-      )}
-      {helperText && !error && (
-        <p className="text-sm text-gray-500">{helperText}</p>
-      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      {helperText && !error && <p className="text-sm text-gray-500">{helperText}</p>}
     </div>
   );
 });

@@ -1,15 +1,8 @@
 import React from 'react';
 import { cn } from '@/lib/utils';
 
-const TMLTextarea = React.forwardRef(({ 
-  label,
-  error,
-  helperText,
-  className,
-  containerClassName,
-  required,
-  ...props 
-}, ref) => {
+const TMLTextarea = React.forwardRef(function TMLTextarea(props, ref) {
+  const { label, error, helperText, className, containerClassName, required, ...rest } = props;
   return (
     <div className={cn('space-y-1.5', containerClassName)}>
       {label && (
@@ -29,14 +22,10 @@ const TMLTextarea = React.forwardRef(({
           error && 'border-red-500 focus:ring-red-500/20 focus:border-red-500',
           className
         )}
-        {...props}
+        {...rest}
       />
-      {error && (
-        <p className="text-sm text-red-600">{error}</p>
-      )}
-      {helperText && !error && (
-        <p className="text-sm text-gray-500">{helperText}</p>
-      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
+      {helperText && !error && <p className="text-sm text-gray-500">{helperText}</p>}
     </div>
   );
 });
