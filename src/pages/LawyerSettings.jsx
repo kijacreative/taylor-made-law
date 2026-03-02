@@ -307,11 +307,11 @@ export default function LawyerSettings() {
             <p className="text-gray-600 mt-1">Manage your profile and account settings.</p>
           </div>
 
-          {/* Status Badge */}
-          {lawyerProfile && (
+          {/* Status Badge - only show if not approved */}
+          {lawyerProfile && lawyerProfile.status !== 'approved' && (
             <div className="mb-6">
               <TMLBadge 
-                variant={lawyerProfile.status === 'approved' ? 'success' : lawyerProfile.status === 'pending' ? 'warning' : 'danger'}
+                variant={lawyerProfile.status === 'pending' ? 'warning' : 'danger'}
                 size="lg"
               >
                 {LAWYER_STATUSES[lawyerProfile.status]?.label || lawyerProfile.status}
