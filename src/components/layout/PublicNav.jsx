@@ -130,7 +130,7 @@ const PublicNav = () => {
               <Link to={createPageUrl('FindLawyer')} onClick={() => setMobileOpen(false)}>
                 <TMLButton variant="primary" className="w-full">Find a Lawyer</TMLButton>
               </Link>
-              <Link to={createPageUrl('ForLawyers')} onClick={() => setMobileOpen(false)}>
+              <Link to={createPageUrl('JoinNetwork')} onClick={() => setMobileOpen(false)}>
                 <TMLButton variant="primary" className="w-full">Join the Network</TMLButton>
               </Link>
             </div>
