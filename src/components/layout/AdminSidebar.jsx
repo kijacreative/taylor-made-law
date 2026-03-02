@@ -30,14 +30,6 @@ const AdminSidebar = ({ user }) => {
     enabled: !!user,
   });
 
-  // Fetch pending lawyer applications count
-  const { data: pendingApps = [] } = useQuery({
-    queryKey: ['pendingAppsCount'],
-    queryFn: () => base44.entities.LawyerApplication.filter({ status: 'pending' }),
-    enabled: !!user,
-    refetchInterval: 60000,
-  });
-
   const menuItems = [
     { 
       label: 'Dashboard', 
