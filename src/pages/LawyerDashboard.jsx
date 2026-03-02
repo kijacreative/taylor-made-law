@@ -141,27 +141,48 @@ export default function LawyerDashboard() {
           </motion.div>
           )}
 
-          {needsReferralAgreement && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-8"
-            >
-              <TMLCard className="border-l-4 border-l-amber-500 bg-amber-50">
-                <div className="flex items-start gap-4">
-                  <div className="p-3 bg-amber-100 rounded-xl">
-                    <Shield className="w-6 h-6 text-amber-600" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-gray-900 text-lg">Referral Agreement Required</h3>
-                    <p className="text-gray-600 mt-1">
-                      Please accept the referral agreement before accepting cases.
-                    </p>
-                    <Link to={createPageUrl('LawyerSettings')} className="inline-block mt-3">
-                      <TMLButton variant="accent" size="sm">
-                        Review & Accept Agreement
-                      </TMLButton>
-                    </Link>
+          {/* Getting Started Checklist for new auto-approved users */}
+          {isApproved && (!lawyerProfile?.referral_agreement_accepted || !user?.profile_completed_at) && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
+              <TMLCard className="border-l-4 border-l-[#3a164d] bg-[#f5f0fa]">
+                <div className="p-2">
+                  <h3 className="font-bold text-[#3a164d] text-lg mb-1 flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5" /> Getting Started Checklist
+                  </h3>
+                  <p className="text-gray-600 text-sm mb-4">Complete these steps to unlock full case access.</p>
+                  <div className="space-y-3">
+                    <div className={`flex items-center gap-3 p-3 rounded-xl border ${lawyerProfile?.referral_agreement_accepted ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-amber-200'}`}>
+                      {lawyerProfile?.referral_agreement_accepted
+                        ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                        : <div className="w-5 h-5 rounded-full border-2 border-amber-400 shrink-0" />}
+                      <div className="flex-1">
+                        <p className={`text-sm font-semibold ${lawyerProfile?.referral_agreement_accepted ? 'text-emerald-700 line-through' : 'text-gray-900'}`}>
+                          Accept the Referral Agreement
+                        </p>
+                        <p className="text-xs text-gray-500">Required before accepting any cases</p>
+                      </div>
+                      {!lawyerProfile?.referral_agreement_accepted && (
+                        <Link to={createPageUrl('LawyerSettings')}>
+                          <TMLButton variant="accent" size="sm">Review & Accept →</TMLButton>
+                        </Link>
+                      )}
+                    </div>
+                    <div className={`flex items-center gap-3 p-3 rounded-xl border ${user?.profile_completed_at ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-amber-200'}`}>
+                      {user?.profile_completed_at
+                        ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                        : <div className="w-5 h-5 rounded-full border-2 border-amber-400 shrink-0" />}
+                      <div className="flex-1">
+                        <p className={`text-sm font-semibold ${user?.profile_completed_at ? 'text-emerald-700 line-through' : 'text-gray-900'}`}>
+                          Complete Your Attorney Profile
+                        </p>
+                        <p className="text-xs text-gray-500">Add your bio and professional details</p>
+                      </div>
+                      {!user?.profile_completed_at && (
+                        <Link to={createPageUrl('LawyerSettings')}>
+                          <TMLButton variant="accent" size="sm">Complete Profile →</TMLButton>
+                        </Link>
+                      )}
+                    </div>
                   </div>
                 </div>
               </TMLCard>
