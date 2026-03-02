@@ -72,12 +72,6 @@ const AdminSidebar = ({ user }) => {
       count: pendingApps.length
     },
     { 
-      label: 'Network Review', 
-      icon: ShieldCheck, 
-      path: 'AdminNetworkReview',
-      active: currentPath.includes('/AdminNetworkReview'),
-    },
-    { 
       label: 'Blog & Resources', 
       icon: BookOpen, 
       path: 'AdminBlog',
