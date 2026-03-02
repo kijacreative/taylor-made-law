@@ -363,6 +363,76 @@ export default function LawyerSettings() {
           </div>
 
           {/* Tab Content */}
+          {activeTab === 'account' && (
+            <div className="space-y-6">
+              <TMLCard variant="elevated">
+                <TMLCardHeader>
+                  <TMLCardTitle className="flex items-center gap-2">
+                    <User className="w-5 h-5 text-[#7e277e]" />
+                    Account Information
+                  </TMLCardTitle>
+                </TMLCardHeader>
+                <TMLCardContent className="space-y-4">
+                  <TMLInput
+                    label="Full Name"
+                    placeholder="Jane Smith"
+                    value={accountForm.full_name}
+                    onChange={(e) => setAccountForm({ ...accountForm, full_name: e.target.value })}
+                  />
+                  <TMLInput
+                    label="Email Address"
+                    type="email"
+                    placeholder="jane@lawfirm.com"
+                    value={accountForm.email}
+                    disabled
+                    hint="Email cannot be changed. Contact support if needed."
+                  />
+                  <TMLInput
+                    label="Phone Number"
+                    placeholder="(555) 123-4567"
+                    value={accountForm.phone}
+                    onChange={(e) => setAccountForm({ ...accountForm, phone: e.target.value })}
+                  />
+                  <div className="pt-4 border-t border-gray-100">
+                    <TMLButton variant="primary" onClick={handleSaveAccount} loading={saving}>
+                      <Save className="w-4 h-4 mr-2" /> Save Changes
+                    </TMLButton>
+                  </div>
+                </TMLCardContent>
+              </TMLCard>
+
+              <TMLCard variant="elevated">
+                <TMLCardHeader>
+                  <TMLCardTitle className="flex items-center gap-2">
+                    <KeyRound className="w-5 h-5 text-[#7e277e]" />
+                    Reset Password
+                  </TMLCardTitle>
+                </TMLCardHeader>
+                <TMLCardContent className="space-y-4">
+                  <TMLInput
+                    label="New Password"
+                    type="password"
+                    placeholder="Enter new password"
+                    value={passwordForm.new_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
+                  />
+                  <TMLInput
+                    label="Confirm Password"
+                    type="password"
+                    placeholder="Re-enter new password"
+                    value={passwordForm.confirm_password}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
+                  />
+                  <div className="pt-4 border-t border-gray-100">
+                    <TMLButton variant="primary" onClick={handleResetPassword} loading={saving}>
+                      <KeyRound className="w-4 h-4 mr-2" /> Update Password
+                    </TMLButton>
+                  </div>
+                </TMLCardContent>
+              </TMLCard>
+            </div>
+          )}
+
           {activeTab === 'profile' && (
             <TMLCard variant="elevated">
               <TMLCardHeader>
