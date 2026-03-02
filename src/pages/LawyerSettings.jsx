@@ -13,7 +13,10 @@ import {
   AlertCircle,
   Save,
   Loader2,
-  FileText
+  FileText,
+  KeyRound,
+  Mail,
+  Phone
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
