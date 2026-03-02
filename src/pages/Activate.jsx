@@ -125,6 +125,32 @@ export default function Activate() {
     }
   };
 
+  if (resetEmailSent) {
+    return (
+      <div className="min-h-screen bg-[#faf8f5]">
+        <PublicNav />
+        <div className="flex items-center justify-center py-24 px-4">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full">
+            <div className="bg-white rounded-2xl shadow-xl text-center p-10">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-blue-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h2>
+              <p className="text-gray-600 mb-4">
+                We've sent a password reset link to your email address. Click the link in that email to set your password and log in.
+              </p>
+              <p className="text-sm text-gray-500">
+                Can't find it? Check your spam folder or{' '}
+                <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">contact support</a>.
+              </p>
+            </div>
+          </motion.div>
+        </div>
+        <PublicFooter />
+      </div>
+    );
+  }
+
   if (success) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
