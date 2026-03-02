@@ -16,6 +16,7 @@ import {
   Lock,
   Clock,
   BarChart3,
+  Plus,
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
@@ -24,6 +25,7 @@ import TMLBadge from '@/components/ui/TMLBadge';
 import TMLSelect from '@/components/ui/TMLSelect';
 import TMLInput from '@/components/ui/TMLInput';
 import { PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
+import SubmitCaseModal from '@/components/cases/SubmitCaseModal';
 
 export default function CaseExchange() {
   const navigate = useNavigate();
