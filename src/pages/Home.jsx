@@ -147,7 +147,7 @@ export default function Home() {
                   <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </TMLButton>
               </Link>
-              <Link to={createPageUrl('ForLawyers')}>
+              <Link to={createPageUrl('JoinNetwork')}>
                 <TMLButton variant="secondary" size="lg" className="bg-white/10 border-white/30 text-white hover:bg-white/20">
                   For Lawyers
                 </TMLButton>
