@@ -141,22 +141,28 @@ export default function LawyerSettings() {
   };
 
   const handleSaveProfile = async () => {
-    if (!lawyerProfile) return;
+    if (!user) return;
     
     setSaving(true);
     setError(null);
     setSuccess(null);
     
+    const profileData = {
+      firm_name: profileForm.firm_name,
+      bar_number: profileForm.bar_number,
+      phone: profileForm.phone,
+      bio: profileForm.bio,
+      states_licensed: profileForm.states_licensed,
+      practice_areas: profileForm.practice_areas,
+      years_experience: parseInt(profileForm.years_experience) || 0
+    };
+
     try {
-      await base44.entities.LawyerProfile.update(lawyerProfile.id, {
-        firm_name: profileForm.firm_name,
-        bar_number: profileForm.bar_number,
-        phone: profileForm.phone,
-        bio: profileForm.bio,
-        states_licensed: profileForm.states_licensed,
-        practice_areas: profileForm.practice_areas,
-        years_experience: parseInt(profileForm.years_experience) || 0
-      });
+      if (lawyerProfile) {
+        await base44.entities.LawyerProfile.update(lawyerProfile.id, profileData);
+      } else {
+        await base44.entities.LawyerProfile.create({ ...profileData, user_id: user.id });
+      }
       
       queryClient.invalidateQueries(['lawyerProfile']);
       showSuccess('Profile updated successfully!');
