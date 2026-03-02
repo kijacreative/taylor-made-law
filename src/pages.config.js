@@ -57,6 +57,7 @@ import AdminLawyers from './pages/AdminLawyers';
 import AdminLeadDetail from './pages/AdminLeadDetail';
 import AdminLeads from './pages/AdminLeads';
 import AdminLogin from './pages/AdminLogin';
+import AdminNetworkReview from './pages/AdminNetworkReview';
 import AdminPopupEdit from './pages/AdminPopupEdit';
 import AdminPopups from './pages/AdminPopups';
 import AdminResourceEdit from './pages/AdminResourceEdit';
@@ -75,6 +76,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import GroupDetail from './pages/GroupDetail';
 import Groups from './pages/Groups';
 import Home from './pages/Home';
+import JoinNetwork from './pages/JoinNetwork';
 import LawyerBlog from './pages/LawyerBlog';
 import LawyerBlogDetail from './pages/LawyerBlogDetail';
 import LawyerDashboard from './pages/LawyerDashboard';
@@ -86,8 +88,6 @@ import MassTortDetail from './pages/MassTortDetail';
 import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
-import JoinNetwork from './pages/JoinNetwork';
-import AdminNetworkReview from './pages/AdminNetworkReview';
 import __Layout from './Layout.jsx';
 
 
@@ -102,6 +102,7 @@ export const PAGES = {
     "AdminLeadDetail": AdminLeadDetail,
     "AdminLeads": AdminLeads,
     "AdminLogin": AdminLogin,
+    "AdminNetworkReview": AdminNetworkReview,
     "AdminPopupEdit": AdminPopupEdit,
     "AdminPopups": AdminPopups,
     "AdminResourceEdit": AdminResourceEdit,
@@ -120,6 +121,7 @@ export const PAGES = {
     "GroupDetail": GroupDetail,
     "Groups": Groups,
     "Home": Home,
+    "JoinNetwork": JoinNetwork,
     "LawyerBlog": LawyerBlog,
     "LawyerBlogDetail": LawyerBlogDetail,
     "LawyerDashboard": LawyerDashboard,
@@ -131,8 +133,6 @@ export const PAGES = {
     "MassTorts": MassTorts,
     "MyCases": MyCases,
     "ResetPassword": ResetPassword,
-    "JoinNetwork": JoinNetwork,
-    "AdminNetworkReview": AdminNetworkReview,
 }
 
 export const pagesConfig = {

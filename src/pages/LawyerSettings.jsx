@@ -175,21 +175,38 @@ export default function LawyerSettings() {
   };
 
   const handleAcceptAgreement = async () => {
-    if (!lawyerProfile) return;
+    if (!user) return;
     
     setSaving(true);
     setError(null);
     
     try {
-      await base44.entities.LawyerProfile.update(lawyerProfile.id, {
-        referral_agreement_accepted: true,
-        referral_agreement_accepted_at: new Date().toISOString()
-      });
+      let profileId;
+
+      if (lawyerProfile) {
+        await base44.entities.LawyerProfile.update(lawyerProfile.id, {
+          referral_agreement_accepted: true,
+          referral_agreement_accepted_at: new Date().toISOString()
+        });
+        profileId = lawyerProfile.id;
+      } else {
+        // No profile yet — create one with minimal required fields
+        const newProfile = await base44.entities.LawyerProfile.create({
+          user_id: user.id,
+          firm_name: user.full_name || 'My Firm',
+          phone: '',
+          states_licensed: [],
+          practice_areas: [],
+          referral_agreement_accepted: true,
+          referral_agreement_accepted_at: new Date().toISOString()
+        });
+        profileId = newProfile.id;
+      }
       
       // Log consent
       await base44.entities.ConsentLog.create({
         entity_type: 'LawyerProfile',
-        entity_id: lawyerProfile.id,
+        entity_id: profileId,
         consent_type: 'referral_agreement',
         consent_version: REFERRAL_AGREEMENT_VERSION,
         consent_text: REFERRAL_AGREEMENT_TEXT,
