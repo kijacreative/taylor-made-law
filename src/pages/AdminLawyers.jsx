@@ -211,6 +211,32 @@ export default function AdminLawyers() {
     }
   };
 
+  const handleGenerateReport = async () => {
+    setGeneratingReport(true);
+    try {
+      const res = await base44.functions.invoke('generateLegacyReport', {});
+      if (res.data?.success && res.data?.csv) {
+        // Download CSV
+        const blob = new Blob([res.data.csv], { type: 'text/csv' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `tml-attorney-report-${new Date().toISOString().split('T')[0]}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        notify(`Report generated: ${res.data.summary?.total_lawyer_users || 0} users, ${res.data.summary?.duplicate_emails || 0} duplicate emails.`);
+      } else {
+        notifyError(res.data?.error || 'Failed to generate report.');
+      }
+    } catch (err) {
+      notifyError(err.response?.data?.error || err.message);
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
   const handleInvite = async () => {
     if (!inviteData.email) { notifyError('Email is required'); return; }
     setSaving(true);
