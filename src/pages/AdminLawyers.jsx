@@ -273,9 +273,14 @@ export default function AdminLawyers() {
               <h1 className="text-3xl font-bold text-gray-900">Attorney Management</h1>
               <p className="text-gray-600 mt-1">Manage attorney identities, applications, and access.</p>
             </div>
-            <TMLButton variant="primary" onClick={() => setShowInviteModal(true)}>
-              <Plus className="w-4 h-4 mr-2" /> Invite Attorney
-            </TMLButton>
+            <div className="flex gap-2">
+              <TMLButton variant="outline" onClick={handleGenerateReport} loading={generatingReport}>
+                <Download className="w-4 h-4 mr-2" /> Export Report
+              </TMLButton>
+              <TMLButton variant="primary" onClick={() => setShowInviteModal(true)}>
+                <Plus className="w-4 h-4 mr-2" /> Invite Attorney
+              </TMLButton>
+            </div>
           </div>
 
           {/* Notifications */}
