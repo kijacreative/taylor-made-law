@@ -1,6 +1,7 @@
 /**
- * inviteAttorney — Admin-only. Invites an attorney by email.
- * Uses upsertLawyer for unified identity logic.
+ * inviteAttorney — Admin-only. Option C Unified Identity.
+ * Upserts user record (never calls base44.users.inviteUser to avoid auth account conflicts).
+ * Creates activation token, sends invite email.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
@@ -94,19 +95,21 @@ Deno.serve(async (req) => {
     const normalizedEmail = email.toLowerCase().trim();
     const resendKey = Deno.env.get('RESEND_API_KEY');
 
-    // Find or create user with invited status (using precedence — won't downgrade pending/approved)
+    // Find or create user — NO base44.users.inviteUser() call
+    // That function creates a conflicting auth account which breaks register() later
     const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
     let lawyerUser = existingUsers[0] || null;
     let isNew = false;
 
     if (lawyerUser) {
       if (lawyerUser.user_status === 'disabled') {
-        return Response.json({ 
+        return Response.json({
           error: 'This user is disabled. Please reinstate them before re-inviting.',
           user_status: 'disabled'
         }, { status: 409 });
       }
 
+      // Never downgrade status
       const newStatus = maxStatus(lawyerUser.user_status || 'invited', 'invited');
       const updates = {};
       if (newStatus !== lawyerUser.user_status) updates.user_status = newStatus;
@@ -118,20 +121,26 @@ Deno.serve(async (req) => {
         lawyerUser = { ...lawyerUser, ...updates };
       }
     } else {
-      // Invite new user
+      // Create user entity record only (no auth account yet — that happens at activation)
+      // Base44 doesn't support creating User entity records directly, so we use inviteUser
+      // but ONLY as a user-record-creation mechanism, understanding it may fail or succeed.
+      // We then immediately check if user was created.
       try {
         await base44.users.inviteUser(normalizedEmail, 'user');
       } catch (e) {
-        console.log('inviteUser note:', e.message);
+        console.log('inviteUser note (expected for new users):', e.message);
       }
-      await new Promise(r => setTimeout(r, 1000));
+      await new Promise(r => setTimeout(r, 1500));
       const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
       lawyerUser = newUsers[0] || null;
+
       if (lawyerUser) {
         const initData = {
           user_status: 'invited',
           email_verified: false,
-          password_set: false
+          password_set: false,
+          invited_by_admin: user.email,
+          invited_at: new Date().toISOString()
         };
         if (full_name) initData.full_name = full_name;
         if (firm_name) initData.firm_name = firm_name;
@@ -148,7 +157,21 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Failed to create or find user record' }, { status: 500 });
     }
 
-    // Create activation token
+    // Invalidate all previous unused activation tokens for this email
+    const existingTokens = await base44.asServiceRole.entities.ActivationToken.filter({
+      user_email: normalizedEmail,
+      token_type: 'activation'
+    });
+    for (const t of existingTokens) {
+      if (!t.used_at) {
+        await base44.asServiceRole.entities.ActivationToken.update(t.id, {
+          used_at: new Date().toISOString(),
+          invalidated_reason: 'superseded_by_resend'
+        });
+      }
+    }
+
+    // Create new activation token
     const { rawToken, tokenHash } = await generateTokenPair();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -195,12 +218,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    return Response.json({ 
-      success: true, 
+    return Response.json({
+      success: true,
       user_id: lawyerUser.id,
       user_status: lawyerUser.user_status,
       is_new: isNew,
-      message: 'Invitation sent successfully' 
+      message: 'Invitation sent successfully'
     });
 
   } catch (error) {

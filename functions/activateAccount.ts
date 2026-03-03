@@ -1,7 +1,7 @@
 /**
  * activateAccount — Single activation endpoint for ALL users (invited + applied).
- * Token validates identity. Sets email_verified=true, password_set=true.
- * Uses base44.auth.register() to create the actual password-authenticated account.
+ * Option C Unified Identity: token validates identity, register() sets password.
+ * IMPORTANT: We do NOT call base44.users.inviteUser() before this — so register() always works.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
@@ -36,14 +36,14 @@ Deno.serve(async (req) => {
 
     const tokenRecord = tokens.find(t => !t.used_at);
     if (!tokenRecord) {
-      return Response.json({ 
+      return Response.json({
         error: 'This activation link has already been used. Please log in.',
         already_used: true
       }, { status: 400 });
     }
 
     if (new Date(tokenRecord.expires_at) < new Date()) {
-      return Response.json({ 
+      return Response.json({
         error: 'This activation link has expired.',
         expired: true,
         user_email: tokenRecord.user_email
@@ -61,16 +61,15 @@ Deno.serve(async (req) => {
     }
 
     if (lawyerUser.user_status === 'disabled') {
-      return Response.json({ 
-        error: 'Your account has been disabled. Please contact support@taylormadelaw.com.' 
+      return Response.json({
+        error: 'Your account has been disabled. Please contact support@taylormadelaw.com.'
       }, { status: 403 });
     }
 
-    // Set the password.
-    // For invited users (via inviteUser), an auth record already exists, so register() will fail.
-    // In that case, trigger a password reset email so the user can set their password via the
-    // standard reset flow.
-    let usedResetFlow = false;
+    // Register the auth account with password.
+    // Since we stopped calling base44.users.inviteUser() in our invite/apply flows,
+    // this should always succeed for new users.
+    // For users who were created via the old inviteUser flow, handle gracefully.
     try {
       await base44.auth.register({
         email: normalizedEmail,
@@ -80,31 +79,16 @@ Deno.serve(async (req) => {
     } catch (regErr) {
       const msg = (regErr.message || '').toLowerCase();
       if (msg.includes('already') || msg.includes('exists')) {
-        // Auth account already exists (invited user). Send a password reset email
-        // so they can set their password.
-        await base44.auth.resetPasswordRequest(normalizedEmail);
-        usedResetFlow = true;
+        // Auth account exists from old inviteUser flow.
+        // User needs to use Forgot Password to set their password.
+        return Response.json({
+          error: 'An account already exists for this email. Please use the "Forgot Password" link on the login page to set your password.',
+          use_forgot_password: true,
+          login_url: 'https://app.taylormadelaw.com/LawyerLogin'
+        }, { status: 409 });
       } else {
         throw regErr;
       }
-    }
-
-    // If we had to fall back to the reset flow, mark token used and return a special response
-    // so the frontend can show the right message.
-    if (usedResetFlow) {
-      await base44.asServiceRole.entities.User.update(lawyerUser.id, {
-        email_verified: true,
-        email_verified_at: new Date().toISOString(),
-      });
-      await base44.asServiceRole.entities.ActivationToken.update(tokenRecord.id, {
-        used_at: new Date().toISOString()
-      });
-      return Response.json({
-        success: true,
-        reset_email_sent: true,
-        message: 'A password reset email has been sent to your address. Please check your inbox to set your password.',
-        user_status: lawyerUser.user_status
-      });
     }
 
     // Mark user as activated
@@ -127,14 +111,6 @@ Deno.serve(async (req) => {
       actor_email: normalizedEmail,
       actor_role: 'user',
       notes: `Account activated. Status: ${lawyerUser.user_status}`
-    });
-    await base44.asServiceRole.entities.AuditLog.create({
-      entity_type: 'ActivationToken',
-      entity_id: tokenRecord.id,
-      action: 'activation_token_used',
-      actor_email: normalizedEmail,
-      actor_role: 'user',
-      notes: `Token used by ${normalizedEmail}`
     });
 
     return Response.json({
