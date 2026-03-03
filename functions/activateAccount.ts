@@ -66,10 +66,10 @@ Deno.serve(async (req) => {
       }, { status: 403 });
     }
 
-    // Register the auth account with password.
-    // Since we stopped calling base44.users.inviteUser() in our invite/apply flows,
-    // this should always succeed for new users.
-    // For users who were created via the old inviteUser flow, handle gracefully.
+    // Set the password. Two cases:
+    // 1. New invited user (no auth account yet) — register() creates the account.
+    // 2. Applied user (auth account exists with temp password) — use resetPasswordRequest flow.
+    // 3. Legacy inviteUser user (auth account exists) — same as case 2.
     try {
       await base44.auth.register({
         email: normalizedEmail,
@@ -79,13 +79,34 @@ Deno.serve(async (req) => {
     } catch (regErr) {
       const msg = (regErr.message || '').toLowerCase();
       if (msg.includes('already') || msg.includes('exists')) {
-        // Auth account exists from old inviteUser flow.
-        // User needs to use Forgot Password to set their password.
+        // Auth account already exists — send password reset email so they can set their chosen password.
+        await base44.auth.resetPasswordRequest(normalizedEmail);
+
+        // Mark user as email_verified (they clicked our token link)
+        await base44.asServiceRole.entities.User.update(lawyerUser.id, {
+          email_verified: true,
+          email_verified_at: new Date().toISOString(),
+        });
+        // Mark token as used
+        await base44.asServiceRole.entities.ActivationToken.update(tokenRecord.id, {
+          used_at: new Date().toISOString()
+        });
+
+        await base44.asServiceRole.entities.AuditLog.create({
+          entity_type: 'User',
+          entity_id: lawyerUser.id,
+          action: 'activation_completed',
+          actor_email: normalizedEmail,
+          actor_role: 'user',
+          notes: `Email verified via activation token. Password reset email sent to complete setup.`
+        });
+
         return Response.json({
-          error: 'An account already exists for this email. Please use the "Forgot Password" link on the login page to set your password.',
-          use_forgot_password: true,
-          login_url: 'https://app.taylormadelaw.com/LawyerLogin'
-        }, { status: 409 });
+          success: true,
+          reset_email_sent: true,
+          message: 'Your email has been verified. A password setup email has been sent — please check your inbox to finalize your password.',
+          user_status: lawyerUser.user_status
+        });
       } else {
         throw regErr;
       }
