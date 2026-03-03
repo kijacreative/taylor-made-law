@@ -115,6 +115,8 @@ export default function Activate() {
       if (data?.expired) {
         setExpiredError(true);
         setExpiredEmail(data?.user_email || '');
+      } else if (data?.use_forgot_password) {
+        setUseForgotPassword(true);
       } else {
         setError(data?.error || err.message || 'Failed to activate. Please try again.');
       }
