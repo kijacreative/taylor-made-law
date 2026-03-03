@@ -6,8 +6,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Users, CheckCircle2, XCircle, Clock, Mail, Phone,
-  MapPin, Scale, Building2, Loader2, X, Gift, Shield, Eye,
-  Edit, Plus, RefreshCw, AlertCircle, Ban, RotateCcw, Info, Send
+  Scale, Building2, Loader2, X, Shield, Eye,
+  Plus, AlertCircle, Ban, RotateCcw, Info, Send, Download, FileText
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
