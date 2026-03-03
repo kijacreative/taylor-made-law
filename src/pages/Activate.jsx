@@ -125,23 +125,29 @@ export default function Activate() {
     }
   };
 
-  if (resetEmailSent) {
+  if (useForgotPassword) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
         <PublicNav />
         <div className="flex items-center justify-center py-24 px-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full">
             <div className="bg-white rounded-2xl shadow-xl text-center p-10">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
-                <Mail className="w-8 h-8 text-blue-600" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
+                <AlertCircle className="w-8 h-8 text-amber-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Check Your Email</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Account Already Set Up</h2>
               <p className="text-gray-600 mb-4">
-                We've sent a password reset link to your email address. Click the link in that email to set your password and log in.
+                An account for this email was already created via another method. Please use <strong>Forgot Password</strong> on the login page to set or reset your password.
               </p>
-              <p className="text-sm text-gray-500">
-                Can't find it? Check your spam folder or{' '}
-                <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">contact support</a>.
+              <a
+                href={createPageUrl('ForgotPassword')}
+                className="inline-block bg-[#3a164d] text-white px-6 py-3 rounded-full font-semibold text-sm hover:bg-[#2a1038] transition-colors"
+              >
+                Go to Forgot Password →
+              </a>
+              <p className="text-sm text-gray-500 mt-4">
+                Need help?{' '}
+                <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">Contact support</a>
               </p>
             </div>
           </motion.div>
