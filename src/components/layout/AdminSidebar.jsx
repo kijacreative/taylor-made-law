@@ -51,16 +51,10 @@ const AdminSidebar = ({ user }) => {
       count: pendingCases.length
     },
     { 
-      label: 'Manage Lawyers', 
+      label: 'Attorney Management', 
       icon: Users, 
       path: 'AdminLawyers',
-      active: currentPath.includes('/AdminLawyers') && !currentPath.includes('Applications')
-    },
-    { 
-      label: 'Network Review', 
-      icon: FileText, 
-      path: 'AdminLawyerApplications',
-      active: currentPath.includes('/AdminLawyerApplications') || currentPath.includes('/AdminNetworkReview'),
+      active: currentPath.includes('/AdminLawyers') || currentPath.includes('/AdminLawyerApplications') || currentPath.includes('/AdminNetworkReview')
     },
     { 
       label: 'Blog & Resources', 
