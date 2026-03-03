@@ -85,16 +85,20 @@ export default function CreateGroup() {
         is_active: true
       });
 
-      // Add creator as admin
-      await base44.entities.LegalCircleMember.create({
-        circle_id: circle.id,
-        user_id: user.id,
-        user_email: user.email,
-        user_name: user.full_name,
-        role: 'admin',
-        status: 'active',
-        joined_at: new Date().toISOString()
-      });
+      // Add creator as admin (best effort)
+      try {
+        await base44.entities.LegalCircleMember.create({
+          circle_id: circle.id,
+          user_id: user.id,
+          user_email: user.email,
+          user_name: user.full_name,
+          role: 'admin',
+          status: 'active',
+          joined_at: new Date().toISOString()
+        });
+      } catch (memberErr) {
+        console.warn('Could not add member record:', memberErr.message);
+      }
 
       navigate(`${createPageUrl('GroupDetail')}?id=${circle.id}`);
     } catch (error) {
