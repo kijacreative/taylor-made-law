@@ -90,24 +90,6 @@ export default function Groups() {
     );
   }
 
-  // Check if pending lawyer
-  if (lawyerProfile?.status === 'pending') {
-    return (
-      <div className="min-h-screen bg-gray-50">
-        <AppSidebar user={user} lawyerProfile={lawyerProfile} />
-        <main className="ml-64 p-8">
-          <div className="max-w-4xl mx-auto text-center py-12">
-            <Lock className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-3">Application Under Review</h2>
-            <p className="text-gray-600 mb-6">
-              Legal Circles are available to approved attorneys. Your application is currently under review.
-            </p>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50">
       <AppSidebar user={user} lawyerProfile={lawyerProfile} />
