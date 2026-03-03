@@ -88,6 +88,8 @@ import MassTortDetail from './pages/MassTortDetail';
 import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
+import GroupInvitations from './pages/GroupInvitations';
+import AdminCircles from './pages/AdminCircles';
 import __Layout from './Layout.jsx';
 
 
@@ -133,6 +135,8 @@ export const PAGES = {
     "MassTorts": MassTorts,
     "MyCases": MyCases,
     "ResetPassword": ResetPassword,
+    "GroupInvitations": GroupInvitations,
+    "AdminCircles": AdminCircles,
 }
 
 export const pagesConfig = {
