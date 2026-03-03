@@ -100,9 +100,7 @@ export default function Activate() {
         password: formData.password,
       });
 
-      if (response.data?.success && response.data?.reset_email_sent) {
-        setResetEmailSent(true);
-      } else if (response.data?.success) {
+      if (response.data?.success) {
         setSuccess(true);
         setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1'), 2500);
       } else if (response.data?.expired) {

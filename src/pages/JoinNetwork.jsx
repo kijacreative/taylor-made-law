@@ -1,10 +1,15 @@
+/**
+ * JoinNetwork — Option C Unified Identity Apply Flow
+ * Collects profile info, submits to applyToNetwork (no password here).
+ * User receives activation email to set password.
+ */
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ArrowRight, ArrowLeft, CheckCircle2, AlertCircle,
-  Eye, EyeOff, Briefcase, DollarSign, Users, Shield
+  ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Mail,
+  Briefcase, DollarSign, Users, Shield, Loader2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import PublicNav from '@/components/layout/PublicNav';
@@ -16,9 +21,8 @@ import { PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
 import StepProgress from '@/components/attorney/StepProgress';
 
 const STEPS = [
-  { number: 1, label: 'Account Info' },
+  { number: 1, label: 'Contact Info' },
   { number: 2, label: 'Practice Details' },
-  { number: 3, label: 'Billing (Demo)' },
 ];
 
 const benefits = [
@@ -34,24 +38,20 @@ export default function JoinNetwork() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
+  const [alreadyActivated, setAlreadyActivated] = useState(false);
 
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     phone: '',
     firm_name: '',
-    password: '',
-    confirm_password: '',
     bar_number: '',
     states_licensed: [],
     practice_areas: [],
-    billing_plan: 'trial_6mo_then_49',
-    billing_account_holder: '',
-    billing_bank_name: '',
-    billing_account_type: 'checking',
-    billing_last4: '',
+    years_experience: '',
+    bio: '',
   });
 
   const updateField = (field, value) => {
@@ -71,8 +71,6 @@ export default function JoinNetwork() {
       if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Valid email is required';
       if (!formData.phone || formData.phone.replace(/\D/g, '').length < 10) e.phone = 'Valid phone number is required';
       if (!formData.firm_name.trim()) e.firm_name = 'Law firm name is required';
-      if (!formData.password || formData.password.length < 8) e.password = 'Password must be at least 8 characters';
-      if (formData.password !== formData.confirm_password) e.confirm_password = 'Passwords do not match';
     }
     if (s === 2) {
       if (!formData.states_licensed.length) e.states_licensed = 'Select at least one state';
@@ -86,52 +84,102 @@ export default function JoinNetwork() {
   const nextStep = () => {
     if (validateStep(step)) setStep(step + 1);
   };
-
   const prevStep = () => setStep(step - 1);
 
   const handleSubmit = async () => {
+    if (!validateStep(step)) return;
     setLoading(true);
     setErrors({});
     try {
-      const res = await base44.functions.invoke('joinNetwork', {
+      const res = await base44.functions.invoke('applyToNetwork', {
         full_name: formData.full_name,
         email: formData.email,
-        password: formData.password,
         phone: formData.phone,
         firm_name: formData.firm_name,
         bar_number: formData.bar_number,
         states_licensed: formData.states_licensed,
         practice_areas: formData.practice_areas,
-        billing_plan: formData.billing_plan,
-        billing_account_holder: formData.billing_account_holder,
-        billing_bank_name: formData.billing_bank_name,
-        billing_account_type: formData.billing_account_type,
-        billing_last4: formData.billing_last4,
+        years_experience: formData.years_experience ? parseInt(formData.years_experience) : null,
+        bio: formData.bio || null,
       });
 
       if (res.data?.success) {
-        // Account created — now log them in
-        try {
-          await base44.auth.login({ email: formData.email.toLowerCase().trim(), password: formData.password });
-          navigate(createPageUrl('LawyerDashboard'), { replace: true });
-        } catch (loginErr) {
-          // Login failed after creation — redirect to login page
-          navigate(createPageUrl('LawyerLogin') + '?created=1', { replace: true });
+        if (res.data?.already_activated) {
+          setAlreadyActivated(true);
+        } else {
+          setSubmittedEmail(formData.email.toLowerCase().trim());
+          setSubmitted(true);
         }
       } else {
-        setErrors({ submit: res.data?.error || 'Account creation failed. Please try again.' });
+        setErrors({ submit: res.data?.error || 'Submission failed. Please try again.' });
       }
     } catch (err) {
-      const msg = err.response?.data?.error || err.message || 'An error occurred.';
-      if (msg.includes('already exists') || msg.includes('409')) {
-        setErrors({ submit: 'An account with this email already exists. Please log in instead.' });
-      } else {
-        setErrors({ submit: msg });
-      }
+      setErrors({ submit: err.response?.data?.error || err.message || 'An error occurred.' });
     } finally {
       setLoading(false);
     }
   };
+
+  // Success state — check email
+  if (submitted) {
+    return (
+      <div className="min-h-screen bg-[#faf8f5]">
+        <PublicNav />
+        <div className="flex items-center justify-center min-h-screen px-4 pt-20">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full">
+            <div className="bg-white rounded-2xl shadow-xl text-center p-10">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Received!</h2>
+              <p className="text-gray-600 mb-2">
+                We've sent an activation link to <strong>{submittedEmail}</strong>.
+              </p>
+              <p className="text-gray-600 mb-6">
+                Click the link in that email to verify your email and set your password. Our team will review your application within 2–3 business days.
+              </p>
+              <p className="text-sm text-gray-500">
+                Can't find it? Check your spam folder or{' '}
+                <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">contact support</a>.
+              </p>
+              <div className="mt-6">
+                <Link to={createPageUrl('LawyerLogin')} className="text-[#3a164d] text-sm font-semibold hover:underline">
+                  Already activated? Sign in →
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+        <PublicFooter />
+      </div>
+    );
+  }
+
+  // Already activated — tell them to log in
+  if (alreadyActivated) {
+    return (
+      <div className="min-h-screen bg-[#faf8f5]">
+        <PublicNav />
+        <div className="flex items-center justify-center min-h-screen px-4 pt-20">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full">
+            <div className="bg-white rounded-2xl shadow-xl text-center p-10">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-blue-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Account Already Exists</h2>
+              <p className="text-gray-600 mb-6">
+                An account already exists for this email. Your application has been updated. Please log in to check your status.
+              </p>
+              <Link to={createPageUrl('LawyerLogin')}>
+                <TMLButton variant="primary" className="w-full">Sign In →</TMLButton>
+              </Link>
+            </div>
+          </motion.div>
+        </div>
+        <PublicFooter />
+      </div>
+    );
+  }
 
   if (!showForm) {
     return (
@@ -144,11 +192,11 @@ export default function JoinNetwork() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">Join the Attorney Network</h1>
               <p className="text-xl text-white/80 max-w-2xl mx-auto mb-4">
-                Get immediate access to pre-screened case referrals matched to your practice areas. Sign up in minutes.
+                Apply for access to pre-screened case referrals matched to your practice areas.
               </p>
-              <p className="text-white/60 mb-10 text-sm">No waiting period — your account is activated instantly.</p>
+              <p className="text-white/60 mb-10 text-sm">Applications are reviewed within 2–3 business days.</p>
               <TMLButton variant="accent" size="lg" onClick={() => setShowForm(true)}>
-                Create My Account — It's Free
+                Apply Now — It's Free
                 <ArrowRight className="ml-2 w-5 h-5" />
               </TMLButton>
               <p className="mt-4 text-white/50 text-sm">
@@ -165,7 +213,7 @@ export default function JoinNetwork() {
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
               {benefits.map((b, i) => (
                 <motion.div key={b.title} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}>
-                  <TMLCard variant="elevated" className="h-full text-center">
+                  <TMLCard variant="elevated" className="h-full text-center p-6">
                     <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-gradient-to-br from-[#3a164d] to-[#7e277e] flex items-center justify-center">
                       <b.icon className="w-7 h-7 text-white" />
                     </div>
@@ -181,9 +229,9 @@ export default function JoinNetwork() {
         <section className="py-20 bg-[#faf8f5]">
           <div className="max-w-3xl mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Grow Your Practice?</h2>
-            <p className="text-gray-600 mb-8">Create your account in minutes and get immediate access to case referrals.</p>
+            <p className="text-gray-600 mb-8">Apply in minutes. Our team reviews applications within 2–3 business days.</p>
             <TMLButton variant="primary" size="lg" onClick={() => setShowForm(true)}>
-              Get Started Now
+              Apply Now
               <ArrowRight className="ml-2 w-5 h-5" />
             </TMLButton>
           </div>
@@ -205,8 +253,8 @@ export default function JoinNetwork() {
               alt="Taylor Made Law"
               className="h-12 mx-auto mb-4"
             />
-            <h1 className="text-3xl font-bold text-gray-900">Join the Attorney Network</h1>
-            <p className="text-gray-500 mt-2">Create your account — instant access, no waiting period</p>
+            <h1 className="text-3xl font-bold text-gray-900">Apply to the Attorney Network</h1>
+            <p className="text-gray-500 mt-2">Submit your application — you'll receive an email to activate your account</p>
           </div>
 
           <div className="mb-8">
@@ -223,12 +271,12 @@ export default function JoinNetwork() {
             >
               <TMLCard variant="elevated" className="p-8">
 
-                {/* Step 1: Account Info */}
+                {/* Step 1: Contact Info */}
                 {step === 1 && (
                   <div className="space-y-5">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900 mb-1">Account Information</h2>
-                      <p className="text-gray-500 text-sm">Create your login credentials and basic details.</p>
+                      <h2 className="text-xl font-bold text-gray-900 mb-1">Contact Information</h2>
+                      <p className="text-gray-500 text-sm">Tell us who you are and where to reach you.</p>
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       <TMLInput label="Full Name" required value={formData.full_name} onChange={e => updateField('full_name', e.target.value)} placeholder="Jane Smith" error={errors.full_name} />
@@ -238,26 +286,9 @@ export default function JoinNetwork() {
                       <TMLInput label="Email Address" type="email" required value={formData.email} onChange={e => updateField('email', e.target.value)} placeholder="jane@smithlaw.com" error={errors.email} />
                       <TMLInput label="Phone Number" type="tel" required value={formData.phone} onChange={e => updateField('phone', e.target.value)} placeholder="(555) 555-5555" error={errors.phone} />
                     </div>
-                    <div className="relative">
-                      <TMLInput
-                        label="Create Password" type={showPassword ? 'text' : 'password'} required
-                        value={formData.password} onChange={e => updateField('password', e.target.value)}
-                        placeholder="Min. 8 characters" error={errors.password}
-                        helperText="Use 8+ characters with a mix of letters, numbers, and symbols."
-                      />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-9 text-gray-400 hover:text-gray-600">
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <TMLInput
-                        label="Confirm Password" type={showConfirmPassword ? 'text' : 'password'} required
-                        value={formData.confirm_password} onChange={e => updateField('confirm_password', e.target.value)}
-                        placeholder="Re-enter your password" error={errors.confirm_password}
-                      />
-                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-9 text-gray-400 hover:text-gray-600">
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
+                    <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800">
+                      <Mail className="w-5 h-5 shrink-0 text-blue-500 mt-0.5" />
+                      <p>You'll receive an activation email to set your password after submitting your application.</p>
                     </div>
                   </div>
                 )}
@@ -297,58 +328,6 @@ export default function JoinNetwork() {
                         ))}
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {/* Step 3: Billing (Demo) */}
-                {step === 3 && (
-                  <div className="space-y-5">
-                    <div>
-                      <h2 className="text-xl font-bold text-gray-900 mb-1">Billing Information</h2>
-                      <p className="text-gray-500 text-sm">Demo mode — no charges will occur.</p>
-                    </div>
-
-                    <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
-                      <AlertCircle className="w-5 h-5 shrink-0 text-blue-500 mt-0.5" />
-                      <p><strong>Billing is in demo mode.</strong> We will connect Stripe later. No charges will occur at this time.</p>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-3">Select Your Plan</label>
-                      <div className="space-y-3">
-                        <label className="flex items-start gap-3 p-4 border-2 rounded-xl cursor-pointer transition-all hover:border-[#3a164d] has-[:checked]:border-[#3a164d] has-[:checked]:bg-[#f5f0fa]">
-                          <input type="radio" name="billing_plan" value="trial_6mo_then_49" checked={formData.billing_plan === 'trial_6mo_then_49'} onChange={e => updateField('billing_plan', e.target.value)} className="mt-1 accent-[#3a164d]" />
-                          <div>
-                            <p className="font-semibold text-gray-900">6-Month Free Trial, then $49/month</p>
-                            <p className="text-sm text-gray-500">Start for free. Billed after trial ends. Cancel anytime.</p>
-                          </div>
-                        </label>
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-gray-100">
-                      <p className="text-sm font-semibold text-gray-700 mb-3">Banking Information (Demo)</p>
-                      <div className="space-y-3">
-                        <TMLInput label="Account Holder Name" value={formData.billing_account_holder} onChange={e => updateField('billing_account_holder', e.target.value)} placeholder="Jane Smith" />
-                        <TMLInput label="Bank Name" value={formData.billing_bank_name} onChange={e => updateField('billing_bank_name', e.target.value)} placeholder="Chase, Bank of America, etc." />
-                        <div className="grid grid-cols-2 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
-                            <select value={formData.billing_account_type} onChange={e => updateField('billing_account_type', e.target.value)}
-                              className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]">
-                              <option value="checking">Checking</option>
-                              <option value="savings">Savings</option>
-                            </select>
-                          </div>
-                          <TMLInput label="Last 4 Digits" type="text" maxLength={4} value={formData.billing_last4} onChange={e => updateField('billing_last4', e.target.value.replace(/\D/g, ''))} placeholder="1234" />
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex items-start gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800">
-                      <CheckCircle2 className="w-5 h-5 shrink-0 text-emerald-500 mt-0.5" />
-                      <p>Your account will be <strong>activated immediately</strong> upon submission. You'll be redirected to your attorney dashboard to complete your profile and accept the referral agreement.</p>
-                    </div>
 
                     {errors.submit && (
                       <div className="flex items-start gap-2 p-4 bg-red-50 border border-red-200 rounded-xl">
@@ -376,14 +355,14 @@ export default function JoinNetwork() {
                     </TMLButton>
                   )}
 
-                  {step < 3 && (
+                  {step < 2 && (
                     <TMLButton variant="primary" onClick={nextStep}>
                       Continue <ArrowRight className="w-4 h-4 ml-1" />
                     </TMLButton>
                   )}
-                  {step === 3 && (
+                  {step === 2 && (
                     <TMLButton variant="primary" loading={loading} onClick={handleSubmit}>
-                      Create My Account
+                      Submit Application
                     </TMLButton>
                   )}
                 </div>
