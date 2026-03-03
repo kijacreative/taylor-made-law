@@ -148,12 +148,15 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.User.update(lawyerUser.id, updates);
       lawyerUser = { ...lawyerUser, ...updates };
     } else {
-      // Create user via inviteUser (only mechanism to create a User entity record)
-      try {
-        await base44.users.inviteUser(normalizedEmail, 'user');
-      } catch (e) {
-        console.log('inviteUser note:', e.message);
-      }
+      // Create auth account with a random temp password.
+      // The user will set their real password via the activation link.
+      const tempPassword = 'TMLTemp!' + Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b => b.toString(16)).join('');
+      await base44.auth.register({
+        email: normalizedEmail,
+        password: tempPassword,
+        full_name: full_name || ''
+      });
+
       await new Promise(r => setTimeout(r, 1500));
       const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
       lawyerUser = newUsers[0] || null;
@@ -162,7 +165,7 @@ Deno.serve(async (req) => {
         const initData = {
           user_status: 'pending',
           email_verified: false,
-          password_set: false,
+          password_set: false, // false until they activate with their chosen password
           applied_at: new Date().toISOString()
         };
         if (full_name) initData.full_name = full_name;
