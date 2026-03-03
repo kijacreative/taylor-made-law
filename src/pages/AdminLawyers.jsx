@@ -40,6 +40,7 @@ export default function AdminLawyers() {
 
   // Modals
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [generatingReport, setGeneratingReport] = useState(false);
   const [viewingUser, setViewingUser] = useState(null);
   const [approvingUser, setApprovingUser] = useState(null);
   const [disablingUser, setDisablingUser] = useState(null);
