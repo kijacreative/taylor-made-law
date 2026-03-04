@@ -137,6 +137,40 @@ Deno.serve(async (req) => {
 
     await base44.asServiceRole.entities.User.update(user_id, updateData);
 
+    // Upsert LawyerProfile so the dashboard works immediately after approval
+    const existingProfiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id });
+    if (existingProfiles.length === 0) {
+      await base44.asServiceRole.entities.LawyerProfile.create({
+        user_id,
+        firm_name: lawyerUser.firm_name || '',
+        phone: lawyerUser.phone || '',
+        bar_number: lawyerUser.bar_number || '',
+        bio: lawyerUser.bio || '',
+        states_licensed: lawyerUser.states_licensed || [],
+        practice_areas: lawyerUser.practice_areas || [],
+        years_experience: lawyerUser.years_experience || 0,
+        status: 'approved',
+        approved_at: new Date().toISOString(),
+        approved_by: adminUser.email,
+        ...(parseInt(free_trial_months) > 0 ? {
+          subscription_status: 'trial',
+          free_trial_months: parseInt(free_trial_months),
+          trial_ends_at: updateData.trial_ends_at
+        } : { subscription_status: 'active' })
+      });
+    } else {
+      await base44.asServiceRole.entities.LawyerProfile.update(existingProfiles[0].id, {
+        status: 'approved',
+        approved_at: new Date().toISOString(),
+        approved_by: adminUser.email,
+        ...(parseInt(free_trial_months) > 0 ? {
+          subscription_status: 'trial',
+          free_trial_months: parseInt(free_trial_months),
+          trial_ends_at: updateData.trial_ends_at
+        } : { subscription_status: 'active' })
+      });
+    }
+
     const resendKey = Deno.env.get('RESEND_API_KEY');
     const firstName = (lawyerUser.full_name || '').split(' ')[0] || 'there';
     let emailSent = false;
