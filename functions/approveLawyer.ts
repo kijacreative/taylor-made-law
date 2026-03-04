@@ -57,6 +57,7 @@ function buildApprovedWithLoginEmail(firstName, loginUrl, freeTrialMonths) {
 }
 
 function buildApprovedWithActivationEmail(firstName, activationUrl, freeTrialMonths) {
+  // activationUrl is now the login URL for admin invites
   const trialBanner = parseInt(freeTrialMonths) > 0
     ? `<div style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0;">
         <p style="margin:0;color:#15803d;font-size:14px;font-weight:600;">🎁 ${freeTrialMonths} Month${parseInt(freeTrialMonths) > 1 ? 's' : ''} FREE — No payment required during your trial.</p>
