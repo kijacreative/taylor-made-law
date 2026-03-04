@@ -204,8 +204,8 @@ Deno.serve(async (req) => {
 
     // Send invite email
     if (send_email && resendKey) {
-      const activationUrl = `${BASE_URL}/Activate?token=${rawToken}`;
-      const html = buildInviteEmail(full_name || 'there', activationUrl, admin_note);
+      const loginUrl = `${BASE_URL}/LawyerLogin`;
+      const html = buildInviteEmail(full_name || 'there', loginUrl, admin_note);
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
