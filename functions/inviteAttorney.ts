@@ -33,14 +33,13 @@ function buildInviteEmail(name, activationUrl, adminNote) {
         <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${name},</p>
         <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">You've been personally invited to join the <strong>Taylor Made Law Network</strong> — a private attorney platform connecting trusted legal professionals with vetted case opportunities.</p>
         ${noteBlock}
-        <p style="margin:0 0 24px;color:#333333;font-size:15px;line-height:1.7;">Activate your account by clicking the button below:</p>
+        <p style="margin:0 0 24px;color:#333333;font-size:15px;line-height:1.7;">Click below to log in and get started:</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
           <tr><td align="center">
-            <a href="${activationUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Activate Your Account →</a>
+            <a href="${activationUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Log In to Your Account →</a>
           </td></tr>
         </table>
-        <p style="margin:0 0 16px;color:#4b5563;font-size:14px;line-height:1.7;">This link expires in <strong>7 days</strong>. Once activated, you'll be able to log in and access the Case Exchange.</p>
-        <p style="margin:0;color:#9ca3af;font-size:13px;word-break:break-all;">Or copy: ${activationUrl}</p>
+        <p style="margin:0 0 16px;color:#4b5563;font-size:14px;line-height:1.7;">Once logged in, you'll have access to the Case Exchange and the full Taylor Made Law platform.</p>
       </td></tr>
       <tr><td style="padding:28px 0 0;text-align:center;">
         <p style="margin:0 0 4px;color:#9ca3af;font-size:12px;">Taylor Made Law</p>
