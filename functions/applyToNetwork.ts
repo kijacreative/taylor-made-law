@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
     let alreadyActivated = false;
 
     if (lawyerUser) {
-      if (lawyerUser.user_status === 'disabled') {
+      if (lawyerUser.user_status === 'disabled' || lawyerUser.disabled) {
         return Response.json({
           error: 'This account has been disabled. Please contact support@taylormadelaw.com.'
         }, { status: 403 });
@@ -148,16 +148,13 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.User.update(lawyerUser.id, updates);
       lawyerUser = { ...lawyerUser, ...updates };
     } else {
-      // Create auth account with a random temp password.
-      // The user will set their real password via the activation link.
-      const tempPassword = 'TMLTemp!' + Array.from(crypto.getRandomValues(new Uint8Array(8))).map(b => b.toString(16)).join('');
-      await base44.auth.register({
-        email: normalizedEmail,
-        password: tempPassword,
-        full_name: full_name || ''
-      });
+      // DO NOT pre-register the user with a temp password.
+      // Instead, store their profile data in a LawyerApplication record
+      // and create the auth account ONLY when they click the activation link.
+      // We create a placeholder User record via inviteUser so activation can find them.
+      await base44.users.inviteUser(normalizedEmail, 'user');
 
-      await new Promise(r => setTimeout(r, 1500));
+      await new Promise(r => setTimeout(r, 2000));
       const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
       lawyerUser = newUsers[0] || null;
 
@@ -165,7 +162,7 @@ Deno.serve(async (req) => {
         const initData = {
           user_status: 'pending',
           email_verified: false,
-          password_set: false, // false until they activate with their chosen password
+          password_set: false,
           applied_at: new Date().toISOString()
         };
         if (full_name) initData.full_name = full_name;
@@ -179,6 +176,38 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.User.update(lawyerUser.id, initData);
         lawyerUser = { ...lawyerUser, ...initData };
         isNew = true;
+      }
+    }
+
+    // Upsert LawyerProfile for this user
+    if (lawyerUser) {
+      const existingProfiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id: lawyerUser.id });
+      const profileData = {
+        user_id: lawyerUser.id,
+        firm_name: firm_name || '',
+        phone: phone || '',
+        bar_number: bar_number || '',
+        bio: bio || '',
+        states_licensed: states_licensed || [],
+        practice_areas: practice_areas || [],
+        years_experience: years_experience || 0,
+        status: 'pending'
+      };
+      if (existingProfiles.length === 0) {
+        await base44.asServiceRole.entities.LawyerProfile.create(profileData);
+      } else {
+        // Update with latest application data
+        const profileUpdates = {};
+        if (firm_name) profileUpdates.firm_name = firm_name;
+        if (phone) profileUpdates.phone = phone;
+        if (bar_number) profileUpdates.bar_number = bar_number;
+        if (bio) profileUpdates.bio = bio;
+        if (states_licensed?.length) profileUpdates.states_licensed = states_licensed;
+        if (practice_areas?.length) profileUpdates.practice_areas = practice_areas;
+        if (years_experience) profileUpdates.years_experience = years_experience;
+        if (Object.keys(profileUpdates).length > 0) {
+          await base44.asServiceRole.entities.LawyerProfile.update(existingProfiles[0].id, profileUpdates);
+        }
       }
     }
 
