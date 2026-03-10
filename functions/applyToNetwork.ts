@@ -169,7 +169,17 @@ Deno.serve(async (req) => {
       application = await base44.asServiceRole.entities.LawyerApplication.create(applicationData);
     }
 
-    // ── 4. Send emails ─────────────────────────────────────────────
+    // ── 4. Phase 8: Audit logging ─────────────────────────────────
+    await base44.asServiceRole.entities.AuditLog.create({
+      entity_type: 'LawyerApplication',
+      entity_id: application.id,
+      action: 'application_submitted',
+      actor_email: normalizedEmail,
+      actor_role: 'applicant',
+      notes: `Application submitted via /JoinNetwork. Firm: ${firm_name}. States: ${(states_licensed || []).join(', ')}.`
+    });
+
+    // ── 5. Send emails ─────────────────────────────────────────────
     if (resendKey) {
       const firstName = (full_name || '').split(' ')[0] || 'there';
 
@@ -195,6 +205,16 @@ Deno.serve(async (req) => {
             subject: `New Attorney Application — ${full_name || normalizedEmail}`,
             html: buildAdminAlertEmail(full_name, normalizedEmail, firm_name, bar_number, states_licensed, practice_areas)
           })
+        });
+
+        // Phase 8: Log admin alert sent
+        await base44.asServiceRole.entities.AuditLog.create({
+          entity_type: 'System',
+          entity_id: 'admin_alerts',
+          action: 'admin_alert_sent',
+          actor_email: 'system',
+          actor_role: 'system',
+          notes: `Admin alert: new application from ${full_name} (${normalizedEmail}).`
         });
       }
 
