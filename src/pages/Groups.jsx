@@ -162,6 +162,20 @@ export default function Groups() {
             </motion.div>
           )}
 
+          {/* Search */}
+          {myCircles.length > 0 && (
+            <div className="relative mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search circles by name, description, or tag..."
+                className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]"
+              />
+            </div>
+          )}
+
           {/* My Circles */}
           {myCircles.length === 0 ? (
             <TMLCard variant="cream" className="text-center py-16">
