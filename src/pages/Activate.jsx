@@ -196,7 +196,7 @@ export default function Activate() {
                 <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Account Activated!</h2>
-              <p className="text-gray-600 mb-4">Your account is ready. Taking you to your dashboard...</p>
+              <p className="text-gray-600 mb-4">Your account is ready. Redirecting you to login...</p>
               <Loader2 className="w-6 h-6 animate-spin text-[#3a164d] mx-auto" />
             </div>
           </motion.div>
