@@ -22,6 +22,7 @@ export default function LawyerLogin() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const activated = urlParams.get('activated') === '1';
+  const passwordReset = urlParams.get('reset') === '1';
 
   useEffect(() => {
     base44.auth.isAuthenticated().then(async (auth) => {
@@ -155,6 +156,20 @@ export default function LawyerLogin() {
             <h1 className="text-3xl font-bold text-gray-900">Attorney Portal</h1>
             <p className="text-gray-500 mt-2">Sign in to access your dashboard</p>
           </div>
+
+          {passwordReset && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
+              <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-blue-800">Password updated!</p>
+                <p className="text-sm text-blue-700">Your password has been reset. Please log in below.</p>
+              </div>
+            </div>
+          )}
 
           {activated && (
             <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
