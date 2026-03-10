@@ -25,29 +25,40 @@ export default function LawyerLogin() {
   const passwordReset = urlParams.get('reset') === '1';
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then(async (auth) => {
-      if (auth) {
-        try {
-          const userData = await base44.auth.me();
-          if (userData.role === 'admin') {
-            navigate(createPageUrl('AdminDashboard'), { replace: true });
-          } else {
-            if (userData.user_status === 'disabled') {
-              await base44.auth.logout();
-              setCheckingAuth(false);
-              setDisabledBlock(true);
-              return;
+    const checkAuth = async () => {
+      try {
+        const auth = await base44.auth.isAuthenticated();
+        if (auth) {
+          try {
+            const userData = await base44.auth.me();
+            if (userData.role === 'admin') {
+              navigate(createPageUrl('AdminDashboard'), { replace: true });
+            } else {
+              if (userData.user_status === 'disabled') {
+                await base44.auth.logout();
+                setCheckingAuth(false);
+                setDisabledBlock(true);
+                return;
+              }
+              // Check if activation is pending
+              if (userData.password_set === false) {
+                navigate(createPageUrl('Activate'), { replace: true });
+                return;
+              }
+              navigate(createPageUrl('LawyerDashboard'), { replace: true });
             }
-            navigate(createPageUrl('LawyerDashboard'), { replace: true });
+          } catch {
+            setCheckingAuth(false);
           }
-        } catch {
+        } else {
           setCheckingAuth(false);
         }
-      } else {
+      } catch {
         setCheckingAuth(false);
       }
-    });
-  }, []);
+    };
+    checkAuth();
+  }, [navigate]);
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -71,6 +82,12 @@ export default function LawyerLogin() {
       if (userData.role === 'admin') {
         await base44.auth.logout();
         setError('This portal is for attorneys only. Admins must use the admin portal.');
+        return;
+      }
+
+      // Check if activation incomplete
+      if (userData.password_set === false) {
+        navigate(createPageUrl('Activate'), { replace: true });
         return;
       }
 
@@ -209,9 +226,9 @@ export default function LawyerLogin() {
                 </button>
               </div>
               <div className="flex justify-end">
-                <Link to={createPageUrl('ForgotPassword')} className="text-sm text-[#3a164d] hover:underline font-medium">
+                <a href="/forgot-password" className="text-sm text-[#3a164d] hover:underline font-medium">
                   Forgot password?
-                </Link>
+                </a>
               </div>
               <TMLButton type="submit" variant="primary" className="w-full" loading={loading}>
                 Sign In
@@ -221,9 +238,9 @@ export default function LawyerLogin() {
             <div className="mt-6 pt-6 border-t border-gray-100 text-center space-y-3">
               <p className="text-sm text-gray-500">
                 Not yet a member?{' '}
-                <Link to={createPageUrl('JoinNetwork')} className="text-[#3a164d] font-semibold hover:underline">
+                <a href="/join" className="text-[#3a164d] font-semibold hover:underline">
                   Apply to join the network
-                </Link>
+                </a>
               </p>
               <p className="text-xs text-gray-400">
                 Need help?{' '}
