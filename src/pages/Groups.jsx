@@ -74,7 +74,11 @@ export default function Groups() {
     memberships.some(m => m.circle_id === circle.id)
   );
 
-  const filteredCircles = myCircles.filter(circle => {
+  const discoverableCircles = allCircles.filter(circle =>
+    circle.visibility === 'discoverable' && !memberships.some(m => m.circle_id === circle.id)
+  );
+
+  const matchesSearch = (circle) => {
     if (!search.trim()) return true;
     const q = search.toLowerCase();
     return (
@@ -82,7 +86,10 @@ export default function Groups() {
       circle.description?.toLowerCase().includes(q) ||
       circle.tags?.some(t => t.toLowerCase().includes(q))
     );
-  });
+  };
+
+  const filteredCircles = myCircles.filter(matchesSearch);
+  const filteredDiscoverable = discoverableCircles.filter(matchesSearch);
 
   // Get pending invitations
   const { data: pendingInvites = [] } = useQuery({
