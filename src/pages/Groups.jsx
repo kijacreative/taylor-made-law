@@ -74,6 +74,16 @@ export default function Groups() {
     memberships.some(m => m.circle_id === circle.id)
   );
 
+  const filteredCircles = myCircles.filter(circle => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      circle.name?.toLowerCase().includes(q) ||
+      circle.description?.toLowerCase().includes(q) ||
+      circle.tags?.some(t => t.toLowerCase().includes(q))
+    );
+  });
+
   // Get pending invitations
   const { data: pendingInvites = [] } = useQuery({
     queryKey: ['pendingInvites', user?.email],
