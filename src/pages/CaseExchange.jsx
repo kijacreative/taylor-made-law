@@ -8,9 +8,14 @@ import {
   Loader2,
   Plus,
   Scale,
+  Search,
+  Filter,
+  X,
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
+import TMLSelect from '@/components/ui/TMLSelect';
+import { US_STATES } from '@/components/design/DesignTokens';
 import SubmitCaseModal from '@/components/cases/SubmitCaseModal';
 
 export default function CaseExchange() {
@@ -20,6 +25,11 @@ export default function CaseExchange() {
   const [authLoading, setAuthLoading] = useState(true);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    search: '',
+    state: '',
+  });
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -51,15 +61,27 @@ export default function CaseExchange() {
 
   const cases = caseData?.cases || [];
 
-  // Define practice area categories with colors and icons
+  // Define practice area categories with icons
   const categories = [
-    { name: 'Criminal', color: '#a8344e', icon: '⚖️', desc: 'Criminal Defense' },
-    { name: 'Family', color: '#1e40af', icon: '👨‍👩‍👧', desc: 'Family Law' },
-    { name: 'Estate', color: '#6b21a8', icon: '📋', desc: 'Estate Planning' },
-    { name: 'Personal Injury', color: '#c2410c', icon: '🏥', desc: 'Personal Injury' },
-    { name: 'Mass Torts', color: '#15803d', icon: '⚖️', desc: 'Mass Tort Litigation' },
-    { name: 'Class Actions', color: '#0f766e', icon: '🏛️', desc: 'Class Actions' },
+    { name: 'Criminal', icon: '⚖️', desc: 'Criminal Defense' },
+    { name: 'Family', icon: '👨‍👩‍👧', desc: 'Family Law' },
+    { name: 'Estate', icon: '📋', desc: 'Estate Planning' },
+    { name: 'Personal Injury', icon: '🏥', desc: 'Personal Injury' },
+    { name: 'Mass Torts', icon: '⚖️', desc: 'Mass Tort Litigation' },
+    { name: 'Class Actions', icon: '🏛️', desc: 'Class Actions' },
   ];
+
+  const hasActiveFilters = filters.state || filters.search;
+  const clearFilters = () => setFilters({ search: '', state: '' });
+
+  const filteredCases = cases.filter(c => {
+    if (filters.search) {
+      const s = filters.search.toLowerCase();
+      if (!c.title?.toLowerCase().includes(s) && !c.practice_area?.toLowerCase().includes(s)) return false;
+    }
+    if (filters.state && c.state !== filters.state) return false;
+    return true;
+  });
 
   if (authLoading) {
     return <div className="min-h-screen bg-gray-50 flex items-center justify-center"><Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" /></div>;
@@ -103,12 +125,12 @@ export default function CaseExchange() {
                   className="group cursor-pointer"
                 >
                   <div className="flex flex-col items-center">
-                    {/* Circular Icon Container */}
+                    {/* Circular Icon Container - #3a164d with white icon */}
                     <div
                       className="w-40 h-40 rounded-full flex items-center justify-center mb-4 shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105"
-                      style={{ backgroundColor: cat.color }}
+                      style={{ backgroundColor: '#3a164d' }}
                     >
-                      <span className="text-6xl">{cat.icon}</span>
+                      <span className="text-6xl filter brightness-0 invert">{cat.icon}</span>
                     </div>
                     {/* Text */}
                     <h3 className="text-xl font-bold text-gray-900 text-center">{cat.name}</h3>
@@ -163,7 +185,58 @@ export default function CaseExchange() {
             </div>
           ) : (
             <>
-              {cases.length === 0 ? (
+              {/* Search + Filters */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-5">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1 relative">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search cases..."
+                      value={filters.search}
+                      onChange={e => setFilters({ ...filters, search: e.target.value })}
+                      className="w-full pl-12 pr-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]"
+                    />
+                  </div>
+                  <TMLButton
+                    variant={showFilters ? 'primary' : 'outline'}
+                    onClick={() => setShowFilters(!showFilters)}
+                  >
+                    <Filter className="w-4 h-4 mr-2" />
+                    Filters
+                    {hasActiveFilters && <span className="ml-2 px-2 py-0.5 bg-white/20 rounded-full text-xs">Active</span>}
+                  </TMLButton>
+                </div>
+
+                {showFilters && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-4 pt-4 border-t border-gray-100">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <TMLSelect
+                        label="State"
+                        placeholder="All States"
+                        options={[{ value: '', label: 'All States' }, ...US_STATES.map(s => ({ value: s, label: s }))]}
+                        value={filters.state}
+                        onChange={e => setFilters({ ...filters, state: e.target.value })}
+                      />
+                    </div>
+                    <div className="flex items-center justify-end mt-4">
+                      {hasActiveFilters && (
+                        <button onClick={clearFilters} className="text-sm text-[#3a164d] hover:underline flex items-center gap-1">
+                          <X className="w-4 h-4" /> Clear filters
+                        </button>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+
+              <div className="flex items-center justify-between mb-4">
+                <p className="text-gray-600">
+                  Showing <span className="font-semibold">{filteredCases.length}</span> cases
+                </p>
+              </div>
+
+              {filteredCases.length === 0 ? (
                 <div className="text-center py-12 bg-white rounded-2xl border border-gray-100">
                   <Scale className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">No Cases Available</h3>
@@ -171,7 +244,7 @@ export default function CaseExchange() {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {cases.map((caseItem, index) => (
+                  {filteredCases.map((caseItem, index) => (
                     <motion.div
                       key={caseItem.id}
                       initial={{ opacity: 0, y: 20 }}
