@@ -100,8 +100,6 @@ export default function CreateGroup() {
         console.warn('Could not add member record:', memberErr.message);
       }
 
-      // Small delay to allow RLS membership check to resolve before navigating
-      await new Promise(r => setTimeout(r, 800));
       navigate(`${createPageUrl('GroupDetail')}?id=${circle.id}`);
     } catch (error) {
       console.error('Failed to create circle:', error);
