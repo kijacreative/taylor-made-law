@@ -86,43 +86,18 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Application is not in pending status' }, { status: 400 });
     }
 
-    // Generate activation token
-    const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
-    const token = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    const normalizedEmail = application.email.toLowerCase().trim();
 
-    const encoder = new TextEncoder();
-    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(token));
-    const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
+    // Mark application as approved
     await base44.asServiceRole.entities.LawyerApplication.update(application_id, {
       status: 'approved',
       reviewed_by: user.email,
       reviewed_at: new Date().toISOString(),
-      activation_token_hash: tokenHash,
-      activation_token_expires_at: expiresAt,
-      activation_token_used: false
+      activation_token_used: false,
+      user_created: true,
     });
 
-    // Invite the user so their account exists in the auth system
-    try {
-      await base44.users.inviteUser(application.email.toLowerCase(), 'user');
-    } catch (inviteErr) {
-      console.log('User invite note:', inviteErr.message);
-    }
-
-    const normalizedEmail = application.email.toLowerCase().trim();
-
-    // Store token in ActivationToken entity so activateAccount.js can validate it
-    await base44.asServiceRole.entities.ActivationToken.create({
-      token_hash: tokenHash,
-      token_type: 'activation',
-      user_email: normalizedEmail,
-      expires_at: expiresAt,
-    });
-
-    // Create or update a User record so this attorney appears in Manage Lawyers immediately
+    // Create or update the User record with approved status and application data
     const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
     if (existingUsers && existingUsers.length > 0) {
       await base44.asServiceRole.entities.User.update(existingUsers[0].id, {
@@ -139,47 +114,35 @@ Deno.serve(async (req) => {
         bio: application.bio,
         free_trial_months: parseInt(free_trial_months) || 0,
       });
-    } else {
-      await base44.asServiceRole.entities.User.create({
-        email: normalizedEmail,
-        full_name: application.full_name,
-        firm_name: application.firm_name,
-        phone: application.phone,
-        bar_number: application.bar_number,
-        states_licensed: application.states_licensed,
-        practice_areas: application.practice_areas,
-        years_experience: application.years_experience,
-        bio: application.bio,
-        user_status: 'approved',
-        approved_at: new Date().toISOString(),
-        approved_by: user.email,
-        free_trial_months: parseInt(free_trial_months) || 0,
-        password_set: false,
-        email_verified: false,
-      });
     }
 
-    // Mark the application as having a user created
-    await base44.asServiceRole.entities.LawyerApplication.update(application_id, {
-      user_created: true,
-    });
+    // Invite the user via Base44 — this sends them a password-setup email
+    // and creates their auth account. The invite email is the primary onboarding flow.
+    try {
+      await base44.users.inviteUser(normalizedEmail, 'user');
+    } catch (inviteErr) {
+      console.log('inviteUser note (may already exist):', inviteErr.message);
+    }
 
-    const origin = 'https://app.taylormadelaw.com';
-    const activateUrl = `${origin}/activate?token=${token}&email=${encodeURIComponent(application.email)}`;
-
+    // Send a separate branded approval notification email
+    const dashboardUrl = 'https://app.taylormadelaw.com/LawyerDashboard';
     const resendKey = Deno.env.get('RESEND_API_KEY');
-    const emailRes = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        from: 'Taylor Made Law <noreply@taylormadelaw.com>',
-        to: [application.email],
-        subject: "You're Approved — Set Your Password to Access TML",
-        html: buildApprovalEmail(application.full_name, activateUrl, free_trial_months)
-      })
-    });
+    let emailSent = false;
+    if (resendKey) {
+      const emailRes = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'Taylor Made Law <noreply@taylormadelaw.com>',
+          to: [application.email],
+          subject: "You're Approved — Welcome to the Taylor Made Law Network",
+          html: buildApprovalEmail(application.full_name, dashboardUrl, free_trial_months)
+        })
+      });
+      emailSent = emailRes.ok;
+    }
 
-    return Response.json({ success: true, email_sent: emailRes.ok });
+    return Response.json({ success: true, email_sent: emailSent });
 
   } catch (error) {
     console.error('Error approving application:', error);
