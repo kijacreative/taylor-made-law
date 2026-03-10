@@ -170,7 +170,7 @@ export default function Groups() {
           )}
 
           {/* Search */}
-          {myCircles.length > 0 && (
+          {(myCircles.length > 0 || discoverableCircles.length > 0) && (
             <div className="relative mb-6">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <input
