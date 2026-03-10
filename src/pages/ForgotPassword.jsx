@@ -97,7 +97,7 @@ Need help? Contact us at support@taylormadelaw.com
             <p className="text-sm text-gray-500 mb-6">
               The reset link will expire in 1 hour. Didn't receive an email? Check your spam folder or contact support.
             </p>
-            <Link to={createPageUrl('Login')}>
+            <Link to={createPageUrl('LawyerLogin')}>
               <TMLButton variant="primary" className="w-full">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Back to Login
