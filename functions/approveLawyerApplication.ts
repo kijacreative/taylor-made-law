@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
     });
 
     // Send activation email
-    const activateUrl = `https://app.taylormadelaw.com/Activate?token=${rawToken}`;
+    const activateUrl = `https://app.taylormadelaw.com/Activate?token=${rawToken}&email=${encodeURIComponent(normalizedEmail)}`;
     const resendKey = Deno.env.get('RESEND_API_KEY');
     let emailSent = false;
     if (resendKey) {
