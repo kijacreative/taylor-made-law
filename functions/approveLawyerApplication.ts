@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const LOGO = 'https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png';
 const YEAR = new Date().getFullYear();
@@ -18,8 +18,6 @@ function emailWrapper(content) {
         ${content}
       </td></tr>
       <tr><td style="padding:28px 0 0;text-align:center;">
-        <p style="margin:0 0 4px;color:#9ca3af;font-size:12px;">Taylor Made Law</p>
-        <p style="margin:0 0 4px;color:#9ca3af;font-size:12px;">This is an automated message from the Taylor Made Law Network.</p>
         <p style="margin:0;color:#9ca3af;font-size:12px;">Questions? <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;text-decoration:none;">support@taylormadelaw.com</a></p>
         <p style="margin:8px 0 0;color:#bbb;font-size:11px;">© ${YEAR} Taylor Made Law. All rights reserved.</p>
       </td></tr>
@@ -30,7 +28,7 @@ function emailWrapper(content) {
 </html>`;
 }
 
-function buildApprovalEmail(name, dashboardUrl, freeTrialMonths) {
+function buildApprovalEmail(name, activateUrl, freeTrialMonths) {
   const trialBanner = parseInt(freeTrialMonths) > 0
     ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
         <tr><td style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:0 8px 8px 0;padding:14px 18px;">
@@ -48,15 +46,15 @@ function buildApprovalEmail(name, dashboardUrl, freeTrialMonths) {
     <h1 style="margin:0 0 8px;text-align:center;color:#111827;font-size:26px;font-weight:700;">You're Approved!</h1>
     <p style="margin:0 0 28px;text-align:center;color:#6b7280;font-size:15px;">Welcome to the Taylor Made Law Network</p>
     <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${name},</p>
-    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Your application to join the Taylor Made Law Network has been <strong>approved</strong>.</p>
-    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">You will receive a <strong>separate email</strong> shortly with a link to set up your account password. Once your password is set, click below to access the attorney portal:</p>
+    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Your application to join the <strong>Taylor Made Law Network</strong> has been approved. Click the button below to set your password and access the attorney portal.</p>
     ${trialBanner}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
       <tr><td align="center">
-        <a href="${dashboardUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Access Attorney Portal →</a>
+        <a href="${activateUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Set Your Password &amp; Access Portal →</a>
       </td></tr>
     </table>
-    <p style="margin:0;color:#6b7280;font-size:14px;line-height:1.7;">Questions? Contact us at <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;">support@taylormadelaw.com</a></p>
+    <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;text-align:center;">This link expires in 7 days.</p>
+    <p style="margin:0;color:#9ca3af;font-size:11px;text-align:center;word-break:break-all;">Or copy: ${activateUrl}</p>
   `);
 }
 
@@ -88,57 +86,49 @@ Deno.serve(async (req) => {
 
     const normalizedEmail = application.email.toLowerCase().trim();
 
+    // Generate a secure activation token
+    const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+    const rawToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(rawToken));
+    const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    // Invalidate any previous unused tokens for this email
+    const existingTokens = await base44.asServiceRole.entities.ActivationToken.filter({
+      user_email: normalizedEmail,
+      token_type: 'activation'
+    });
+    for (const t of existingTokens) {
+      if (!t.used_at) {
+        await base44.asServiceRole.entities.ActivationToken.update(t.id, {
+          used_at: new Date().toISOString()
+        });
+      }
+    }
+
+    // Store new token
+    await base44.asServiceRole.entities.ActivationToken.create({
+      token_hash: tokenHash,
+      token_type: 'activation',
+      user_email: normalizedEmail,
+      expires_at: expiresAt,
+      created_by_admin: user.email,
+    });
+
     // Mark application as approved
     await base44.asServiceRole.entities.LawyerApplication.update(application_id, {
       status: 'approved',
       reviewed_by: user.email,
       reviewed_at: new Date().toISOString(),
+      activation_token_hash: tokenHash,
+      activation_token_expires_at: expiresAt,
       activation_token_used: false,
-      user_created: true,
+      user_created: false,
     });
 
-    // Invite the user via Base44 — this sends them a password-setup email
-    // and creates their auth account. The invite email is the primary onboarding flow.
-    try {
-      await base44.users.inviteUser(normalizedEmail, 'user');
-    } catch (inviteErr) {
-      console.log('inviteUser note (may already exist):', inviteErr.message);
-    }
-
-    // Small delay to allow Base44 to create the User entity after invite
-    await new Promise(r => setTimeout(r, 1000));
-
-    // Create or update the User record with approved status and application data
-    const profileData = {
-      user_status: 'approved',
-      approved_at: new Date().toISOString(),
-      approved_by: user.email,
-      full_name: application.full_name,
-      firm_name: application.firm_name,
-      phone: application.phone || '',
-      bar_number: application.bar_number || '',
-      states_licensed: application.states_licensed || [],
-      practice_areas: application.practice_areas || [],
-      years_experience: application.years_experience || 0,
-      bio: application.bio || '',
-      free_trial_months: parseInt(free_trial_months) || 0,
-    };
-
-    const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-    if (existingUsers && existingUsers.length > 0) {
-      await base44.asServiceRole.entities.User.update(existingUsers[0].id, profileData);
-    } else {
-      // Create the User entity record so the dashboard works on first login
-      await base44.asServiceRole.entities.User.create({
-        email: normalizedEmail,
-        ...profileData,
-        password_set: false,
-        email_verified: false,
-      });
-    }
-
-    // Send a separate branded approval notification email
-    const dashboardUrl = 'https://app.taylormadelaw.com/LawyerDashboard';
+    // Send activation email
+    const activateUrl = `https://app.taylormadelaw.com/Activate?token=${rawToken}`;
     const resendKey = Deno.env.get('RESEND_API_KEY');
     let emailSent = false;
     if (resendKey) {
@@ -148,12 +138,21 @@ Deno.serve(async (req) => {
         body: JSON.stringify({
           from: 'Taylor Made Law <noreply@taylormadelaw.com>',
           to: [application.email],
-          subject: "You're Approved — Welcome to the Taylor Made Law Network",
-          html: buildApprovalEmail(application.full_name, dashboardUrl, free_trial_months)
+          subject: "You're Approved — Set Up Your Taylor Made Law Account",
+          html: buildApprovalEmail(application.full_name, activateUrl, free_trial_months)
         })
       });
       emailSent = emailRes.ok;
     }
+
+    await base44.asServiceRole.entities.AuditLog.create({
+      entity_type: 'LawyerApplication',
+      entity_id: application_id,
+      action: 'approved',
+      actor_email: user.email,
+      actor_role: 'admin',
+      notes: `Application approved. Activation email sent to ${normalizedEmail}.`
+    });
 
     return Response.json({ success: true, email_sent: emailSent });
 
