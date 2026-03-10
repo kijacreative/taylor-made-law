@@ -34,7 +34,13 @@ const benefits = [
 
 export default function JoinNetwork() {
   const navigate = useNavigate();
-  const [showForm, setShowForm] = useState(false);
+
+  // Read URL params for pre-fill (from email invite links)
+  const urlParams = new URLSearchParams(window.location.search);
+  const prefilledEmail = urlParams.get('email') || '';
+  const prefilledName = urlParams.get('name') || '';
+
+  const [showForm, setShowForm] = useState(!!prefilledEmail);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
@@ -43,8 +49,8 @@ export default function JoinNetwork() {
   const [alreadyActivated, setAlreadyActivated] = useState(false);
 
   const [formData, setFormData] = useState({
-    full_name: '',
-    email: '',
+    full_name: prefilledName,
+    email: prefilledEmail,
     phone: '',
     firm_name: '',
     bar_number: '',

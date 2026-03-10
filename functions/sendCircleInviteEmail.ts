@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
                 <li>Grow your practice network</li>
               </ul>
             </div>
-            <a href="https://app.taylormadelaw.com/JoinNetwork" style="display:inline-block;background:#3a164d;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:14px;">Apply to Join the Network</a>
+            <a href="https://app.taylormadelaw.com/JoinNetwork?email=${encodeURIComponent(invitee_email)}&name=${encodeURIComponent(invitee_name || '')}" style="display:inline-block;background:#3a164d;color:#fff;padding:12px 28px;border-radius:999px;text-decoration:none;font-weight:600;font-size:14px;">Apply to Join the Network</a>
             <p style="margin-top:24px;color:#9ca3af;font-size:12px;">Taylor Made Law Network · Attorney Referral Platform</p>
           </div>
         </div>
