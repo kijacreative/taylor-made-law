@@ -7,16 +7,10 @@ import { motion } from 'framer-motion';
 import {
   Loader2,
   Plus,
-  Gavel,
-  Users,
-  BookOpen,
-  Zap,
   Scale,
-  Building2,
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
-import { PRACTICE_AREAS } from '@/components/design/DesignTokens';
 import SubmitCaseModal from '@/components/cases/SubmitCaseModal';
 
 export default function CaseExchange() {
