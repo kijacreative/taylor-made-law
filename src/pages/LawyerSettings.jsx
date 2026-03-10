@@ -105,6 +105,17 @@ export default function LawyerSettings() {
         const userData = await base44.auth.me();
         setUser(userData);
         setAccountForm({ full_name: userData.full_name || '', email: userData.email || '', phone: userData.phone || '' });
+        // Pre-populate profile form with data saved on user entity during signup/activation
+        setProfileForm(prev => ({
+          ...prev,
+          firm_name: prev.firm_name || userData.firm_name || '',
+          bar_number: prev.bar_number || userData.bar_number || '',
+          phone: prev.phone || userData.phone || '',
+          states_licensed: prev.states_licensed?.length > 0 ? prev.states_licensed : (userData.states_licensed || []),
+          practice_areas: prev.practice_areas?.length > 0 ? prev.practice_areas : (userData.practice_areas || []),
+          years_experience: prev.years_experience || userData.years_experience?.toString() || '',
+          bio: prev.bio || userData.bio || '',
+        }));
       } catch (e) {
         navigate(createPageUrl('LawyerLogin'));
       } finally {
