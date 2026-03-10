@@ -12,7 +12,8 @@ import {
   ArrowRight,
   Loader2,
   Shield,
-  Sparkles
+  Sparkles,
+  Search
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
