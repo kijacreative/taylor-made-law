@@ -191,9 +191,14 @@ export default function Groups() {
                 </TMLButton>
               </Link>
             </TMLCard>
+          ) : filteredCircles.length === 0 ? (
+            <div className="text-center py-12 text-gray-500">
+              <Search className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+              <p>No circles match "<strong>{search}</strong>"</p>
+            </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {myCircles.map((circle, index) => {
+              {filteredCircles.map((circle, index) => {
                 const myMembership = memberships.find(m => m.circle_id === circle.id);
                 const isAdmin = myMembership?.role === 'admin';
                 
