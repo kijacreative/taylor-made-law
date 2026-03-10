@@ -97,31 +97,44 @@ Deno.serve(async (req) => {
       user_created: true,
     });
 
-    // Create or update the User record with approved status and application data
-    const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-    if (existingUsers && existingUsers.length > 0) {
-      await base44.asServiceRole.entities.User.update(existingUsers[0].id, {
-        user_status: 'approved',
-        approved_at: new Date().toISOString(),
-        approved_by: user.email,
-        full_name: application.full_name,
-        firm_name: application.firm_name,
-        phone: application.phone,
-        bar_number: application.bar_number,
-        states_licensed: application.states_licensed,
-        practice_areas: application.practice_areas,
-        years_experience: application.years_experience,
-        bio: application.bio,
-        free_trial_months: parseInt(free_trial_months) || 0,
-      });
-    }
-
     // Invite the user via Base44 — this sends them a password-setup email
     // and creates their auth account. The invite email is the primary onboarding flow.
     try {
       await base44.users.inviteUser(normalizedEmail, 'user');
     } catch (inviteErr) {
       console.log('inviteUser note (may already exist):', inviteErr.message);
+    }
+
+    // Small delay to allow Base44 to create the User entity after invite
+    await new Promise(r => setTimeout(r, 1000));
+
+    // Create or update the User record with approved status and application data
+    const profileData = {
+      user_status: 'approved',
+      approved_at: new Date().toISOString(),
+      approved_by: user.email,
+      full_name: application.full_name,
+      firm_name: application.firm_name,
+      phone: application.phone || '',
+      bar_number: application.bar_number || '',
+      states_licensed: application.states_licensed || [],
+      practice_areas: application.practice_areas || [],
+      years_experience: application.years_experience || 0,
+      bio: application.bio || '',
+      free_trial_months: parseInt(free_trial_months) || 0,
+    };
+
+    const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+    if (existingUsers && existingUsers.length > 0) {
+      await base44.asServiceRole.entities.User.update(existingUsers[0].id, profileData);
+    } else {
+      // Create the User entity record so the dashboard works on first login
+      await base44.asServiceRole.entities.User.create({
+        email: normalizedEmail,
+        ...profileData,
+        password_set: false,
+        email_verified: false,
+      });
     }
 
     // Send a separate branded approval notification email
