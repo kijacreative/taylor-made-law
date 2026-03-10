@@ -185,13 +185,35 @@ Deno.serve(async (req) => {
       emailSent = emailRes.ok;
     }
 
+    // ── Phase 8: Comprehensive audit logging ──────────────────────
+    // Log application approval
     await base44.asServiceRole.entities.AuditLog.create({
       entity_type: 'LawyerApplication',
       entity_id: application_id,
-      action: 'approved',
+      action: 'application_approved',
       actor_email: adminUser.email,
       actor_role: 'admin',
-      notes: `Application approved. Activation email sent: ${emailSent}. upsert_action=${upsertResult.data?.action}.`
+      notes: `Application approved. Free trial: ${free_trial_months} months. Activation email: ${emailSent}. User action: ${upsertResult.data?.action}.`
+    });
+
+    // Log activation token creation
+    await base44.asServiceRole.entities.AuditLog.create({
+      entity_type: 'ActivationToken',
+      entity_id: tokenRecord.id,
+      action: 'activation_token_created',
+      actor_email: adminUser.email,
+      actor_role: 'admin',
+      notes: `Activation token created for ${normalizedEmail}. Expires: ${expiresAt}.`
+    });
+
+    // Log admin alert sent
+    await base44.asServiceRole.entities.AuditLog.create({
+      entity_type: 'System',
+      entity_id: 'admin_alerts',
+      action: 'admin_alert_sent',
+      actor_email: 'system',
+      actor_role: 'system',
+      notes: `Admin approval notification. Application: ${application_id}, Lawyer: ${application.full_name}.`
     });
 
     return Response.json({ success: true, email_sent: emailSent });
