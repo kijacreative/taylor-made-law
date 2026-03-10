@@ -320,25 +320,24 @@ export default function JoinNetwork() {
             >
               <TMLCard variant="elevated" className="p-8">
 
-                {/* Step 1: Contact Info */}
+                {/* Step 1: Account Setup */}
                 {step === 1 && (
                   <div className="space-y-5">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900 mb-1">Contact Information</h2>
-                      <p className="text-gray-500 text-sm">Tell us who you are and where to reach you.</p>
+                      <h2 className="text-xl font-bold text-gray-900 mb-1">Create Your Account</h2>
+                      <p className="text-gray-500 text-sm">Set up your login credentials and basic information.</p>
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       <TMLInput label="Full Name" required value={formData.full_name} onChange={e => updateField('full_name', e.target.value)} placeholder="Jane Smith" error={errors.full_name} />
+                      <TMLInput label="Email Address" type="email" required value={formData.email} onChange={e => updateField('email', e.target.value)} placeholder="jane@smithlaw.com" error={errors.email} />
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <TMLInput label="Phone Number" type="tel" required value={formData.phone} onChange={e => updateField('phone', e.target.value)} placeholder="(555) 555-5555" error={errors.phone} />
                       <TMLInput label="Law Firm Name" required value={formData.firm_name} onChange={e => updateField('firm_name', e.target.value)} placeholder="Smith & Associates" error={errors.firm_name} />
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <TMLInput label="Email Address" type="email" required value={formData.email} onChange={e => updateField('email', e.target.value)} placeholder="jane@smithlaw.com" error={errors.email} />
-                      <TMLInput label="Phone Number" type="tel" required value={formData.phone} onChange={e => updateField('phone', e.target.value)} placeholder="(555) 555-5555" error={errors.phone} />
-                    </div>
-                    <TMLInput label="Bar Number" required value={formData.bar_number} onChange={e => updateField('bar_number', e.target.value)} placeholder="BAR123456" error={errors.bar_number} />
-                    <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800">
-                      <Mail className="w-5 h-5 shrink-0 text-blue-500 mt-0.5" />
-                      <p>Upon approval, you'll receive an email with a link to activate your account and set your password.</p>
+                      <TMLInput label="Password" type="password" required value={formData.password} onChange={e => updateField('password', e.target.value)} placeholder="Min 8 characters" error={errors.password} />
+                      <TMLInput label="Confirm Password" type="password" required value={formData.password_confirm} onChange={e => updateField('password_confirm', e.target.value)} placeholder="Confirm password" error={errors.password_confirm} />
                     </div>
                   </div>
                 )}
@@ -348,7 +347,7 @@ export default function JoinNetwork() {
                   <div className="space-y-6">
                     <div>
                       <h2 className="text-xl font-bold text-gray-900 mb-1">Practice Details</h2>
-                      <p className="text-gray-500 text-sm">Tell us about your legal practice.</p>
+                      <p className="text-gray-500 text-sm">Tell us about your legal practice and licensing.</p>
                     </div>
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">States Where Licensed <span className="text-red-500">*</span></label>
@@ -377,16 +376,16 @@ export default function JoinNetwork() {
                         ))}
                       </div>
                     </div>
-                    <TMLInput label="Years of Experience" type="number" required min="0" max="60" value={formData.years_experience} onChange={e => updateField('years_experience', e.target.value)} placeholder="10" error={errors.years_experience} />
+                    <TMLInput label="Bar Number" required value={formData.bar_number} onChange={e => updateField('bar_number', e.target.value)} placeholder="BAR123456" error={errors.bar_number} />
                   </div>
                 )}
 
-                {/* Step 3: Bio & Referrals */}
+                {/* Step 3: Bio / Profile */}
                 {step === 3 && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900 mb-1">Bio & Referrals</h2>
-                      <p className="text-gray-500 text-sm">Tell us more about yourself and optionally refer colleagues.</p>
+                      <h2 className="text-xl font-bold text-gray-900 mb-1">Professional Profile</h2>
+                      <p className="text-gray-500 text-sm">Tell us about your legal background and experience.</p>
                     </div>
                     <TMLTextarea
                       label="Professional Bio"
@@ -398,30 +397,6 @@ export default function JoinNetwork() {
                       error={errors.bio}
                       helperText={`${formData.bio.length} characters (min 50)`}
                     />
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <label className="block text-sm font-semibold text-gray-700">Know other attorneys? (Optional)</label>
-                        <button type="button" onClick={addReferral} className="flex items-center gap-1 text-sm text-[#3a164d] hover:underline font-medium">
-                          <Plus className="w-4 h-4" /> Add Referral
-                        </button>
-                      </div>
-                      <div className="space-y-3">
-                        {formData.referrals.map((ref, i) => (
-                          <div key={i} className="flex gap-2 items-start bg-gray-50 p-3 rounded-lg">
-                            <div className="flex-1 grid grid-cols-2 gap-2">
-                              <TMLInput placeholder="Their Name" value={ref.name} onChange={e => updateReferral(i, 'name', e.target.value)} />
-                              <TMLInput type="email" placeholder="their@email.com" value={ref.email} onChange={e => updateReferral(i, 'email', e.target.value)} />
-                            </div>
-                            <button type="button" onClick={() => removeReferral(i)} className="p-2 text-red-400 hover:text-red-600 mt-1">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      {formData.referrals.length === 0 && (
-                        <p className="text-sm text-gray-400 italic">No referrals added. You can skip this step.</p>
-                      )}
-                    </div>
                   </div>
                 )}
 
