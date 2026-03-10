@@ -103,8 +103,9 @@ export default function LawyerLogin() {
     } catch (err) {
       const msg = (err.response?.data?.error || err.response?.data?.message || err.message || '').toLowerCase();
       if (msg.includes('otp') || msg.includes('verif') || msg.includes('two') || msg.includes('mfa') || msg.includes('code')) {
-        setStep('otp');
-        setResendCooldown(60);
+        // Platform requires OTP — redirect to platform's native login which handles it
+        base44.auth.redirectToLogin(createPageUrl('LawyerDashboard'));
+        return;
       } else if (msg.includes('disabled') || msg.includes('blocked')) {
         setDisabledBlock(true);
       } else if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('password') || msg.includes('credentials') || msg.includes('not found') || msg.includes('wrong')) {
