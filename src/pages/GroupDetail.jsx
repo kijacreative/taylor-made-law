@@ -181,7 +181,7 @@ export default function GroupDetail() {
             <CircleChat circleId={circleId} user={user} isAdmin={isAdmin} circleName={circle.name} />
           )}
           {activeTab === 'members' && (
-            <CircleMembers circleId={circleId} members={members} user={user} isAdmin={isAdmin} />
+            <CircleMembers circleId={circleId} members={members} user={user} isAdmin={isAdmin} circleName={circle.name} />
           )}
           {activeTab === 'cases' && circle.case_sharing_enabled && (
             <CircleCases circleId={circleId} circle={circle} user={user} isAdmin={isAdmin} />
