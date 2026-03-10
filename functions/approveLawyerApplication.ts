@@ -30,7 +30,7 @@ function emailWrapper(content) {
 </html>`;
 }
 
-function buildApprovalEmail(name, activateUrl, freeTrialMonths) {
+function buildApprovalEmail(name, dashboardUrl, freeTrialMonths) {
   const trialBanner = parseInt(freeTrialMonths) > 0
     ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
         <tr><td style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:0 8px 8px 0;padding:14px 18px;">
@@ -48,15 +48,15 @@ function buildApprovalEmail(name, activateUrl, freeTrialMonths) {
     <h1 style="margin:0 0 8px;text-align:center;color:#111827;font-size:26px;font-weight:700;">You're Approved!</h1>
     <p style="margin:0 0 28px;text-align:center;color:#6b7280;font-size:15px;">Welcome to the Taylor Made Law Network</p>
     <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${name},</p>
-    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Your attorney profile has been <strong>approved</strong> for the Taylor Made Law Network. Click the button below to verify your email and set your password — you'll then be taken directly to the attorney portal.</p>
+    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Your application to join the Taylor Made Law Network has been <strong>approved</strong>.</p>
+    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">You will receive a <strong>separate email</strong> shortly with a link to set up your account password. Once your password is set, click below to access the attorney portal:</p>
     ${trialBanner}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
       <tr><td align="center">
-        <a href="${activateUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Verify Email &amp; Set Password →</a>
+        <a href="${dashboardUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Access Attorney Portal →</a>
       </td></tr>
     </table>
-    <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;text-align:center;">This link expires in 7 days. If you did not apply, ignore this email.</p>
-    <p style="margin:0;color:#9ca3af;font-size:11px;text-align:center;word-break:break-all;">Or copy: ${activateUrl}</p>
+    <p style="margin:0;color:#6b7280;font-size:14px;line-height:1.7;">Questions? Contact us at <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;">support@taylormadelaw.com</a></p>
   `);
 }
 
