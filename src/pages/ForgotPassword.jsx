@@ -174,7 +174,7 @@ Need help? Contact us at support@taylormadelaw.com
 
           <div className="mt-6 pt-6 border-t border-gray-100 text-center">
             <Link 
-              to={createPageUrl('Login')}
+              to={createPageUrl('LawyerLogin')}
               className="text-sm text-[#7e277e] hover:text-[#993333] font-medium flex items-center justify-center gap-2"
             >
               <ArrowLeft className="w-4 h-4" />
