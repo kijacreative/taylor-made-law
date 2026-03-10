@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Send, Paperclip, AlertTriangle, Trash2, Loader2 } from 'lucide-react';
 
-export default function CircleChat({ circleId, user, isAdmin }) {
+export default function CircleChat({ circleId, user, isAdmin, circleName }) {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
@@ -55,6 +55,14 @@ export default function CircleChat({ circleId, user, isAdmin }) {
       message_text: text,
       is_deleted: false
     });
+
+    // Notify other members (fire and forget)
+    base44.functions.invoke('notifyCircleMessage', {
+      circle_id: circleId,
+      message_text: text,
+      circle_name: circleName || 'Legal Circle'
+    }).catch(() => null);
+
     setSending(false);
     inputRef.current?.focus();
   };
