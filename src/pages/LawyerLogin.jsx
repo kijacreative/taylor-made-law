@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, EyeOff, AlertCircle, Loader2, Mail, ArrowLeft, Shield } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle, Loader2, Shield } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLInput from '@/components/ui/TMLInput';
 import PublicNav from '@/components/layout/PublicNav';
