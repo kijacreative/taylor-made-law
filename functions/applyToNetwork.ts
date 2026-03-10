@@ -1,7 +1,18 @@
 /**
+ * ============================================================
+ * CANONICAL ATTORNEY ONBOARDING BACKEND FUNCTION
+ * ============================================================
  * applyToNetwork — Public endpoint. No authentication required.
+ * This is the ONE and ONLY backend function for attorney applications.
+ *
+ * Called by: pages/JoinNetwork (the canonical frontend flow)
+ * Deprecated callers (forwarded here): submitLawyerApplication, joinNetwork
+ *
  * Creates a LawyerApplication record and notifies admins.
- * User account creation happens at approval time.
+ * User account creation happens at approval time (approveLawyerApplication).
+ *
+ * DO NOT create duplicate application endpoints.
+ * ============================================================
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
