@@ -19,7 +19,7 @@ export default function ForLawyers() {
   useEffect(() => {
     // Preserve any URL params (invite tokens, pre-fill) when redirecting
     const params = window.location.search;
-    navigate(createPageUrl('JoinNetwork') + params, { replace: true });
+    navigate(`/join-the-network${params}`, { replace: true });
   }, [navigate]);
 
   return null;
