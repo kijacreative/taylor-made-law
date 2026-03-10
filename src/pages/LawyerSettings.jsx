@@ -26,6 +26,7 @@ import TMLTextarea from '@/components/ui/TMLTextarea';
 import TMLBadge from '@/components/ui/TMLBadge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PRACTICE_AREAS, US_STATES, LAWYER_STATUSES } from '@/components/design/DesignTokens';
+import BarNumberVerify from '@/components/attorney/BarNumberVerify';
 
 const REFERRAL_AGREEMENT_VERSION = '1.0.0';
 
