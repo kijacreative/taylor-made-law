@@ -47,11 +47,11 @@ export default function ForgotPassword() {
                 The link expires in 1 hour. Can't find it? Check your spam folder or{' '}
                 <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">contact support</a>.
               </p>
-              <Link to={createPageUrl('LawyerLogin')}>
+              <a href="/login">
                 <TMLButton variant="primary" className="w-full">
                   <ArrowLeft className="w-4 h-4 mr-2" /> Back to Login
                 </TMLButton>
-              </Link>
+              </a>
             </div>
           </motion.div>
         </div>
@@ -101,12 +101,12 @@ export default function ForgotPassword() {
             </form>
 
             <div className="mt-6 pt-6 border-t border-gray-100 text-center">
-              <Link
-                to={createPageUrl('LawyerLogin')}
+              <a
+                href="/login"
                 className="text-sm text-[#3a164d] font-medium hover:underline flex items-center justify-center gap-1"
               >
                 <ArrowLeft className="w-4 h-4" /> Back to Login
-              </Link>
+              </a>
             </div>
           </div>
 

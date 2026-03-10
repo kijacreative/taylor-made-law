@@ -41,14 +41,14 @@ export default function ResetPassword() {
                 This reset link is missing required information. Please use the link directly from your email,
                 or request a new one.
               </p>
-              <Link to={createPageUrl('ForgotPassword')}>
-                <TMLButton variant="primary" className="w-full">Request a New Reset Link</TMLButton>
-              </Link>
-              <div className="mt-4">
-                <Link to={createPageUrl('LawyerLogin')} className="text-sm text-[#3a164d] hover:underline">
-                  Back to Login
-                </Link>
-              </div>
+              <a href="/forgot-password">
+                 <TMLButton variant="primary" className="w-full">Request a New Reset Link</TMLButton>
+               </a>
+               <div className="mt-4">
+                 <a href="/login" className="text-sm text-[#3a164d] hover:underline">
+                   Back to Login
+                 </a>
+               </div>
             </div>
           </motion.div>
         </div>
@@ -84,7 +84,7 @@ export default function ResetPassword() {
       const res = await base44.functions.invoke('resetPassword', { token, password });
       if (res.data?.success) {
         setSuccess(true);
-        setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?reset=1', { replace: true }), 2500);
+        setTimeout(() => navigate('/login?reset=1', { replace: true }), 2500);
       } else if (res.data?.expired) {
         setExpired(true);
         setExpiredEmail(res.data?.user_email || '');
@@ -131,9 +131,9 @@ export default function ResetPassword() {
                   Send New Reset Link
                 </TMLButton>
               )}
-              <Link to={createPageUrl('ForgotPassword')} className="text-sm text-[#3a164d] hover:underline block mt-2">
+              <a href="/forgot-password" className="text-sm text-[#3a164d] hover:underline block mt-2">
                 Enter a different email
-              </Link>
+              </a>
               <p className="text-xs text-gray-500 mt-4">
                 Need help? <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">Contact Support</a>
               </p>
@@ -195,9 +195,9 @@ export default function ResetPassword() {
                 <div>
                   <p className="text-sm text-red-800">{error}</p>
                   {error.includes('invalid') || error.includes('already been used') ? (
-                    <Link to={createPageUrl('ForgotPassword')} className="text-sm text-red-700 underline font-medium mt-1 block">
+                    <a href="/forgot-password" className="text-sm text-red-700 underline font-medium mt-1 block">
                       Request a new reset link →
-                    </Link>
+                    </a>
                   ) : null}
                 </div>
               </div>
@@ -247,13 +247,13 @@ export default function ResetPassword() {
             </form>
 
             <div className="mt-6 pt-6 border-t border-gray-100 text-center">
-              <Link
-                to={createPageUrl('LawyerLogin')}
-                className="text-sm text-[#3a164d] font-medium hover:underline flex items-center justify-center gap-1"
-              >
-                <ArrowLeft className="w-4 h-4" /> Back to Login
-              </Link>
-            </div>
+               <a
+                 href="/login"
+                 className="text-sm text-[#3a164d] font-medium hover:underline flex items-center justify-center gap-1"
+               >
+                 <ArrowLeft className="w-4 h-4" /> Back to Login
+               </a>
+             </div>
           </div>
 
           <p className="text-center text-sm text-gray-500 mt-6">
