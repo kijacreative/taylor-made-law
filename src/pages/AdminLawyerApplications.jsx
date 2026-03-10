@@ -6,20 +6,21 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, CheckCircle2, XCircle, Clock, Eye, Loader2,
-  Mail, Phone, Building2, Scale, X, BadgeCheck, Users, ArrowLeft
+  Mail, Phone, Building2, Scale, X, BadgeCheck, Users, ArrowLeft, FileText
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLTextarea from '@/components/ui/TMLTextarea';
 
-const REVIEW_CONFIG = {
+const STATUS_CONFIG = {
   pending:  { label: 'Pending Review', bg: 'bg-amber-50',   text: 'text-amber-700' },
-  verified: { label: 'Verified',       bg: 'bg-emerald-50', text: 'text-emerald-700' },
+  approved: { label: 'Approved',       bg: 'bg-emerald-50', text: 'text-emerald-700' },
   rejected: { label: 'Rejected',       bg: 'bg-red-50',     text: 'text-red-700' },
 };
+
 const TABS = [
   { value: 'pending',  label: 'Pending' },
-  { value: 'verified', label: 'Verified' },
+  { value: 'approved', label: 'Approved' },
   { value: 'rejected', label: 'Rejected' },
   { value: '',         label: 'All' },
 ];
@@ -31,10 +32,11 @@ export default function AdminLawyerApplications() {
   const [authLoading, setAuthLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('pending');
   const [search, setSearch] = useState('');
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedApp, setSelectedApp] = useState(null);
   const [panelAction, setPanelAction] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [freeTrialMonths, setFreeTrialMonths] = useState(0);
   const [toast, setToast] = useState(null);
 
   const showToast = (msg, type = 'success') => {
@@ -56,60 +58,65 @@ export default function AdminLawyerApplications() {
     checkAuth();
   }, [navigate]);
 
-  const { data: allUsers = [], isLoading, refetch } = useQuery({
-    queryKey: ['networkLawyers'],
-    queryFn: async () => {
-      const users = await base44.entities.User.list('-created_date');
-      return users.filter(u => u.role !== 'admin');
-    },
+  const { data: applications = [], isLoading, refetch } = useQuery({
+    queryKey: ['lawyerApplications'],
+    queryFn: () => base44.entities.LawyerApplication.list('-created_date'),
     enabled: !!user,
     refetchInterval: 30000,
   });
 
-  const counts = allUsers.reduce((acc, u) => {
-    const rs = u.review_status || 'pending';
-    acc[rs] = (acc[rs] || 0) + 1;
+  const counts = applications.reduce((acc, app) => {
+    const s = app.status || 'pending';
+    acc[s] = (acc[s] || 0) + 1;
     return acc;
   }, {});
 
-  const filtered = allUsers.filter(u => {
-    if (activeTab && (u.review_status || 'pending') !== activeTab) return false;
+  const filtered = applications.filter(app => {
+    if (activeTab && (app.status || 'pending') !== activeTab) return false;
     if (search) {
       const s = search.toLowerCase();
-      return u.full_name?.toLowerCase().includes(s) || u.email?.toLowerCase().includes(s) ||
-        u.firm_name?.toLowerCase().includes(s) || u.bar_number?.toLowerCase().includes(s);
+      return app.full_name?.toLowerCase().includes(s) || app.email?.toLowerCase().includes(s) ||
+        app.firm_name?.toLowerCase().includes(s) || app.bar_number?.toLowerCase().includes(s);
     }
     return true;
   });
 
-  const handleVerify = async () => {
+  const handleApprove = async () => {
     setActionLoading(true);
     try {
-      await base44.entities.User.update(selectedUser.id, { review_status: 'verified' });
-      await base44.entities.AuditLog.create({
-        entity_type: 'User', entity_id: selectedUser.id, action: 'lawyer_verified',
-        actor_email: user.email, actor_role: 'admin', notes: `Bar number verified by ${user.email}`
+      const res = await base44.functions.invoke('approveLawyerApplication', {
+        application_id: selectedApp.id,
+        free_trial_months: freeTrialMonths,
       });
-      showToast(`${selectedUser.full_name || selectedUser.email} marked as verified.`);
-      setSelectedUser(null); setPanelAction(null);
-      refetch(); queryClient.invalidateQueries(['networkLawyers']);
-    } catch (err) { showToast(err.message || 'Verification failed.', 'error'); }
-    finally { setActionLoading(false); }
+      if (res.data?.success) {
+        showToast(`${selectedApp.full_name || selectedApp.email} approved. Activation email sent.`);
+        setSelectedApp(null); setPanelAction(null); setFreeTrialMonths(0);
+        refetch(); queryClient.invalidateQueries(['lawyerApplications']);
+      } else {
+        showToast(res.data?.error || 'Approval failed.', 'error');
+      }
+    } catch (err) {
+      showToast(err.response?.data?.error || err.message || 'Error approving.', 'error');
+    } finally { setActionLoading(false); }
   };
 
   const handleReject = async () => {
     setActionLoading(true);
     try {
-      const res = await base44.functions.invoke('rejectLawyer', {
-        user_id: selectedUser.id, rejection_reason: rejectionReason,
+      const res = await base44.functions.invoke('rejectLawyerApplication', {
+        application_id: selectedApp.id,
+        rejection_reason: rejectionReason,
       });
       if (res.data?.success) {
-        showToast(`${selectedUser.full_name || selectedUser.email} rejected and disabled.`);
-        setSelectedUser(null); setPanelAction(null); setRejectionReason('');
-        refetch(); queryClient.invalidateQueries(['networkLawyers']);
-      } else { showToast(res.data?.error || 'Rejection failed.', 'error'); }
-    } catch (err) { showToast(err.response?.data?.error || err.message || 'Error rejecting.', 'error'); }
-    finally { setActionLoading(false); }
+        showToast(`${selectedApp.full_name || selectedApp.email} rejected.`);
+        setSelectedApp(null); setPanelAction(null); setRejectionReason('');
+        refetch(); queryClient.invalidateQueries(['lawyerApplications']);
+      } else {
+        showToast(res.data?.error || 'Rejection failed.', 'error');
+      }
+    } catch (err) {
+      showToast(err.response?.data?.error || err.message || 'Error rejecting.', 'error');
+    } finally { setActionLoading(false); }
   };
 
   if (authLoading) {
@@ -127,8 +134,8 @@ export default function AdminLawyerApplications() {
       <div className="flex-1 flex flex-col min-w-0 ml-64">
         <div className="bg-white border-b border-gray-200 px-8 py-5 flex items-center justify-between sticky top-0 z-20">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Network Review</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Review attorneys who joined the network. Verify bar numbers or remove access.</p>
+            <h1 className="text-2xl font-bold text-gray-900">Attorney Applications</h1>
+            <p className="text-sm text-gray-500 mt-0.5">Review and approve attorneys who applied to join the network.</p>
           </div>
           <AnimatePresence>
             {toast && (
@@ -147,9 +154,9 @@ export default function AdminLawyerApplications() {
         <div className="flex-1 p-8 overflow-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[
-              { label: 'Total Attorneys', count: allUsers.length, color: 'border-gray-100' },
+              { label: 'Total Applications', count: applications.length, color: 'border-gray-100' },
               { label: 'Pending Review', count: counts.pending || 0, color: 'border-amber-100' },
-              { label: 'Verified', count: counts.verified || 0, color: 'border-emerald-100' },
+              { label: 'Approved', count: counts.approved || 0, color: 'border-emerald-100' },
               { label: 'Rejected', count: counts.rejected || 0, color: 'border-red-100' },
             ].map(s => (
               <div key={s.label} className={`bg-white rounded-xl border px-5 py-4 ${s.color}`}>
@@ -161,7 +168,7 @@ export default function AdminLawyerApplications() {
 
           <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit">
             {TABS.map(tab => {
-              const cnt = tab.value ? (counts[tab.value] || 0) : allUsers.length;
+              const cnt = tab.value ? (counts[tab.value] || 0) : applications.length;
               return (
                 <button key={tab.value} onClick={() => setActiveTab(tab.value)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === tab.value ? 'bg-[#3a164d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
@@ -181,51 +188,54 @@ export default function AdminLawyerApplications() {
             <div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" /></div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-24 bg-white rounded-2xl border border-gray-100">
-              <Users className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p className="text-gray-500 font-medium">No attorneys found in this category.</p>
+              <FileText className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+              <p className="text-gray-500 font-medium">No applications found in this category.</p>
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-gray-50 border-b border-gray-100">
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Date Joined</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Date Applied</th>
                     <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Attorney</th>
                     <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Firm / Bar #</th>
                     <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">States</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Referral Agmt</th>
-                    <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Review Status</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Status</th>
                     <th className="text-right px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50">
-                  {filtered.map(u => {
-                    const rs = u.review_status || 'pending';
-                    const rc = REVIEW_CONFIG[rs] || REVIEW_CONFIG.pending;
+                  {filtered.map(app => {
+                    const sc = STATUS_CONFIG[app.status] || STATUS_CONFIG.pending;
                     return (
-                      <motion.tr key={u.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                      <motion.tr key={app.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
                         className="hover:bg-gray-50 transition-colors cursor-pointer"
-                        onClick={() => { setSelectedUser(u); setPanelAction(null); setRejectionReason(''); }}>
-                        <td className="px-5 py-4 text-gray-500 whitespace-nowrap text-xs">{new Date(u.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                        <td className="px-5 py-4"><p className="font-semibold text-gray-900">{u.full_name || '—'}</p><p className="text-gray-400 text-xs">{u.email}</p></td>
-                        <td className="px-5 py-4"><p className="text-gray-700">{u.firm_name || '—'}</p><p className="text-gray-400 text-xs">{u.bar_number || 'No bar #'}</p></td>
-                        <td className="px-5 py-4 hidden lg:table-cell text-gray-600 text-xs">{(u.states_licensed || []).slice(0, 3).join(', ')}{(u.states_licensed || []).length > 3 ? ` +${u.states_licensed.length - 3}` : ''}</td>
-                        <td className="px-5 py-4">
-                          {u.referral_agreement_accepted
-                            ? <span className="flex items-center gap-1 text-emerald-600 text-xs font-medium"><CheckCircle2 className="w-3.5 h-3.5" />Accepted</span>
-                            : <span className="flex items-center gap-1 text-amber-500 text-xs"><Clock className="w-3.5 h-3.5" />Pending</span>}
+                        onClick={() => { setSelectedApp(app); setPanelAction(null); setRejectionReason(''); setFreeTrialMonths(0); }}>
+                        <td className="px-5 py-4 text-gray-500 whitespace-nowrap text-xs">
+                          {new Date(app.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                         </td>
                         <td className="px-5 py-4">
-                          <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full ${rc.bg} ${rc.text}`}>{rc.label}</span>
+                          <p className="font-semibold text-gray-900">{app.full_name || '—'}</p>
+                          <p className="text-gray-400 text-xs">{app.email}</p>
+                        </td>
+                        <td className="px-5 py-4">
+                          <p className="text-gray-700">{app.firm_name || '—'}</p>
+                          <p className="text-gray-400 text-xs">{app.bar_number || 'No bar #'}</p>
+                        </td>
+                        <td className="px-5 py-4 hidden lg:table-cell text-gray-600 text-xs">
+                          {(app.states_licensed || []).slice(0, 3).join(', ')}{(app.states_licensed || []).length > 3 ? ` +${app.states_licensed.length - 3}` : ''}
+                        </td>
+                        <td className="px-5 py-4">
+                          <span className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full ${sc.bg} ${sc.text}`}>{sc.label}</span>
                         </td>
                         <td className="px-5 py-4 text-right" onClick={e => e.stopPropagation()}>
                           <div className="flex items-center justify-end gap-2">
-                            <button onClick={() => { setSelectedUser(u); setPanelAction(null); }} className="p-1.5 rounded-lg text-gray-400 hover:text-[#3a164d] hover:bg-gray-100"><Eye className="w-4 h-4" /></button>
-                            {rs !== 'verified' && rs !== 'rejected' && (
+                            <button onClick={() => { setSelectedApp(app); setPanelAction(null); }} className="p-1.5 rounded-lg text-gray-400 hover:text-[#3a164d] hover:bg-gray-100"><Eye className="w-4 h-4" /></button>
+                            {app.status === 'pending' && (
                               <>
-                                <button onClick={() => { setSelectedUser(u); setPanelAction('verify'); }}
-                                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100">Verify</button>
-                                <button onClick={() => { setSelectedUser(u); setPanelAction('reject'); }}
+                                <button onClick={() => { setSelectedApp(app); setPanelAction('approve'); }}
+                                  className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100">Approve</button>
+                                <button onClick={() => { setSelectedApp(app); setPanelAction('reject'); }}
                                   className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-red-50 text-red-700 hover:bg-red-100">Reject</button>
                               </>
                             )}
@@ -243,89 +253,112 @@ export default function AdminLawyerApplications() {
 
       {/* Detail Side Panel */}
       <AnimatePresence>
-        {selectedUser && (
+        {selectedApp && (
           <>
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 0.4 }} exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black z-30" onClick={() => { setSelectedUser(null); setPanelAction(null); }} />
+              className="fixed inset-0 bg-black z-30" onClick={() => { setSelectedApp(null); setPanelAction(null); }} />
             <motion.aside initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 28, stiffness: 280 }}
               className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-2xl z-40 flex flex-col overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-white">
                 <div className="flex items-center gap-3">
-                  <button onClick={() => { setSelectedUser(null); setPanelAction(null); }} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"><ArrowLeft className="w-5 h-5" /></button>
-                  <div><h2 className="font-bold text-gray-900 text-lg leading-tight">{selectedUser.full_name || selectedUser.email}</h2><p className="text-sm text-gray-500">{selectedUser.firm_name || '—'}</p></div>
+                  <button onClick={() => { setSelectedApp(null); setPanelAction(null); }} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"><ArrowLeft className="w-5 h-5" /></button>
+                  <div>
+                    <h2 className="font-bold text-gray-900 text-lg leading-tight">{selectedApp.full_name || selectedApp.email}</h2>
+                    <p className="text-sm text-gray-500">{selectedApp.firm_name || '—'}</p>
+                  </div>
                 </div>
-                {(() => { const rs = selectedUser.review_status || 'pending'; const rc = REVIEW_CONFIG[rs] || REVIEW_CONFIG.pending; return <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${rc.bg} ${rc.text}`}>{rc.label}</span>; })()}
+                {(() => { const sc = STATUS_CONFIG[selectedApp.status] || STATUS_CONFIG.pending; return <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${sc.bg} ${sc.text}`}>{sc.label}</span>; })()}
               </div>
 
               <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6">
                 <section>
                   <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Attorney Info</h3>
                   <div className="bg-gray-50 rounded-xl p-4 grid grid-cols-2 gap-3 text-sm">
-                    <div><p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><Mail className="w-3 h-3" />Email</p><p className="font-medium text-gray-900">{selectedUser.email}</p></div>
-                    <div><p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><Phone className="w-3 h-3" />Phone</p><p className="font-medium text-gray-900">{selectedUser.phone || '—'}</p></div>
-                    <div><p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><Building2 className="w-3 h-3" />Firm</p><p className="font-medium text-gray-900">{selectedUser.firm_name || '—'}</p></div>
-                    <div><p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><Scale className="w-3 h-3" />Bar #</p><p className="font-medium text-gray-900">{selectedUser.bar_number || '—'}</p></div>
-                    <div><p className="text-xs text-gray-400 mb-0.5">Account Status</p><p className="font-medium text-gray-900">{selectedUser.user_status || '—'}</p></div>
-                    <div><p className="text-xs text-gray-400 mb-0.5">Joined</p><p className="font-medium text-gray-900">{new Date(selectedUser.created_date).toLocaleDateString()}</p></div>
+                    <div><p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><Mail className="w-3 h-3" />Email</p><p className="font-medium text-gray-900">{selectedApp.email}</p></div>
+                    <div><p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><Phone className="w-3 h-3" />Phone</p><p className="font-medium text-gray-900">{selectedApp.phone || '—'}</p></div>
+                    <div><p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><Building2 className="w-3 h-3" />Firm</p><p className="font-medium text-gray-900">{selectedApp.firm_name || '—'}</p></div>
+                    <div><p className="text-xs text-gray-400 mb-0.5 flex items-center gap-1"><Scale className="w-3 h-3" />Bar #</p><p className="font-medium text-gray-900">{selectedApp.bar_number || '—'}</p></div>
+                    <div><p className="text-xs text-gray-400 mb-0.5">Years Experience</p><p className="font-medium text-gray-900">{selectedApp.years_experience || '—'}</p></div>
+                    <div><p className="text-xs text-gray-400 mb-0.5">Applied</p><p className="font-medium text-gray-900">{new Date(selectedApp.created_date).toLocaleDateString()}</p></div>
                   </div>
                 </section>
 
-                {(selectedUser.states_licensed?.length > 0 || selectedUser.practice_areas?.length > 0) && (
+                {selectedApp.bio && (
+                  <section>
+                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Bio</h3>
+                    <p className="text-sm text-gray-700 bg-gray-50 rounded-xl p-4 leading-relaxed">{selectedApp.bio}</p>
+                  </section>
+                )}
+
+                {(selectedApp.states_licensed?.length > 0 || selectedApp.practice_areas?.length > 0) && (
                   <section>
                     <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Practice</h3>
                     <div className="bg-gray-50 rounded-xl p-4 space-y-3 text-sm">
-                      {selectedUser.states_licensed?.length > 0 && (
+                      {selectedApp.states_licensed?.length > 0 && (
                         <div><p className="text-xs text-gray-400 mb-1.5">States Licensed</p>
-                          <div className="flex flex-wrap gap-1.5">{selectedUser.states_licensed.map(s => <span key={s} className="bg-white border border-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">{s}</span>)}</div>
+                          <div className="flex flex-wrap gap-1.5">{selectedApp.states_licensed.map(s => <span key={s} className="bg-white border border-gray-200 text-gray-700 text-xs px-2 py-0.5 rounded-full">{s}</span>)}</div>
                         </div>
                       )}
-                      {selectedUser.practice_areas?.length > 0 && (
+                      {selectedApp.practice_areas?.length > 0 && (
                         <div><p className="text-xs text-gray-400 mb-1.5">Practice Areas</p>
-                          <div className="flex flex-wrap gap-1.5">{selectedUser.practice_areas.map(a => <span key={a} className="bg-[#f5f0fa] text-[#3a164d] text-xs px-2 py-0.5 rounded-full">{a}</span>)}</div>
+                          <div className="flex flex-wrap gap-1.5">{selectedApp.practice_areas.map(a => <span key={a} className="bg-[#f5f0fa] text-[#3a164d] text-xs px-2 py-0.5 rounded-full">{a}</span>)}</div>
                         </div>
                       )}
                     </div>
                   </section>
                 )}
 
-                <section>
-                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Agreement & Profile</h3>
-                  <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
-                    <div className="flex items-center gap-2">{selectedUser.referral_agreement_accepted ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-gray-300" />}<span className="text-gray-700">Referral Agreement Accepted</span></div>
-                    <div className="flex items-center gap-2">{selectedUser.profile_completed_at ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <XCircle className="w-4 h-4 text-gray-300" />}<span className="text-gray-700">Profile Completed</span></div>
-                  </div>
-                </section>
+                {selectedApp.referrals?.length > 0 && (
+                  <section>
+                    <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Referrals</h3>
+                    <div className="bg-gray-50 rounded-xl p-4 space-y-2 text-sm">
+                      {selectedApp.referrals.map((r, i) => (
+                        <div key={i} className="flex items-center gap-2">
+                          <Users className="w-3.5 h-3.5 text-gray-400" />
+                          <span className="text-gray-700">{r.name}</span>
+                          {r.email && <span className="text-gray-400 text-xs">— {r.email}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </section>
+                )}
 
-                {selectedUser.disabled_by && (
+                {selectedApp.status === 'rejected' && selectedApp.rejection_reason && (
                   <section>
                     <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Rejection Record</h3>
                     <div className="bg-red-50 rounded-xl p-4 text-sm">
-                      <p className="text-red-700">Rejected by <strong>{selectedUser.disabled_by}</strong></p>
-                      {selectedUser.disabled_at && <p className="text-red-400 text-xs">{new Date(selectedUser.disabled_at).toLocaleString()}</p>}
-                      {selectedUser.disabled_reason && <p className="text-red-600 mt-2">Reason: {selectedUser.disabled_reason}</p>}
+                      <p className="text-red-700">Rejected by <strong>{selectedApp.reviewed_by}</strong></p>
+                      {selectedApp.reviewed_at && <p className="text-red-400 text-xs mt-1">{new Date(selectedApp.reviewed_at).toLocaleString()}</p>}
+                      <p className="text-red-600 mt-2">Reason: {selectedApp.rejection_reason}</p>
                     </div>
                   </section>
                 )}
               </div>
 
-              {(selectedUser.review_status === 'pending' || !selectedUser.review_status) && (
+              {selectedApp.status === 'pending' && (
                 <div className="border-t border-gray-100 bg-white px-6 py-4">
                   <AnimatePresence mode="wait">
                     {!panelAction && (
                       <motion.div key="default" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
-                        <TMLButton variant="success" className="flex-1" onClick={() => setPanelAction('verify')}><BadgeCheck className="w-4 h-4 mr-2" /> Mark Verified</TMLButton>
-                        <TMLButton variant="danger" className="flex-1" onClick={() => setPanelAction('reject')}><XCircle className="w-4 h-4 mr-2" /> Reject & Disable</TMLButton>
+                        <TMLButton variant="success" className="flex-1" onClick={() => setPanelAction('approve')}><BadgeCheck className="w-4 h-4 mr-2" /> Approve</TMLButton>
+                        <TMLButton variant="danger" className="flex-1" onClick={() => setPanelAction('reject')}><XCircle className="w-4 h-4 mr-2" /> Reject</TMLButton>
                       </motion.div>
                     )}
-                    {panelAction === 'verify' && (
-                      <motion.div key="verify" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+                    {panelAction === 'approve' && (
+                      <motion.div key="approve" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
                         <div className="p-3 bg-emerald-50 rounded-xl text-sm text-emerald-800 border border-emerald-100">
-                          <p className="font-semibold mb-1">Confirm Verification</p>
-                          <p>Mark <strong>{selectedUser.full_name || selectedUser.email}</strong> as verified. This confirms their bar number has been checked.</p>
+                          <p className="font-semibold mb-1">Confirm Approval</p>
+                          <p>Approving <strong>{selectedApp.full_name || selectedApp.email}</strong> will send them an activation email to set up their account.</p>
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-500 font-medium block mb-1">Free Trial Months (optional)</label>
+                          <input type="number" min="0" max="24" value={freeTrialMonths}
+                            onChange={e => setFreeTrialMonths(parseInt(e.target.value) || 0)}
+                            className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20" />
                         </div>
                         <div className="flex gap-2">
-                          <TMLButton variant="success" className="flex-1" loading={actionLoading} onClick={handleVerify}>Confirm Verification</TMLButton>
+                          <TMLButton variant="success" className="flex-1" loading={actionLoading} onClick={handleApprove}>Confirm Approval</TMLButton>
                           <TMLButton variant="ghost" onClick={() => setPanelAction(null)}>Cancel</TMLButton>
                         </div>
                       </motion.div>
@@ -333,8 +366,8 @@ export default function AdminLawyerApplications() {
                     {panelAction === 'reject' && (
                       <motion.div key="reject" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
                         <div className="p-3 bg-red-50 rounded-xl text-sm text-red-800 border border-red-100">
-                          <p className="font-semibold mb-1">Reject & Disable Access</p>
-                          <p>This will disable <strong>{selectedUser.full_name || selectedUser.email}</strong>'s account.</p>
+                          <p className="font-semibold mb-1">Reject Application</p>
+                          <p>This will reject <strong>{selectedApp.full_name || selectedApp.email}</strong> and send them a rejection email.</p>
                         </div>
                         <TMLTextarea label="Rejection Reason (optional)" value={rejectionReason} onChange={e => setRejectionReason(e.target.value)} placeholder="Provide a reason — will be included in the rejection email..." rows={3} />
                         <div className="flex gap-2">

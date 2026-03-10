@@ -51,6 +51,7 @@ import Activate from './pages/Activate';
 import AdminBlog from './pages/AdminBlog';
 import AdminBlogEdit from './pages/AdminBlogEdit';
 import AdminCases from './pages/AdminCases';
+import AdminCircles from './pages/AdminCircles';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminLawyerApplications from './pages/AdminLawyerApplications';
 import AdminLawyers from './pages/AdminLawyers';
@@ -74,6 +75,7 @@ import FindLawyer from './pages/FindLawyer';
 import ForLawyers from './pages/ForLawyers';
 import ForgotPassword from './pages/ForgotPassword';
 import GroupDetail from './pages/GroupDetail';
+import GroupInvitations from './pages/GroupInvitations';
 import Groups from './pages/Groups';
 import Home from './pages/Home';
 import JoinNetwork from './pages/JoinNetwork';
@@ -88,8 +90,6 @@ import MassTortDetail from './pages/MassTortDetail';
 import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
-import GroupInvitations from './pages/GroupInvitations';
-import AdminCircles from './pages/AdminCircles';
 import __Layout from './Layout.jsx';
 
 
@@ -98,6 +98,7 @@ export const PAGES = {
     "AdminBlog": AdminBlog,
     "AdminBlogEdit": AdminBlogEdit,
     "AdminCases": AdminCases,
+    "AdminCircles": AdminCircles,
     "AdminDashboard": AdminDashboard,
     "AdminLawyerApplications": AdminLawyerApplications,
     "AdminLawyers": AdminLawyers,
@@ -121,6 +122,7 @@ export const PAGES = {
     "ForLawyers": ForLawyers,
     "ForgotPassword": ForgotPassword,
     "GroupDetail": GroupDetail,
+    "GroupInvitations": GroupInvitations,
     "Groups": Groups,
     "Home": Home,
     "JoinNetwork": JoinNetwork,
@@ -135,8 +137,6 @@ export const PAGES = {
     "MassTorts": MassTorts,
     "MyCases": MyCases,
     "ResetPassword": ResetPassword,
-    "GroupInvitations": GroupInvitations,
-    "AdminCircles": AdminCircles,
 }
 
 export const pagesConfig = {
