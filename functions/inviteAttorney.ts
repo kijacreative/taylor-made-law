@@ -9,7 +9,7 @@ const LOGO = 'https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw
 const BASE_URL = 'https://app.taylormadelaw.com';
 const YEAR = new Date().getFullYear();
 
-function buildInviteEmail(name, loginUrl, adminNote) {
+function buildInviteEmail(name, activateUrl, adminNote) {
   const noteBlock = adminNote
     ? `<div style="background:#f5f0fa;border-left:4px solid #3a164d;border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0;">
         <p style="margin:0 0 4px;color:#3a164d;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Note from the TML Team</p>
@@ -33,12 +33,14 @@ function buildInviteEmail(name, loginUrl, adminNote) {
         <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${name},</p>
         <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">You've been personally invited to join the <strong>Taylor Made Law Network</strong> — a private attorney platform connecting trusted legal professionals with vetted case opportunities.</p>
         ${noteBlock}
-        <p style="margin:0 0 24px;color:#333333;font-size:15px;line-height:1.7;">Once approved, you'll receive a link to set your password and access the portal. In the meantime, you can <a href="${BASE_URL}/JoinNetwork" style="color:#3a164d;">complete your application here</a>.</p>
+        <p style="margin:0 0 24px;color:#333333;font-size:15px;line-height:1.7;">Click the button below to set your password and activate your account:</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
           <tr><td align="center">
-            <a href="${loginUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Sign In to Your Account →</a>
+            <a href="${activateUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Activate Your Account →</a>
           </td></tr>
         </table>
+        <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;text-align:center;">This link expires in 7 days.</p>
+        <p style="margin:0 0 16px;color:#9ca3af;font-size:11px;text-align:center;word-break:break-all;">Or copy: ${activateUrl}</p>
         <p style="margin:0;color:#9ca3af;font-size:12px;">Questions? <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;text-decoration:none;">support@taylormadelaw.com</a></p>
       </td></tr>
       <tr><td style="padding:28px 0 0;text-align:center;">
@@ -145,8 +147,8 @@ Deno.serve(async (req) => {
 
     // ── Send invite email ───────────────────────────────────────────
     if (send_email && resendKey) {
-      const loginUrl = `${BASE_URL}/LawyerLogin`;
-      const html = buildInviteEmail(full_name || 'there', loginUrl, admin_note);
+      const activateUrl = `${BASE_URL}/Activate?token=${rawToken}`;
+      const html = buildInviteEmail(full_name || 'there', activateUrl, admin_note);
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },

@@ -60,7 +60,7 @@ function buildConfirmationEmail(firstName) {
 }
 
 function buildAdminAlertEmail(fullName, email, firmName, barNumber, states, practiceAreas) {
-  const adminLink = `${BASE_URL}/AdminLawyerApplications`;
+  const adminLink = `${BASE_URL}/AdminLawyers`;
   return emailWrapper(`
     <div style="background:#dbeafe;border-radius:8px;padding:10px 16px;margin-bottom:20px;display:inline-block;">
       <span style="font-weight:700;color:#1e40af;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;">⚖️ New Attorney Application</span>
