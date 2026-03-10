@@ -216,10 +216,12 @@ Deno.serve(async (req) => {
     // Initialize the new user record
     const initData = {
       email_normalized: normalizedEmail,
+      role: 'lawyer',
       user_status: requested_status,
       entry_source,
       email_verified: false,
       password_set: false,
+      password_hash: null,
     };
 
     if (entry_source === 'apply') {
