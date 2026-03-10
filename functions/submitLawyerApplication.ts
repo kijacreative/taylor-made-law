@@ -1,5 +1,5 @@
 /**
- * DEPRECATED: submitLawyerApplication
+ * DEPRECATED: submitLawyerApplication (referral links updated to /JoinNetwork)
  * ============================================================
  * This function is no longer called from the frontend.
  * The canonical onboarding flow (pages/JoinNetwork) now calls
