@@ -178,7 +178,7 @@ export default function GroupDetail() {
 
           {/* Tab Content */}
           {activeTab === 'chat' && (
-            <CircleChat circleId={circleId} user={user} isAdmin={isAdmin} />
+            <CircleChat circleId={circleId} user={user} isAdmin={isAdmin} circleName={circle.name} />
           )}
           {activeTab === 'members' && (
             <CircleMembers circleId={circleId} members={members} user={user} isAdmin={isAdmin} />

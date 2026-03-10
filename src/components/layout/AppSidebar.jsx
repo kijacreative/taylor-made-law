@@ -14,6 +14,7 @@ import {
   FileText
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import NotificationBell from '@/components/notifications/NotificationBell';
 
 const AppSidebar = ({ user, lawyerProfile }) => {
   const [collapsed, setCollapsed] = useState(false);
