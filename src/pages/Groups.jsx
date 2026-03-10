@@ -271,6 +271,57 @@ export default function Groups() {
               })}
             </div>
           )}
+          {/* Discoverable Circles */}
+          {filteredDiscoverable.length > 0 && (
+            <div className="mt-10">
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Discover Circles</h2>
+              <p className="text-sm text-gray-500 mb-4">Open circles you can request to join.</p>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredDiscoverable.map((circle, index) => (
+                  <motion.div
+                    key={circle.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Link to={`${createPageUrl('GroupDetail')}?id=${circle.id}`}>
+                      <TMLCard hover className="h-full border-dashed border-2 border-gray-200">
+                        <TMLCardHeader>
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
+                              <Globe className="w-6 h-6 text-white" />
+                            </div>
+                            <TMLBadge variant="default" size="sm">Discoverable</TMLBadge>
+                          </div>
+                          <TMLCardTitle>{circle.name}</TMLCardTitle>
+                        </TMLCardHeader>
+                        <TMLCardContent>
+                          <p className="text-gray-600 mb-4 line-clamp-2 text-sm">
+                            {circle.description || 'Open legal community'}
+                          </p>
+                          <div className="flex items-center gap-4 text-sm text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <Users className="w-4 h-4" />
+                              {circle.member_count || 0} members
+                            </span>
+                          </div>
+                          {circle.tags && circle.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-3">
+                              {circle.tags.slice(0, 2).map(tag => (
+                                <span key={tag} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </TMLCardContent>
+                      </TMLCard>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
