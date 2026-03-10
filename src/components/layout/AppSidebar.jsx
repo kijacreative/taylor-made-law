@@ -159,6 +159,7 @@ const AppSidebar = ({ user, lawyerProfile }) => {
         </button>
       </div>
     </aside>
+
   );
 };
 
