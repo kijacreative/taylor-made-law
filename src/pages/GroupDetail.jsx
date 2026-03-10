@@ -56,16 +56,11 @@ export default function GroupDetail() {
   });
   const circle = circles[0] || null;
 
-  const { data: myMemberships = [], isLoading: membershipLoading } = useQuery({
+  const { data: myMemberships = [], isLoading: membershipLoading, isError: membershipError } = useQuery({
     queryKey: ['myCircleMembership', circleId, user?.id],
-    queryFn: async () => {
-      const results = await base44.entities.LegalCircleMember.filter({ circle_id: circleId, user_id: user.id, status: 'active' });
-      // If empty, throw so react-query retries (RLS may not have resolved yet)
-      if (!results || results.length === 0) throw new Error('membership_not_ready');
-      return results;
-    },
+    queryFn: () => base44.entities.LegalCircleMember.filter({ circle_id: circleId, user_id: user.id, status: 'active' }),
     enabled: !!circleId && !!user?.id,
-    retry: 5,
+    retry: 2,
     retryDelay: 1000,
   });
   const myMembership = myMemberships[0] || null;
