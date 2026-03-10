@@ -62,9 +62,25 @@ export default function CaseExchange() {
   const cases = caseData?.cases || [];
 
   // Define practice area categories with icons
+  const FamilySVG = (
+    <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Adult 1 (left) */}
+      <circle cx="35" cy="20" r="8" stroke="white" strokeWidth="2.5"/>
+      <path d="M 35 30 L 35 50 M 35 35 L 25 45 M 35 35 L 45 45 M 35 50 L 25 70 M 35 50 L 45 70" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      
+      {/* Adult 2 (right) */}
+      <circle cx="65" cy="20" r="8" stroke="white" strokeWidth="2.5"/>
+      <path d="M 65 30 L 65 50 M 65 35 L 55 45 M 65 35 L 75 45 M 65 50 L 55 70 M 65 50 L 75 70" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      
+      {/* Child (center) */}
+      <circle cx="50" cy="35" r="6" stroke="white" strokeWidth="2.5"/>
+      <path d="M 50 43 L 50 58 M 50 46 L 42 54 M 50 46 L 58 54 M 50 58 L 42 72 M 50 58 L 58 72" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </svg>
+  );
+
   const categories = [
     { name: 'Criminal', icon: '⚖️', desc: 'Criminal Defense' },
-    { name: 'Family', icon: '👨‍👩‍👧', desc: 'Family Law' },
+    { name: 'Family', icon: FamilySVG, desc: 'Family Law', isSVG: true },
     { name: 'Estate', icon: '📋', desc: 'Estate Planning' },
     { name: 'Personal Injury', icon: '🏥', desc: 'Personal Injury' },
     { name: 'Mass Torts', icon: '⚖️', desc: 'Mass Tort Litigation' },
@@ -130,7 +146,11 @@ export default function CaseExchange() {
                       className="w-40 h-40 rounded-full flex items-center justify-center mb-4 shadow-lg transition-all duration-300 group-hover:shadow-xl group-hover:scale-105"
                       style={{ backgroundColor: '#3a164d' }}
                     >
-                      <span className="text-6xl filter brightness-0 invert">{cat.icon}</span>
+                      {cat.isSVG ? (
+                        <div className="scale-110">{cat.icon}</div>
+                      ) : (
+                        <span className="text-6xl filter brightness-0 invert">{cat.icon}</span>
+                      )}
                     </div>
                     {/* Text */}
                     <h3 className="text-xl font-bold text-gray-900 text-center">{cat.name}</h3>
