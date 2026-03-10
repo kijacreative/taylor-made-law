@@ -835,8 +835,46 @@ export default function AdminUAT() {
             })}
           </div>
 
+          {/* Phase 8 Audit Logging Reference */}
+          <div className="mt-12 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl shadow-sm p-8 border border-blue-200">
+            <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+              <Shield className="w-5 h-5 text-blue-600" />
+              Phase 8: Audit Logging Reference
+            </h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Core Events Logged</h3>
+                <ul className="space-y-2 text-sm text-gray-700">
+                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">✓</span> <span><strong>user_upserted</strong> — User identity created/merged</span></li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">✓</span> <span><strong>activation_token_created</strong> — Token generated for account setup</span></li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">✓</span> <span><strong>activation_completed</strong> — Password set, account activated</span></li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">✓</span> <span><strong>application_submitted</strong> — Lawyer app submitted via /JoinNetwork</span></li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">✓</span> <span><strong>admin_alert_sent</strong> — Admin notified of new app/lead</span></li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">✓</span> <span><strong>application_approved</strong> — Admin approves lawyer</span></li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">✓</span> <span><strong>lawyer_disabled</strong> — Account access revoked</span></li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">✓</span> <span><strong>lawyer_reinstated</strong> — Disabled account restored</span></li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">✓</span> <span><strong>lead_created</strong> — New lead submission from /FindLawyer</span></li>
+                  <li className="flex items-start gap-2"><span className="text-blue-600 font-bold">✓</span> <span><strong>lead_sent_to_lead_docket</strong> — Lead successfully synced to external CRM</span></li>
+                </ul>
+              </div>
+              <div>
+                <h3 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Locations</h3>
+                <ul className="space-y-2 text-xs text-gray-600 font-mono">
+                  <li className="bg-white rounded p-2">functions/submitFindLawyerLead.js (lead_created, lead_sent_to_lead_docket)</li>
+                  <li className="bg-white rounded p-2">functions/approveLawyerApplication.js (application_approved, activation_token_created, admin_alert_sent)</li>
+                  <li className="bg-white rounded p-2">functions/completeOnboarding.js (activation_completed)</li>
+                  <li className="bg-white rounded p-2">functions/disableLawyer.js (lawyer_disabled)</li>
+                  <li className="bg-white rounded p-2">functions/reinstateLawyer.js (lawyer_reinstated)</li>
+                  <li className="bg-white rounded p-2">functions/upsertUserByEmail.js (user_upserted)</li>
+                  <li className="bg-white rounded p-2">functions/submitLawyerApplication.js (application_submitted, admin_alert_sent)</li>
+                  <li className="bg-white rounded p-2">Entity: AuditLog (view in Admin Dashboard)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
           {/* Summary Report */}
-          <div className="mt-12 bg-white rounded-2xl shadow-sm p-8">
+          <div className="mt-8 bg-white rounded-2xl shadow-sm p-8">
             <h2 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
               <Shield className="w-5 h-5 text-[#3a164d]" />
               UAT Summary Report

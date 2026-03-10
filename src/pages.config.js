@@ -64,6 +64,7 @@ import AdminResourceEdit from './pages/AdminResourceEdit';
 import AdminResources from './pages/AdminResources';
 import AdminTeam from './pages/AdminTeam';
 import AdminUAT from './pages/AdminUAT';
+import Apply from './pages/Apply';
 import AuthRedirect from './pages/AuthRedirect';
 import Blog from './pages/Blog';
 import CaseDetail from './pages/CaseDetail';
@@ -78,6 +79,7 @@ import GroupDetail from './pages/GroupDetail';
 import GroupInvitations from './pages/GroupInvitations';
 import Groups from './pages/Groups';
 import Home from './pages/Home';
+import Join from './pages/Join';
 import JoinNetwork from './pages/JoinNetwork';
 import LawyerBlog from './pages/LawyerBlog';
 import LawyerBlogDetail from './pages/LawyerBlogDetail';
@@ -91,8 +93,6 @@ import MassTortDetail from './pages/MassTortDetail';
 import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
-import Join from './pages/Join';
-import Apply from './pages/Apply';
 import __Layout from './Layout.jsx';
 
 
@@ -114,6 +114,7 @@ export const PAGES = {
     "AdminResources": AdminResources,
     "AdminTeam": AdminTeam,
     "AdminUAT": AdminUAT,
+    "Apply": Apply,
     "AuthRedirect": AuthRedirect,
     "Blog": Blog,
     "CaseDetail": CaseDetail,
@@ -128,6 +129,7 @@ export const PAGES = {
     "GroupInvitations": GroupInvitations,
     "Groups": Groups,
     "Home": Home,
+    "Join": Join,
     "JoinNetwork": JoinNetwork,
     "LawyerBlog": LawyerBlog,
     "LawyerBlogDetail": LawyerBlogDetail,
@@ -141,8 +143,6 @@ export const PAGES = {
     "MassTorts": MassTorts,
     "MyCases": MyCases,
     "ResetPassword": ResetPassword,
-    "Join": Join,
-    "Apply": Apply,
 }
 
 export const pagesConfig = {
