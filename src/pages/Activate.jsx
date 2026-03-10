@@ -26,6 +26,7 @@ export default function Activate() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
+  const emailParam = urlParams.get('email') || '';
 
   const [formData, setFormData] = useState({
     password: '',
