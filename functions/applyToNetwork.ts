@@ -1,9 +1,9 @@
 /**
- * applyToNetwork — Public endpoint. Option C Unified Identity.
- * Upserts user as status=pending (never downgrades invited/approved).
- * Sends activation email + admin alert. No password collected here.
+ * applyToNetwork — Public endpoint. No authentication required.
+ * Creates a LawyerApplication record and notifies admins.
+ * User account creation happens at approval time.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const LOGO = 'https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png';
 const BASE_URL = 'https://app.taylormadelaw.com';
@@ -34,25 +34,26 @@ function emailWrapper(content) {
 </html>`;
 }
 
-function buildActivationEmail(firstName, activationUrl) {
+function buildConfirmationEmail(firstName) {
   return emailWrapper(`
-    <h1 style="margin:0 0 8px;color:#111827;font-size:26px;font-weight:700;">Complete Your Application — Activate Your Account</h1>
-    <p style="margin:0 0 28px;color:#6b7280;font-size:15px;">One step left — verify your email and set your password.</p>
+    <h1 style="margin:0 0 8px;color:#111827;font-size:26px;font-weight:700;">Application Received!</h1>
+    <p style="margin:0 0 28px;color:#6b7280;font-size:15px;">Thank you for applying to the Taylor Made Law Network.</p>
     <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${firstName},</p>
-    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Thank you for applying to the <strong>Taylor Made Law Network</strong>. Your application has been received and is pending review.</p>
-    <p style="margin:0 0 24px;color:#333333;font-size:15px;line-height:1.7;">Click below to verify your email and set your password. You'll be able to log in and track your application status right away.</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
-      <tr><td align="center">
-        <a href="${activationUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Verify Email &amp; Set Password →</a>
-      </td></tr>
-    </table>
-    <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;">This link expires in <strong>7 days</strong>. Our team typically reviews applications within 2–3 business days.</p>
-    <p style="margin:0;color:#9ca3af;font-size:11px;word-break:break-all;">Or copy: ${activationUrl}</p>
+    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">We've received your application to join the <strong>Taylor Made Law Network</strong>. Our team will review your application and get back to you within 2–3 business days.</p>
+    <div style="background:#f5f0fa;border-radius:10px;padding:18px 20px;margin:24px 0;">
+      <p style="margin:0 0 6px;color:#3a164d;font-weight:600;font-size:14px;">What happens next?</p>
+      <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:14px;line-height:1.8;">
+        <li>Our team reviews your application</li>
+        <li>You'll receive an email with next steps once approved</li>
+        <li>Upon approval, you'll get a link to set up your account and access the Case Exchange</li>
+      </ul>
+    </div>
+    <p style="margin:0;color:#6b7280;font-size:14px;line-height:1.7;">If you have any questions in the meantime, don't hesitate to reach out to <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;">support@taylormadelaw.com</a>.</p>
   `);
 }
 
 function buildAdminAlertEmail(fullName, email, firmName, barNumber, states, practiceAreas) {
-  const adminLink = `${BASE_URL}/AdminLawyers`;
+  const adminLink = `${BASE_URL}/AdminLawyerApplications`;
   return emailWrapper(`
     <div style="background:#dbeafe;border-radius:8px;padding:10px 16px;margin-bottom:20px;display:inline-block;">
       <span style="font-weight:700;color:#1e40af;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;">⚖️ New Attorney Application</span>
@@ -77,35 +78,14 @@ function buildAdminAlertEmail(fullName, email, firmName, barNumber, states, prac
   `);
 }
 
-async function generateTokenPair() {
-  const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
-  const rawToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
-  const encoder = new TextEncoder();
-  const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(rawToken));
-  const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-  return { rawToken, tokenHash };
-}
-
-function statusRank(s) {
-  if (s === 'approved') return 3;
-  if (s === 'pending') return 2;
-  if (s === 'invited') return 1;
-  return 0;
-}
-
-function maxStatus(current, requested) {
-  if (current === 'disabled') return 'disabled';
-  if (statusRank(current) >= statusRank(requested)) return current;
-  return requested;
-}
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
     const {
       full_name, email, phone, firm_name, bar_number,
-      states_licensed, practice_areas, years_experience, bio
+      states_licensed, practice_areas, years_experience, bio,
+      referrals, consent_terms, consent_referral
     } = body;
 
     if (!email) {
@@ -118,172 +98,57 @@ Deno.serve(async (req) => {
     const normalizedEmail = email.toLowerCase().trim();
     const resendKey = Deno.env.get('RESEND_API_KEY');
 
-    // Upsert user by email
-    const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-    let lawyerUser = existingUsers[0] || null;
-    let isNew = false;
-    let alreadyActivated = false;
+    // Check for duplicate application
+    const existingApps = await base44.asServiceRole.entities.LawyerApplication.filter({ email: normalizedEmail });
+    const existingApp = existingApps[0] || null;
 
-    if (lawyerUser) {
-      if (lawyerUser.user_status === 'disabled' || lawyerUser.disabled) {
-        return Response.json({
-          error: 'This account has been disabled. Please contact support@taylormadelaw.com.'
-        }, { status: 403 });
-      }
-
-      alreadyActivated = !!(lawyerUser.password_set && lawyerUser.email_verified);
-
-      // Never downgrade status, fill in profile data
-      const newStatus = maxStatus(lawyerUser.user_status || 'pending', 'pending');
-      const updates = { user_status: newStatus };
-      if (full_name) updates.full_name = full_name;
-      if (phone) updates.phone = phone;
-      if (firm_name) updates.firm_name = firm_name;
-      if (bar_number) updates.bar_number = bar_number;
-      if (states_licensed?.length) updates.states_licensed = states_licensed;
-      if (practice_areas?.length) updates.practice_areas = practice_areas;
-      if (years_experience) updates.years_experience = years_experience;
-      if (bio) updates.bio = bio;
-      updates.applied_at = new Date().toISOString();
-      await base44.asServiceRole.entities.User.update(lawyerUser.id, updates);
-      lawyerUser = { ...lawyerUser, ...updates };
-    } else {
-      // DO NOT pre-register the user with a temp password.
-      // Instead, store their profile data in a LawyerApplication record
-      // and create the auth account ONLY when they click the activation link.
-      // We create a placeholder User record via inviteUser so activation can find them.
-      await base44.users.inviteUser(normalizedEmail, 'user');
-
-      await new Promise(r => setTimeout(r, 2000));
-      const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-      lawyerUser = newUsers[0] || null;
-
-      if (lawyerUser) {
-        const initData = {
-          user_status: 'pending',
-          email_verified: false,
-          password_set: false,
-          applied_at: new Date().toISOString()
-        };
-        if (full_name) initData.full_name = full_name;
-        if (phone) initData.phone = phone;
-        if (firm_name) initData.firm_name = firm_name;
-        if (bar_number) initData.bar_number = bar_number;
-        if (states_licensed?.length) initData.states_licensed = states_licensed;
-        if (practice_areas?.length) initData.practice_areas = practice_areas;
-        if (years_experience) initData.years_experience = years_experience;
-        if (bio) initData.bio = bio;
-        await base44.asServiceRole.entities.User.update(lawyerUser.id, initData);
-        lawyerUser = { ...lawyerUser, ...initData };
-        isNew = true;
-      }
-    }
-
-    // Upsert LawyerProfile for this user
-    if (lawyerUser) {
-      const existingProfiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id: lawyerUser.id });
-      const profileData = {
-        user_id: lawyerUser.id,
-        firm_name: firm_name || '',
-        phone: phone || '',
-        bar_number: bar_number || '',
-        bio: bio || '',
-        states_licensed: states_licensed || [],
-        practice_areas: practice_areas || [],
-        years_experience: years_experience || 0,
-        status: 'pending'
-      };
-      if (existingProfiles.length === 0) {
-        await base44.asServiceRole.entities.LawyerProfile.create(profileData);
-      } else {
-        // Update with latest application data
-        const profileUpdates = {};
-        if (firm_name) profileUpdates.firm_name = firm_name;
-        if (phone) profileUpdates.phone = phone;
-        if (bar_number) profileUpdates.bar_number = bar_number;
-        if (bio) profileUpdates.bio = bio;
-        if (states_licensed?.length) profileUpdates.states_licensed = states_licensed;
-        if (practice_areas?.length) profileUpdates.practice_areas = practice_areas;
-        if (years_experience) profileUpdates.years_experience = years_experience;
-        if (Object.keys(profileUpdates).length > 0) {
-          await base44.asServiceRole.entities.LawyerProfile.update(existingProfiles[0].id, profileUpdates);
-        }
-      }
-    }
-
-    if (!lawyerUser) {
-      return Response.json({ error: 'Failed to create user record. Please try again.' }, { status: 500 });
-    }
-
-    // Audit log
-    await base44.asServiceRole.entities.AuditLog.create({
-      entity_type: 'User',
-      entity_id: lawyerUser.id,
-      action: 'application_submitted',
-      actor_email: normalizedEmail,
-      actor_role: 'user',
-      notes: `Applied from ${firm_name || 'unknown firm'}. Status: ${lawyerUser.user_status}`
-    });
-
-    // If already activated, just let them know to log in
-    if (alreadyActivated) {
+    if (existingApp && existingApp.status === 'approved') {
       return Response.json({
         success: true,
-        already_activated: true,
-        message: 'Your account already exists. Please log in to check your application status.'
+        already_approved: true,
+        message: 'Your application has already been approved. Please log in.'
       });
     }
 
-    // Invalidate old activation tokens
-    const existingTokens = await base44.asServiceRole.entities.ActivationToken.filter({
-      user_email: normalizedEmail,
-      token_type: 'activation'
-    });
-    for (const t of existingTokens) {
-      if (!t.used_at) {
-        await base44.asServiceRole.entities.ActivationToken.update(t.id, {
-          used_at: new Date().toISOString(),
-          invalidated_reason: 'superseded_by_application'
-        });
-      }
+    const applicationData = {
+      full_name: full_name || '',
+      email: normalizedEmail,
+      phone: phone || '',
+      firm_name: firm_name || '',
+      bar_number: bar_number || '',
+      years_experience: years_experience || 0,
+      states_licensed: states_licensed || [],
+      practice_areas: practice_areas || [],
+      bio: bio || '',
+      referrals: referrals || [],
+      consent_terms: consent_terms || false,
+      consent_referral: consent_referral || false,
+      email_verified: true,
+      status: 'pending'
+    };
+
+    let application;
+    if (existingApp) {
+      // Re-application: update existing record
+      await base44.asServiceRole.entities.LawyerApplication.update(existingApp.id, applicationData);
+      application = { ...existingApp, ...applicationData };
+    } else {
+      application = await base44.asServiceRole.entities.LawyerApplication.create(applicationData);
     }
-
-    // Create activation token
-    const { rawToken, tokenHash } = await generateTokenPair();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    await base44.asServiceRole.entities.ActivationToken.create({
-      user_id: lawyerUser.id,
-      user_email: normalizedEmail,
-      token_hash: tokenHash,
-      token_type: 'activation',
-      expires_at: expiresAt,
-      created_by_admin: null
-    });
-
-    await base44.asServiceRole.entities.AuditLog.create({
-      entity_type: 'ActivationToken',
-      entity_id: lawyerUser.id,
-      action: 'activation_token_created',
-      actor_email: normalizedEmail,
-      actor_role: 'user',
-      notes: `Token created on application for ${normalizedEmail}`
-    });
 
     // Send emails
     if (resendKey) {
       const firstName = (full_name || '').split(' ')[0] || 'there';
-      const activationUrl = `${BASE_URL}/Activate?token=${rawToken}`;
 
-      // Activation email to applicant
+      // Confirmation email to applicant
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           from: 'Taylor Made Law <noreply@taylormadelaw.com>',
           to: [normalizedEmail],
-          subject: 'Complete Your Application — Activate Your Account',
-          html: buildActivationEmail(firstName, activationUrl)
+          subject: 'Your Application Has Been Received — Taylor Made Law',
+          html: buildConfirmationEmail(firstName)
         })
       });
 
@@ -301,22 +166,12 @@ Deno.serve(async (req) => {
           })
         });
       }
-
-      await base44.asServiceRole.entities.AuditLog.create({
-        entity_type: 'User',
-        entity_id: lawyerUser.id,
-        action: 'admin_alert_sent',
-        actor_email: normalizedEmail,
-        actor_role: 'system',
-        notes: `Admin alerted about new application from ${normalizedEmail}`
-      });
     }
 
     return Response.json({
       success: true,
-      is_new: isNew,
-      user_status: lawyerUser.user_status,
-      message: 'Application submitted. Check your email to activate your account.'
+      application_id: application.id,
+      message: 'Application submitted successfully. Check your email for confirmation.'
     });
 
   } catch (error) {
