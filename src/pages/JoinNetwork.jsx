@@ -30,10 +30,10 @@ import { PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
 import StepProgress from '@/components/attorney/StepProgress';
 
 const STEPS = [
-  { number: 1, label: 'Contact Info' },
+  { number: 1, label: 'Account Setup' },
   { number: 2, label: 'Practice Details' },
-  { number: 3, label: 'Bio & Referrals' },
-  { number: 4, label: 'Review & Agree' },
+  { number: 3, label: 'Bio / Profile' },
+  { number: 4, label: 'Agreements' },
 ];
 
 const benefits = [
@@ -64,12 +64,12 @@ export default function JoinNetwork() {
     email: prefilledEmail,
     phone: '',
     firm_name: '',
+    password: '',
+    password_confirm: '',
     bar_number: '',
-    years_experience: '',
     states_licensed: [],
     practice_areas: [],
     bio: '',
-    referrals: [],
     consent_terms: false,
     consent_referral: false,
   });
@@ -84,18 +84,9 @@ export default function JoinNetwork() {
     updateField(field, current.includes(item) ? current.filter(i => i !== item) : [...current, item]);
   };
 
-  const addReferral = () => {
-    setFormData(prev => ({ ...prev, referrals: [...prev.referrals, { name: '', email: '' }] }));
-  };
 
-  const updateReferral = (index, field, value) => {
-    const updated = formData.referrals.map((r, i) => i === index ? { ...r, [field]: value } : r);
-    setFormData(prev => ({ ...prev, referrals: updated }));
-  };
 
-  const removeReferral = (index) => {
-    setFormData(prev => ({ ...prev, referrals: prev.referrals.filter((_, i) => i !== index) }));
-  };
+
 
   const validateStep = (s) => {
     const e = {};
@@ -104,12 +95,13 @@ export default function JoinNetwork() {
       if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Valid email is required';
       if (!formData.phone || formData.phone.replace(/\D/g, '').length < 10) e.phone = 'Valid phone number is required';
       if (!formData.firm_name.trim()) e.firm_name = 'Law firm name is required';
-      if (!formData.bar_number.trim()) e.bar_number = 'Bar number is required';
+      if (!formData.password || formData.password.length < 8) e.password = 'Password must be at least 8 characters';
+      if (formData.password !== formData.password_confirm) e.password_confirm = 'Passwords do not match';
     }
     if (s === 2) {
       if (!formData.states_licensed.length) e.states_licensed = 'Select at least one state';
       if (!formData.practice_areas.length) e.practice_areas = 'Select at least one practice area';
-      if (!formData.years_experience) e.years_experience = 'Years of experience is required';
+      if (!formData.bar_number.trim()) e.bar_number = 'Bar number is required';
     }
     if (s === 3) {
       if (!formData.bio || formData.bio.length < 50) e.bio = 'Please provide a bio (at least 50 characters)';
@@ -132,25 +124,25 @@ export default function JoinNetwork() {
     setLoading(true);
     setErrors({});
     try {
-      // Calls the canonical backend: functions/applyToNetwork
-      const res = await base44.functions.invoke('applyToNetwork', {
+      // Create user with password + store profile + send emails
+      const res = await base44.functions.invoke('completeOnboarding', {
         full_name: formData.full_name,
         email: formData.email,
         phone: formData.phone,
         firm_name: formData.firm_name,
         bar_number: formData.bar_number,
-        years_experience: formData.years_experience ? parseInt(formData.years_experience) : null,
+        password: formData.password,
         states_licensed: formData.states_licensed,
         practice_areas: formData.practice_areas,
-        bio: formData.bio || null,
-        referrals: formData.referrals.filter(r => r.email),
+        bio: formData.bio,
         consent_terms: formData.consent_terms,
         consent_referral: formData.consent_referral,
       });
 
       if (res.data?.success) {
-        if (res.data?.already_activated) {
-          setAlreadyActivated(true);
+        // Redirect to dashboard or login
+        if (res.data?.user_id) {
+          navigate(createPageUrl('LawyerDashboard'));
         } else {
           setSubmittedEmail(formData.email.toLowerCase().trim());
           setSubmitted(true);
