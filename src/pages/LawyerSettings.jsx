@@ -134,18 +134,18 @@ export default function LawyerSettings() {
 
   const lawyerProfile = profiles[0] || null;
 
-  // Populate form when profile loads
+  // Populate form when profile loads (merge so user-entity pre-population isn't wiped)
   useEffect(() => {
     if (lawyerProfile) {
-      setProfileForm({
-        firm_name: lawyerProfile.firm_name || '',
-        bar_number: lawyerProfile.bar_number || '',
-        phone: lawyerProfile.phone || '',
-        bio: lawyerProfile.bio || '',
-        states_licensed: lawyerProfile.states_licensed || [],
-        practice_areas: lawyerProfile.practice_areas || [],
-        years_experience: lawyerProfile.years_experience?.toString() || ''
-      });
+      setProfileForm(prev => ({
+        firm_name: lawyerProfile.firm_name || prev.firm_name || '',
+        bar_number: lawyerProfile.bar_number || prev.bar_number || '',
+        phone: lawyerProfile.phone || prev.phone || '',
+        bio: lawyerProfile.bio || prev.bio || '',
+        states_licensed: lawyerProfile.states_licensed?.length > 0 ? lawyerProfile.states_licensed : (prev.states_licensed || []),
+        practice_areas: lawyerProfile.practice_areas?.length > 0 ? lawyerProfile.practice_areas : (prev.practice_areas || []),
+        years_experience: lawyerProfile.years_experience?.toString() || prev.years_experience || ''
+      }));
     }
   }, [lawyerProfile]);
 
