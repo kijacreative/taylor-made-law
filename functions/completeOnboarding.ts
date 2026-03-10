@@ -56,6 +56,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Failed to create lawyer profile' }, { status: 500 });
     }
 
+    // ── Phase 8: Audit logging ─────────────────────────────────────
+    await base44.asServiceRole.entities.AuditLog.create({
+      entity_type: 'User',
+      entity_id: userId,
+      action: 'activation_completed',
+      actor_email: payload.email,
+      actor_role: 'self',
+      notes: `Account activated. Password set. Profile created.`,
+    });
+
     // Send admin alert email (optional, can be async)
     // await base44.integrations.Core.SendEmail({...})
 

@@ -168,6 +168,7 @@ Deno.serve(async (req) => {
       consented_at: now,
     });
 
+    // ── Phase 8: Audit logging ────────────────────────────────────
     await base44.asServiceRole.entities.AuditLog.create({
       entity_type: 'Lead',
       entity_id: lead.id,
