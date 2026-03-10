@@ -25,6 +25,7 @@ import TMLButton from '@/components/ui/TMLButton';
 import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
 import TMLBadge from '@/components/ui/TMLBadge';
 import { LEAD_STATUSES, PRACTICE_AREAS } from '@/components/design/DesignTokens';
+import Phase7Phase8Summary from '@/components/admin/Phase7Phase8Summary';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
@@ -423,6 +424,19 @@ export default function AdminDashboard() {
 
 
             </div>
+          </div>
+
+          {/* Phase 7 & 8 Summary (collapsible) */}
+          <div className="mt-12 border-t-2 border-gray-300 pt-8">
+            <details className="group">
+              <summary className="cursor-pointer py-4 px-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border-2 border-purple-300 font-bold text-gray-900 flex items-center justify-between hover:from-purple-100 hover:to-indigo-100 transition-colors">
+                <span>📋 Phase 7 & 8: UAT Testing & Audit Logging (Platform Ready for Production)</span>
+                <span className="text-xl group-open:rotate-180 transition-transform">▼</span>
+              </summary>
+              <div className="mt-6">
+                <Phase7Phase8Summary />
+              </div>
+            </details>
           </div>
         </div>
       </main>
