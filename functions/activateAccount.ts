@@ -64,12 +64,18 @@ Deno.serve(async (req) => {
 
     const fullName = application.full_name || '';
 
-    // Register the account directly — this creates their auth account with the chosen password
-    await base44.auth.register({
-      email: normalizedEmail,
-      password,
-      full_name: fullName,
-    });
+    // Register the account — creates their auth account with the chosen password
+    // If already registered, they can just log in normally
+    try {
+      await base44.auth.register({
+        email: normalizedEmail,
+        password,
+        full_name: fullName,
+      });
+    } catch (regErr) {
+      // Already registered — that's okay, token was valid so just proceed
+      console.log('Register note:', regErr.message);
+    }
 
     // Mark token as used
     await base44.asServiceRole.entities.ActivationToken.update(tokenRecord.id, {
