@@ -165,17 +165,15 @@ Deno.serve(async (req) => {
       });
       lawyerUser = { ...lawyerUser, user_status: 'approved' };
     } else {
-      // No user entity yet — invite them (creates auth account + user entity)
+      // No user entity yet — invite them (creates auth account; activateAccount will set user_status on first login)
       await base44.users.inviteUser(normalizedEmail, 'user').catch((e) => {
         console.log('inviteUser on approve:', e?.message);
       });
 
-      // Poll up to 5s for the User entity to appear after invite
-      for (let i = 0; i < 5; i++) {
-        await new Promise(r => setTimeout(r, 1000));
-        const found = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-        if (found[0]) { lawyerUser = found[0]; break; }
-      }
+      // Give the platform a moment to create the user entity, then try once
+      await new Promise(r => setTimeout(r, 2000));
+      const found = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+      lawyerUser = found[0] || null;
 
       if (lawyerUser) {
         await base44.asServiceRole.entities.User.update(lawyerUser.id, {
@@ -196,7 +194,8 @@ Deno.serve(async (req) => {
         });
         lawyerUser = { ...lawyerUser, user_status: 'approved', password_set: false };
       } else {
-        console.log('User entity not found after invite — approval email will still be sent');
+        // User entity not yet visible — the activateAccount function will set user_status on first login
+        console.log('User entity not found after invite — activateAccount will pick up approved status');
       }
     }
 
