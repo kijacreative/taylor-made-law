@@ -142,7 +142,6 @@ export default function JoinNetwork() {
       if (res.data?.success) {
         setSubmittedEmail(formData.email.toLowerCase().trim());
         setSubmitted(true);
-        if (false) { // legacy branch kept for safety
       } else {
         setErrors({ submit: res.data?.error || 'Submission failed. Please try again.' });
       }
