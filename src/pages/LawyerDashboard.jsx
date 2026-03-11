@@ -32,7 +32,7 @@ export default function LawyerDashboard() {
     const userData = await base44.auth.me();
     if (userData.user_status === 'disabled') {
       await base44.auth.logout();
-      navigate('/login?disabled=1');
+      navigate(createPageUrl('LawyerLogin') + '?disabled=1');
       return;
     }
     setUser(userData);
@@ -44,18 +44,18 @@ export default function LawyerDashboard() {
       try {
         const isAuth = await base44.auth.isAuthenticated();
         if (!isAuth) {
-          navigate('/login');
+          navigate(createPageUrl('LawyerLogin'));
           return;
         }
         const userData = await refreshUser();
         if (!userData) return;
-
+        
         if (userData.role === 'admin') {
           navigate(createPageUrl('AdminDashboard'));
           return;
         }
       } catch (e) {
-        navigate('/login');
+        navigate(createPageUrl('Home'));
       } finally {
         setLoading(false);
       }

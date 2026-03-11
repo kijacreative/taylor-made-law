@@ -1,15 +1,15 @@
 /**
- * inviteAttorney — Admin-only.
- * Creates or updates the ONE user record for this email via upsertUserByEmail.
- * Never creates a duplicate. Status precedence enforced (no downgrade).
+ * inviteAttorney — Admin-only. Option C Unified Identity.
+ * Upserts user record (never calls base44.users.inviteUser to avoid auth account conflicts).
+ * Creates activation token, sends invite email.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const LOGO = 'https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png';
 const BASE_URL = 'https://app.taylormadelaw.com';
 const YEAR = new Date().getFullYear();
 
-function buildInviteEmail(name, activateUrl, adminNote) {
+function buildInviteEmail(name, activationUrl, adminNote) {
   const noteBlock = adminNote
     ? `<div style="background:#f5f0fa;border-left:4px solid #3a164d;border-radius:0 8px 8px 0;padding:14px 18px;margin:20px 0;">
         <p style="margin:0 0 4px;color:#3a164d;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;">Note from the TML Team</p>
@@ -33,17 +33,17 @@ function buildInviteEmail(name, activateUrl, adminNote) {
         <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${name},</p>
         <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">You've been personally invited to join the <strong>Taylor Made Law Network</strong> — a private attorney platform connecting trusted legal professionals with vetted case opportunities.</p>
         ${noteBlock}
-        <p style="margin:0 0 24px;color:#333333;font-size:15px;line-height:1.7;">Click the button below to set your password and activate your account:</p>
+        <p style="margin:0 0 24px;color:#333333;font-size:15px;line-height:1.7;">Click below to log in and get started:</p>
         <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
           <tr><td align="center">
-            <a href="${activateUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Activate Your Account →</a>
+            <a href="${activationUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Log In to Your Account →</a>
           </td></tr>
         </table>
-        <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;text-align:center;">This link expires in 7 days.</p>
-        <p style="margin:0 0 16px;color:#9ca3af;font-size:11px;text-align:center;word-break:break-all;">Or copy: ${activateUrl}</p>
-        <p style="margin:0;color:#9ca3af;font-size:12px;">Questions? <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;text-decoration:none;">support@taylormadelaw.com</a></p>
+        <p style="margin:0 0 16px;color:#4b5563;font-size:14px;line-height:1.7;">Once logged in, you'll have access to the Case Exchange and the full Taylor Made Law platform.</p>
       </td></tr>
       <tr><td style="padding:28px 0 0;text-align:center;">
+        <p style="margin:0 0 4px;color:#9ca3af;font-size:12px;">Taylor Made Law</p>
+        <p style="margin:0;color:#9ca3af;font-size:12px;">Questions? <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;text-decoration:none;">support@taylormadelaw.com</a></p>
         <p style="margin:8px 0 0;color:#bbb;font-size:11px;">© ${YEAR} Taylor Made Law. All rights reserved.</p>
       </td></tr>
     </table>
@@ -62,55 +62,101 @@ async function generateTokenPair() {
   return { rawToken, tokenHash };
 }
 
+function statusRank(s) {
+  if (s === 'approved') return 3;
+  if (s === 'pending') return 2;
+  if (s === 'invited') return 1;
+  return 0;
+}
+
+function maxStatus(current, requested) {
+  if (current === 'disabled') return 'disabled';
+  if (statusRank(current) >= statusRank(requested)) return current;
+  return requested;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
+    const user = await base44.auth.me();
 
-    const adminUser = await base44.auth.me();
-    if (!adminUser || adminUser.role !== 'admin') {
+    if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
     }
 
     const body = await req.json();
     const { email, full_name, firm_name, states_served, practice_areas, admin_note, send_email = true } = body;
 
-    if (!email) return Response.json({ error: 'Email is required' }, { status: 400 });
+    if (!email) {
+      return Response.json({ error: 'Email is required' }, { status: 400 });
+    }
 
     const normalizedEmail = email.toLowerCase().trim();
     const resendKey = Deno.env.get('RESEND_API_KEY');
 
-    // ── Upsert the ONE user record via the shared identity service ──
-    const upsertResult = await base44.functions.invoke('upsertUserByEmail', {
-      email: normalizedEmail,
-      requested_status: 'invited',
-      entry_source: 'invite',
-      create_if_missing: true,
-      actor_email: adminUser.email,
-      actor_role: 'admin',
-      profile: {
-        full_name: full_name || '',
-        firm_name: firm_name || '',
-        states_licensed: states_served || [],
-        practice_areas: practice_areas || [],
-        admin_note: admin_note || '',
-        invited_by_admin: adminUser.email,
-      }
-    });
+    // Find or create user — NO base44.users.inviteUser() call
+    // That function creates a conflicting auth account which breaks register() later
+    const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+    let lawyerUser = existingUsers[0] || null;
+    let isNew = false;
 
-    if (!upsertResult.data?.success) {
-      return Response.json({
-        error: upsertResult.data?.error || upsertResult.data?.reason || 'Failed to upsert user',
-        blocked: upsertResult.data?.blocked
-      }, { status: upsertResult.data?.blocked ? 409 : 500 });
+    if (lawyerUser) {
+      if (lawyerUser.user_status === 'disabled') {
+        return Response.json({
+          error: 'This user is disabled. Please reinstate them before re-inviting.',
+          user_status: 'disabled'
+        }, { status: 409 });
+      }
+
+      // Never downgrade status
+      const newStatus = maxStatus(lawyerUser.user_status || 'invited', 'invited');
+      const updates = {};
+      if (newStatus !== lawyerUser.user_status) updates.user_status = newStatus;
+      if (full_name && !lawyerUser.full_name) updates.full_name = full_name;
+      if (firm_name && !lawyerUser.firm_name) updates.firm_name = firm_name;
+      if (admin_note) updates.admin_note = admin_note;
+      if (Object.keys(updates).length > 0) {
+        await base44.asServiceRole.entities.User.update(lawyerUser.id, updates);
+        lawyerUser = { ...lawyerUser, ...updates };
+      }
+    } else {
+      // Create user entity record only (no auth account yet — that happens at activation)
+      // Base44 doesn't support creating User entity records directly, so we use inviteUser
+      // but ONLY as a user-record-creation mechanism, understanding it may fail or succeed.
+      // We then immediately check if user was created.
+      try {
+        await base44.users.inviteUser(normalizedEmail, 'user');
+      } catch (e) {
+        console.log('inviteUser note (expected for new users):', e.message);
+      }
+      await new Promise(r => setTimeout(r, 1500));
+      const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+      lawyerUser = newUsers[0] || null;
+
+      if (lawyerUser) {
+        const initData = {
+          user_status: 'invited',
+          email_verified: false,
+          password_set: false,
+          invited_by_admin: user.email,
+          invited_at: new Date().toISOString()
+        };
+        if (full_name) initData.full_name = full_name;
+        if (firm_name) initData.firm_name = firm_name;
+        if (states_served?.length) initData.states_licensed = states_served;
+        if (practice_areas?.length) initData.practice_areas = practice_areas;
+        if (admin_note) initData.admin_note = admin_note;
+        await base44.asServiceRole.entities.User.update(lawyerUser.id, initData);
+        lawyerUser = { ...lawyerUser, ...initData };
+        isNew = true;
+      }
     }
 
-    const lawyerUser = upsertResult.data.user;
     if (!lawyerUser) {
       return Response.json({ error: 'Failed to create or find user record' }, { status: 500 });
     }
 
-    // ── Create activation token ─────────────────────────────────────
-    // Invalidate previous unused tokens first
+    // Invalidate all previous unused activation tokens for this email
     const existingTokens = await base44.asServiceRole.entities.ActivationToken.filter({
       user_email: normalizedEmail,
       token_type: 'activation'
@@ -124,6 +170,7 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Create new activation token
     const { rawToken, tokenHash } = await generateTokenPair();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -133,22 +180,31 @@ Deno.serve(async (req) => {
       token_hash: tokenHash,
       token_type: 'activation',
       expires_at: expiresAt,
-      created_by_admin: adminUser.email
+      created_by_admin: user.email
     });
 
+    // Audit logs
+    await base44.asServiceRole.entities.AuditLog.create({
+      entity_type: 'User',
+      entity_id: lawyerUser.id,
+      action: 'invite_sent',
+      actor_email: user.email,
+      actor_role: 'admin',
+      notes: `Admin invited ${normalizedEmail}${admin_note ? '. Note: ' + admin_note : ''}`
+    });
     await base44.asServiceRole.entities.AuditLog.create({
       entity_type: 'ActivationToken',
       entity_id: tokenRecord.id,
       action: 'activation_token_created',
-      actor_email: adminUser.email,
+      actor_email: user.email,
       actor_role: 'admin',
-      notes: `Invite token created for ${normalizedEmail} by admin ${adminUser.email}`
+      notes: `Token created for ${normalizedEmail}`
     });
 
-    // ── Send invite email ───────────────────────────────────────────
+    // Send invite email
     if (send_email && resendKey) {
-      const activateUrl = `${BASE_URL}/Activate?token=${rawToken}`;
-      const html = buildInviteEmail(full_name || 'there', activateUrl, admin_note);
+      const loginUrl = `${BASE_URL}/LawyerLogin`;
+      const html = buildInviteEmail(full_name || 'there', loginUrl, admin_note);
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
@@ -165,9 +221,8 @@ Deno.serve(async (req) => {
       success: true,
       user_id: lawyerUser.id,
       user_status: lawyerUser.user_status,
-      action: upsertResult.data.action,
-      status_changed: upsertResult.data.status_changed,
-      message: 'Invitation processed successfully'
+      is_new: isNew,
+      message: 'Invitation sent successfully'
     });
 
   } catch (error) {

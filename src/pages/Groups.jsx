@@ -12,8 +12,7 @@ import {
   ArrowRight,
   Loader2,
   Shield,
-  Sparkles,
-  Search
+  Sparkles
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
@@ -24,7 +23,6 @@ export default function Groups() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -73,23 +71,6 @@ export default function Groups() {
   const myCircles = allCircles.filter(circle => 
     memberships.some(m => m.circle_id === circle.id)
   );
-
-  const discoverableCircles = allCircles.filter(circle =>
-    circle.visibility === 'discoverable' && !memberships.some(m => m.circle_id === circle.id)
-  );
-
-  const matchesSearch = (circle) => {
-    if (!search.trim()) return true;
-    const q = search.toLowerCase();
-    return (
-      circle.name?.toLowerCase().includes(q) ||
-      circle.description?.toLowerCase().includes(q) ||
-      circle.tags?.some(t => t.toLowerCase().includes(q))
-    );
-  };
-
-  const filteredCircles = myCircles.filter(matchesSearch);
-  const filteredDiscoverable = discoverableCircles.filter(matchesSearch);
 
   // Get pending invitations
   const { data: pendingInvites = [] } = useQuery({
@@ -169,20 +150,6 @@ export default function Groups() {
             </motion.div>
           )}
 
-          {/* Search */}
-          {(myCircles.length > 0 || discoverableCircles.length > 0) && (
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search circles by name, description, or tag..."
-                className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]"
-              />
-            </div>
-          )}
-
           {/* My Circles */}
           {myCircles.length === 0 ? (
             <TMLCard variant="cream" className="text-center py-16">
@@ -198,14 +165,9 @@ export default function Groups() {
                 </TMLButton>
               </Link>
             </TMLCard>
-          ) : filteredCircles.length === 0 ? (
-            <div className="text-center py-12 text-gray-500">
-              <Search className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-              <p>No circles match "<strong>{search}</strong>"</p>
-            </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredCircles.map((circle, index) => {
+              {myCircles.map((circle, index) => {
                 const myMembership = memberships.find(m => m.circle_id === circle.id);
                 const isAdmin = myMembership?.role === 'admin';
                 
@@ -269,57 +231,6 @@ export default function Groups() {
                   </motion.div>
                 );
               })}
-            </div>
-          )}
-          {/* Discoverable Circles */}
-          {filteredDiscoverable.length > 0 && (
-            <div className="mt-10">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Discover Circles</h2>
-              <p className="text-sm text-gray-500 mb-4">Open circles you can request to join.</p>
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredDiscoverable.map((circle, index) => (
-                  <motion.div
-                    key={circle.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                  >
-                    <Link to={`${createPageUrl('GroupDetail')}?id=${circle.id}`}>
-                      <TMLCard hover className="h-full border-dashed border-2 border-gray-200">
-                        <TMLCardHeader>
-                          <div className="flex items-start justify-between mb-3">
-                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
-                              <Globe className="w-6 h-6 text-white" />
-                            </div>
-                            <TMLBadge variant="default" size="sm">Discoverable</TMLBadge>
-                          </div>
-                          <TMLCardTitle>{circle.name}</TMLCardTitle>
-                        </TMLCardHeader>
-                        <TMLCardContent>
-                          <p className="text-gray-600 mb-4 line-clamp-2 text-sm">
-                            {circle.description || 'Open legal community'}
-                          </p>
-                          <div className="flex items-center gap-4 text-sm text-gray-500">
-                            <span className="flex items-center gap-1">
-                              <Users className="w-4 h-4" />
-                              {circle.member_count || 0} members
-                            </span>
-                          </div>
-                          {circle.tags && circle.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-3">
-                              {circle.tags.slice(0, 2).map(tag => (
-                                <span key={tag} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </TMLCardContent>
-                      </TMLCard>
-                    </Link>
-                  </motion.div>
-                ))}
-              </div>
             </div>
           )}
         </div>

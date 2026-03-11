@@ -1,9 +1,8 @@
 /**
- * resendActivation — Admin-only (by user_id) or public (by email).
- * Calls upsertUserByEmail to normalize & check the user before resending.
+ * resendActivation — Admin-only (user_id) or public (email).
  * Invalidates previous tokens, creates new one, sends activation email.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 const LOGO = 'https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png';
 const BASE_URL = 'https://app.taylormadelaw.com';
@@ -59,69 +58,46 @@ Deno.serve(async (req) => {
     const body = await req.json();
     const { user_id, email } = body;
 
-    // Admin path: requires authentication
+    // Admin path requires authentication
     let isAdminCall = false;
-    let actorEmail = 'public';
     if (user_id) {
       const adminUser = await base44.auth.me();
       if (!adminUser || adminUser.role !== 'admin') {
         return Response.json({ error: 'Forbidden: Admin access required' }, { status: 403 });
       }
       isAdminCall = true;
-      actorEmail = adminUser.email;
     }
 
     if (!user_id && !email) {
       return Response.json({ error: 'user_id or email is required' }, { status: 400 });
     }
 
-    // ── Resolve target user ────────────────────────────────────────
-    let targetUser = null;
+    let targetEmail = null;
+    let targetName = null;
+    let targetUserId = null;
+
     if (user_id) {
       const users = await base44.asServiceRole.entities.User.filter({ id: user_id });
-      targetUser = users[0] || null;
+      const lawyerUser = users[0];
+      if (!lawyerUser) return Response.json({ success: true, message: 'If an account exists, an activation email has been sent.' });
+      if (lawyerUser.user_status === 'disabled') return Response.json({ error: 'Account is disabled.' }, { status: 403 });
+      if (lawyerUser.password_set && lawyerUser.email_verified) return Response.json({ error: 'Account is already activated.' }, { status: 400 });
+      targetEmail = lawyerUser.email.toLowerCase().trim();
+      targetName = lawyerUser.full_name;
+      targetUserId = lawyerUser.id;
     } else {
       const normalizedEmail = email.toLowerCase().trim();
-      const [byEmail, byNorm] = await Promise.all([
-        base44.asServiceRole.entities.User.filter({ email: normalizedEmail }),
-        base44.asServiceRole.entities.User.filter({ email_normalized: normalizedEmail }),
-      ]);
-      const seen = new Set();
-      const candidates = [...byEmail, ...byNorm].filter(u => {
-        if (seen.has(u.id)) return false;
-        seen.add(u.id);
-        return true;
-      });
-      targetUser = candidates[0] || null;
+      const users = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+      const lawyerUser = users[0];
+      if (!lawyerUser) return Response.json({ success: true, message: 'If an account exists, an activation email has been sent.' });
+      if (lawyerUser.user_status === 'disabled') return Response.json({ error: 'Account is disabled.' }, { status: 403 });
+      if (lawyerUser.password_set && lawyerUser.email_verified) return Response.json({ error: 'Account is already activated. Please log in.' }, { status: 400 });
+      targetEmail = lawyerUser.email.toLowerCase().trim();
+      targetName = lawyerUser.full_name;
+      targetUserId = lawyerUser.id;
     }
 
-    // Return generic success to not reveal account existence on public calls
-    if (!targetUser) {
-      return Response.json({ success: true, message: 'If an account exists, an activation email has been sent.' });
-    }
-
-    const { user_status, password_set, email_verified, full_name } = targetUser;
-    const targetEmail = (targetUser.email_normalized || targetUser.email || '').toLowerCase().trim();
-
-    if (user_status === 'disabled' || user_status === 'cancelled') {
-      return Response.json({ error: 'Account is disabled. Please contact support.' }, { status: 403 });
-    }
-    if (password_set && email_verified) {
-      return Response.json({ error: 'Account is already activated. Please log in.' }, { status: 400 });
-    }
-
-    // ── Normalize email via upsert (idempotent touch) ──────────────
-    await base44.functions.invoke('upsertUserByEmail', {
-      email: targetEmail,
-      requested_status: user_status || 'invited',
-      entry_source: 'invite',
-      create_if_missing: false,
-      actor_email: actorEmail,
-      actor_role: isAdminCall ? 'admin' : 'user',
-      profile: { email_normalized: targetEmail }
-    });
-
-    // ── Invalidate previous tokens ─────────────────────────────────
+    // Invalidate all previous unused tokens
     const existingTokens = await base44.asServiceRole.entities.ActivationToken.filter({
       user_email: targetEmail,
       token_type: 'activation'
@@ -135,31 +111,30 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── Create new token ───────────────────────────────────────────
     const resendKey = Deno.env.get('RESEND_API_KEY');
     const { rawToken, tokenHash } = await generateTokenPair();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
     const tokenRecord = await base44.asServiceRole.entities.ActivationToken.create({
-      user_id: targetUser.id,
+      user_id: targetUserId,
       user_email: targetEmail,
       token_hash: tokenHash,
       token_type: 'activation',
       expires_at: expiresAt,
-      created_by_admin: isAdminCall ? actorEmail : null
+      created_by_admin: isAdminCall ? 'admin-resend' : null
     });
 
     await base44.asServiceRole.entities.AuditLog.create({
       entity_type: 'ActivationToken',
       entity_id: tokenRecord.id,
       action: 'activation_token_created',
-      actor_email: actorEmail,
+      actor_email: targetEmail,
       actor_role: isAdminCall ? 'admin' : 'user',
-      notes: `Activation token resent for ${targetEmail}`
+      notes: `Resent activation token for ${targetEmail}`
     });
 
     if (resendKey) {
-      const firstName = (full_name || '').split(' ')[0] || 'there';
+      const firstName = (targetName || '').split(' ')[0] || 'there';
       const activationUrl = `${BASE_URL}/Activate?token=${rawToken}`;
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
@@ -174,7 +149,6 @@ Deno.serve(async (req) => {
     }
 
     return Response.json({ success: true, message: 'Activation email sent.' });
-
   } catch (error) {
     console.error('resendActivation error:', error);
     return Response.json({ error: error.message }, { status: 500 });

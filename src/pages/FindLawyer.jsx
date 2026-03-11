@@ -110,22 +110,218 @@ export default function FindLawyer() {
 
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
+
     setLoading(true);
+
     try {
-      await base44.functions.invoke('submitFindLawyerLead', {
-        first_name: formData.first_name,
-        last_name: formData.last_name,
-        email: formData.email,
-        phone: formData.phone,
+      // Send to Lead Docket webhook first
+      try {
+        const webhookData = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          email: formData.email,
+          phone: formData.phone,
+          state: formData.state,
+          practice_area: formData.practice_area,
+          description: formData.description,
+          urgency: formData.urgency
+        };
+
+        await fetch('https://taylormadelaw.leaddocket.com/opportunities/form/1', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(webhookData)
+        });
+      } catch (webhookErr) {
+        console.log('Lead Docket webhook send attempted');
+      }
+
+      // Create lead
+      const leadData = {
         practice_area: formData.practice_area,
         state: formData.state,
         description: formData.description,
         urgency: formData.urgency,
-        consent: formData.consent,
-        invite_attorney_email: formData.invite_attorney_email || null,
-        invite_attorney_name: formData.invite_attorney_name || null,
-        invite_message: formData.invite_message || null,
+        first_name: formData.first_name,
+        last_name: formData.last_name,
+        email: formData.email,
+        phone: formData.phone,
+        consent_given: true,
+        consent_version: CONSENT_VERSION,
+        status: 'new',
+        source: 'website'
+      };
+
+      const lead = await base44.entities.Lead.create(leadData);
+
+      // Create consent log
+      await base44.entities.ConsentLog.create({
+        entity_type: 'Lead',
+        entity_id: lead.id,
+        consent_type: 'intake_terms',
+        consent_version: CONSENT_VERSION,
+        consent_text: CONSENT_TEXT,
+        consented_at: new Date().toISOString()
       });
+
+      // Send confirmation email to client (via backend function to bypass auth restriction)
+      try {
+        await base44.functions.invoke('sendApplicationEmails', {
+          to: formData.email,
+          from_name: 'Taylor Made Law',
+          subject: 'We Received Your Request — Taylor Made Law',
+          body: `
+            <div style="font-family: Inter, system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px; background: #faf8f5;">
+              <div style="text-align: center; margin-bottom: 32px;">
+                <img src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" alt="Taylor Made Law" style="height: 50px;" />
+              </div>
+
+              <div style="background: white; border-radius: 16px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                <div style="text-align: center; margin-bottom: 32px;">
+                  <div style="width: 64px; height: 64px; background: #d1fae5; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+                    <span style="font-size: 28px;">✓</span>
+                  </div>
+                  <h1 style="color: #111827; font-size: 26px; font-weight: 700; margin: 0 0 8px;">Thank You, ${formData.first_name}!</h1>
+                  <p style="color: #6b7280; font-size: 16px; margin: 0;">Your request has been submitted successfully.</p>
+                </div>
+
+                <p style="color: #374151; font-size: 15px; line-height: 1.7; margin-bottom: 24px;">
+                  Our team is reviewing your information and will work to match you with a qualified attorney in our network. You can expect to hear from us within <strong>24–48 hours</strong>.
+                </p>
+
+                <div style="background: #f5f0fa; border-left: 4px solid #3a164d; border-radius: 8px; padding: 20px; margin-bottom: 28px;">
+                  <p style="color: #3a164d; font-weight: 600; margin: 0 0 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.05em;">Your Submission Summary</p>
+                  <table style="width: 100%; border-collapse: collapse; font-size: 14px; color: #374151;">
+                    <tr><td style="padding: 4px 0; color: #6b7280; width: 40%;">Practice Area</td><td style="padding: 4px 0; font-weight: 500;">${formData.practice_area}</td></tr>
+                    <tr><td style="padding: 4px 0; color: #6b7280;">State</td><td style="padding: 4px 0; font-weight: 500;">${formData.state}</td></tr>
+                    <tr><td style="padding: 4px 0; color: #6b7280;">Urgency</td><td style="padding: 4px 0; font-weight: 500; text-transform: capitalize;">${formData.urgency}</td></tr>
+                  </table>
+                </div>
+
+                <p style="color: #374151; font-weight: 600; font-size: 15px; margin-bottom: 12px;">What happens next?</p>
+                <ul style="color: #374151; font-size: 14px; line-height: 1.8; padding-left: 0; list-style: none; margin: 0 0 28px;">
+                  <li style="padding: 6px 0; display: flex; gap: 10px;"><span style="color: #3a164d; font-weight: 700;">✓</span> Our team reviews your case details</li>
+                  <li style="padding: 6px 0; display: flex; gap: 10px;"><span style="color: #3a164d; font-weight: 700;">✓</span> We match you with qualified attorneys in our network</li>
+                  <li style="padding: 6px 0; display: flex; gap: 10px;"><span style="color: #3a164d; font-weight: 700;">✓</span> You'll be contacted within 24–48 hours</li>
+                </ul>
+
+                <p style="color: #6b7280; font-size: 13px; margin: 0;">
+                  Questions? Contact us at <a href="mailto:support@taylormadelaw.com" style="color: #3a164d;">support@taylormadelaw.com</a>
+                </p>
+              </div>
+
+              <div style="margin-top: 32px; text-align: center; color: #9ca3af; font-size: 12px;">
+                <p style="margin: 0;">© ${new Date().getFullYear()} Taylor Made Law. All rights reserved.</p>
+              </div>
+            </div>
+          `
+        });
+      } catch (emailErr) {
+        console.log('Email send attempted');
+      }
+
+      // Audit log for email send
+      try {
+        await base44.entities.AuditLog.create({
+          entity_type: 'Lead',
+          entity_id: lead.id,
+          action: 'confirmation_email_sent',
+          actor_email: formData.email,
+          actor_role: 'public',
+          notes: `Confirmation email sent to ${formData.email}`
+        });
+      } catch (e) { /* non-critical */ }
+
+      // Send alert email to all admin accounts
+      try {
+        const allUsers = await base44.entities.User.list();
+        const adminUsers = allUsers.filter((u) => u.role === 'admin');
+
+        for (const admin of adminUsers) {
+          await base44.functions.invoke('sendApplicationEmails', {
+            to: admin.email,
+            from_name: 'Taylor Made Law Alerts',
+            subject: `🔔 New Lead: ${formData.first_name} ${formData.last_name} — ${formData.practice_area}`,
+            body: `
+              <div style="font-family: Inter, system-ui, sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+                <div style="text-align: center; margin-bottom: 24px;">
+                  <img src="https://taylormadelaw.com/wp-content/uploads/2025/06/logo-color.webp" alt="Taylor Made Law" style="height: 44px;" />
+                </div>
+                <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 32px;">
+                  <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 24px;">
+                    <div style="background: #fef3c7; border-radius: 8px; padding: 8px 12px; font-size: 20px;">🔔</div>
+                    <div>
+                      <h2 style="margin: 0; color: #111827; font-size: 20px; font-weight: 700;">New Lead Submitted</h2>
+                      <p style="margin: 4px 0 0; color: #6b7280; font-size: 13px;">Lead ID: ${lead.id}</p>
+                    </div>
+                  </div>
+
+                  <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <p style="color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin: 0 0 12px;">Client Information</p>
+                    <table style="width: 100%; font-size: 14px; color: #374151; border-collapse: collapse;">
+                      <tr><td style="padding: 5px 0; color: #6b7280; width: 35%;">Name</td><td style="padding: 5px 0; font-weight: 600;">${formData.first_name} ${formData.last_name}</td></tr>
+                      <tr><td style="padding: 5px 0; color: #6b7280;">Email</td><td style="padding: 5px 0;"><a href="mailto:${formData.email}" style="color: #3a164d;">${formData.email}</a></td></tr>
+                      <tr><td style="padding: 5px 0; color: #6b7280;">Phone</td><td style="padding: 5px 0;"><a href="tel:${formData.phone}" style="color: #3a164d;">${formData.phone}</a></td></tr>
+                    </table>
+                  </div>
+
+                  <div style="background: #f5f0fa; border-radius: 8px; padding: 20px; margin-bottom: 20px;">
+                    <p style="color: #3a164d; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin: 0 0 12px;">Case Details</p>
+                    <table style="width: 100%; font-size: 14px; color: #374151; border-collapse: collapse;">
+                      <tr><td style="padding: 5px 0; color: #6b7280; width: 35%;">Practice Area</td><td style="padding: 5px 0; font-weight: 600;">${formData.practice_area}</td></tr>
+                      <tr><td style="padding: 5px 0; color: #6b7280;">State</td><td style="padding: 5px 0; font-weight: 600;">${formData.state}</td></tr>
+                      <tr><td style="padding: 5px 0; color: #6b7280;">Urgency</td><td style="padding: 5px 0; font-weight: 600; text-transform: capitalize;">${formData.urgency}</td></tr>
+                    </table>
+                  </div>
+
+                  <div style="background: #f9fafb; border-radius: 8px; padding: 20px; margin-bottom: 24px;">
+                    <p style="color: #6b7280; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 600; margin: 0 0 10px;">Description</p>
+                    <p style="color: #374151; font-size: 14px; line-height: 1.7; margin: 0;">${formData.description}</p>
+                  </div>
+
+                  <a href="${window.location.origin}/admin-leads" style="display: block; background: linear-gradient(135deg, #3a164d 0%, #993333 100%); color: white; text-align: center; padding: 14px 24px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 15px;">
+                    Review Lead in Dashboard →
+                  </a>
+                </div>
+                <p style="text-align: center; color: #9ca3af; font-size: 12px; margin-top: 20px;">© ${new Date().getFullYear()} Taylor Made Law</p>
+              </div>
+            `
+          });
+        }
+      } catch (adminEmailErr) {
+        console.log('Admin notification email attempted');
+      }
+
+      // Handle attorney invitation if provided
+      if (formData.invite_attorney_email) {
+        const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
+        await base44.entities.Invitation.create({
+          inviter_email: formData.email,
+          inviter_name: `${formData.first_name} ${formData.last_name}`,
+          invitee_email: formData.invite_attorney_email,
+          invitee_name: formData.invite_attorney_name || '',
+          message: formData.invite_message || 'I thought you might be interested in joining the Taylor Made Law network.',
+          token: token,
+          status: 'pending',
+          sent_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+        });
+
+        // Send invitation email
+        try {
+          await base44.functions.invoke('sendApplicationEmails', {
+            to: formData.invite_attorney_email,
+            subject: "You've Been Invited to Join Taylor Made Law",
+            body: `<p>Hello${formData.invite_attorney_name ? ' ' + formData.invite_attorney_name : ''},</p><p>${formData.first_name} ${formData.last_name} has invited you to join the Taylor Made Law attorney network.</p><p><a href="${window.location.origin}${createPageUrl('ForLawyers')}">Apply now →</a></p><p>Best regards,<br/>Taylor Made Law Team</p>`
+          });
+        } catch (inviteErr) {
+          console.log('Invitation email send attempted');
+        }
+      }
+
       setSubmitted(true);
     } catch (error) {
       console.error('Error submitting form:', error);

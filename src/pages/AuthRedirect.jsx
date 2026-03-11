@@ -13,7 +13,7 @@ export default function AuthRedirect() {
       try {
         const isAuth = await base44.auth.isAuthenticated();
         if (!isAuth) {
-          navigate(createPageUrl('LawyerLogin'));
+          navigate(createPageUrl('Home'));
           return;
         }
 

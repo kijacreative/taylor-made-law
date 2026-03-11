@@ -1,8 +1,3 @@
-/**
- * approveLawyerApplication — Admin-only.
- * Approves a pending LawyerApplication, upserts the user record to 'approved'
- * via upsertUserByEmail, then sends the activation email.
- */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const LOGO = 'https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png';
@@ -51,7 +46,7 @@ function buildApprovalEmail(name, activateUrl, freeTrialMonths) {
     <h1 style="margin:0 0 8px;text-align:center;color:#111827;font-size:26px;font-weight:700;">You're Approved!</h1>
     <p style="margin:0 0 28px;text-align:center;color:#6b7280;font-size:15px;">Welcome to the Taylor Made Law Network</p>
     <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${name},</p>
-    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Your application has been approved. Click the button below to set your password and access the attorney portal.</p>
+    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Your application to join the <strong>Taylor Made Law Network</strong> has been approved. Click the button below to set your password and access the attorney portal.</p>
     ${trialBanner}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
       <tr><td align="center">
@@ -63,113 +58,78 @@ function buildApprovalEmail(name, activateUrl, freeTrialMonths) {
   `);
 }
 
-async function generateTokenPair() {
-  const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
-  const rawToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
-  const encoder = new TextEncoder();
-  const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(rawToken));
-  const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
-  return { rawToken, tokenHash };
-}
-
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    const adminUser = await base44.auth.me();
-    if (!adminUser || adminUser.role !== 'admin') {
+    const user = await base44.auth.me();
+    if (!user || user.role !== 'admin') {
       return Response.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     const body = await req.json();
     const { application_id, free_trial_months = 0 } = body;
 
-    if (!application_id) return Response.json({ error: 'application_id is required' }, { status: 400 });
+    if (!application_id) {
+      return Response.json({ error: 'application_id is required' }, { status: 400 });
+    }
 
     const apps = await base44.asServiceRole.entities.LawyerApplication.filter({ id: application_id });
-    if (!apps || apps.length === 0) return Response.json({ error: 'Application not found' }, { status: 404 });
-
+    if (!apps || apps.length === 0) {
+      return Response.json({ error: 'Application not found' }, { status: 404 });
+    }
     const application = apps[0];
+
     if (application.status !== 'pending') {
       return Response.json({ error: 'Application is not in pending status' }, { status: 400 });
     }
 
     const normalizedEmail = application.email.toLowerCase().trim();
-    const resendKey = Deno.env.get('RESEND_API_KEY');
 
-    // ── 1. Upsert user to 'approved' via shared identity service ────
-    const now = new Date().toISOString();
-    const upsertResult = await base44.functions.invoke('upsertUserByEmail', {
-      email: normalizedEmail,
-      requested_status: 'approved',
-      entry_source: 'apply',
-      create_if_missing: true,
-      actor_email: adminUser.email,
-      actor_role: 'admin',
-      profile: {
-        full_name: application.full_name || '',
-        firm_name: application.firm_name || '',
-        phone: application.phone || '',
-        bar_number: application.bar_number || '',
-        bio: application.bio || '',
-        states_licensed: application.states_licensed || [],
-        practice_areas: application.practice_areas || [],
-        years_experience: application.years_experience || 0,
-        referral_agreement_accepted: application.consent_referral || false,
-        referral_agreement_accepted_at: application.consent_referral ? now : undefined,
-        approved_at: now,
-        approved_by: adminUser.email,
-        free_trial_months: parseInt(free_trial_months) || 0,
-      }
-    });
-
-    if (upsertResult.data?.blocked) {
-      return Response.json({
-        error: 'User is disabled. Please reinstate before approving.',
-        blocked: true
-      }, { status: 409 });
-    }
-
-    if (!upsertResult.data?.success) {
-      return Response.json({ error: 'Failed to upsert user to approved status' }, { status: 500 });
-    }
-
-    // ── 2. Generate & store activation token ───────────────────────
-    const { rawToken, tokenHash } = await generateTokenPair();
+    // Generate a secure activation token
+    const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
+    const rawToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    const encoder = new TextEncoder();
+    const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(rawToken));
+    const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-    // Invalidate previous unused tokens
+    // Invalidate any previous unused tokens for this email
     const existingTokens = await base44.asServiceRole.entities.ActivationToken.filter({
       user_email: normalizedEmail,
       token_type: 'activation'
     });
     for (const t of existingTokens) {
       if (!t.used_at) {
-        await base44.asServiceRole.entities.ActivationToken.update(t.id, { used_at: now });
+        await base44.asServiceRole.entities.ActivationToken.update(t.id, {
+          used_at: new Date().toISOString()
+        });
       }
     }
 
-    const tokenRecord = await base44.asServiceRole.entities.ActivationToken.create({
+    // Store new token
+    await base44.asServiceRole.entities.ActivationToken.create({
       token_hash: tokenHash,
       token_type: 'activation',
       user_email: normalizedEmail,
       expires_at: expiresAt,
-      created_by_admin: adminUser.email,
+      created_by_admin: user.email,
     });
 
-    // ── 3. Mark application approved ──────────────────────────────
+    // Mark application as approved
     await base44.asServiceRole.entities.LawyerApplication.update(application_id, {
       status: 'approved',
-      reviewed_by: adminUser.email,
-      reviewed_at: now,
+      reviewed_by: user.email,
+      reviewed_at: new Date().toISOString(),
       activation_token_hash: tokenHash,
       activation_token_expires_at: expiresAt,
       activation_token_used: false,
       user_created: false,
     });
 
-    // ── 4. Send approval + activation email ────────────────────────
+    // Send activation email
     const activateUrl = `https://app.taylormadelaw.com/Activate?token=${rawToken}&email=${encodeURIComponent(normalizedEmail)}`;
+    const resendKey = Deno.env.get('RESEND_API_KEY');
     let emailSent = false;
     if (resendKey) {
       const emailRes = await fetch('https://api.resend.com/emails', {
@@ -177,7 +137,7 @@ Deno.serve(async (req) => {
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           from: 'Taylor Made Law <noreply@taylormadelaw.com>',
-          to: [normalizedEmail],
+          to: [application.email],
           subject: "You're Approved — Set Up Your Taylor Made Law Account",
           html: buildApprovalEmail(application.full_name, activateUrl, free_trial_months)
         })
@@ -189,15 +149,15 @@ Deno.serve(async (req) => {
       entity_type: 'LawyerApplication',
       entity_id: application_id,
       action: 'approved',
-      actor_email: adminUser.email,
+      actor_email: user.email,
       actor_role: 'admin',
-      notes: `Application approved. Activation email sent: ${emailSent}. upsert_action=${upsertResult.data?.action}.`
+      notes: `Application approved. Activation email sent to ${normalizedEmail}.`
     });
 
     return Response.json({ success: true, email_sent: emailSent });
 
   } catch (error) {
-    console.error('approveLawyerApplication error:', error);
+    console.error('Error approving application:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
