@@ -591,6 +591,101 @@ export default function AdminLawyers() {
               )}
             </>
           )}
+          {/* ── LAWYER PROFILES SECTION ── */}
+          {section === 'profiles' && (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                {[
+                  { label: 'Total Profiles', count: lawyerProfiles.length, border: 'border-gray-100' },
+                  { label: 'Pending', count: profileCounts.pending || 0, border: 'border-amber-100' },
+                  { label: 'Approved', count: profileCounts.approved || 0, border: 'border-emerald-100' },
+                  { label: 'Restricted', count: (profileCounts.restricted || 0) + (profileCounts.cancelled || 0), border: 'border-red-100' },
+                ].map(s => (
+                  <div key={s.label} className={`bg-white rounded-xl border px-5 py-4 ${s.border}`}>
+                    <p className="text-sm text-gray-500">{s.label}</p>
+                    <p className="text-2xl font-bold text-gray-900">{s.count}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit flex-wrap">
+                {['pending', 'approved', 'restricted', 'cancelled'].map(tab => (
+                  <button key={tab} onClick={() => setProfileTab(tab)}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-all ${profileTab === tab ? 'bg-[#3a164d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+                    {tab} <span className={`ml-1.5 text-xs ${profileTab === tab ? 'opacity-75' : 'text-gray-400'}`}>({profileCounts[tab] || 0})</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="relative mb-5 max-w-md">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input type="text" placeholder="Search firm, bar #, state, practice area..." value={profileSearch} onChange={e => setProfileSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]" />
+              </div>
+
+              {profilesLoading ? (
+                <div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" /></div>
+              ) : filteredProfiles.length === 0 ? (
+                <div className="text-center py-24 bg-white rounded-2xl border border-gray-100">
+                  <BadgeCheck className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                  <p className="text-gray-500 font-medium">No profiles in this category.</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {filteredProfiles.map((p, i) => (
+                    <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
+                      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex items-start gap-4 flex-1">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#a47864] to-[#3a164d] flex items-center justify-center text-white font-semibold flex-shrink-0 text-lg">
+                              {(p.firm_name || 'L').charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap mb-1">
+                                <h3 className="font-semibold text-gray-900">{p.firm_name || '—'}</h3>
+                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                                  p.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
+                                  p.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                                  'bg-red-100 text-red-700'
+                                }`}>{p.status}</span>
+                                {p.subscription_status && p.subscription_status !== 'none' && (
+                                  <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{p.subscription_status}</span>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+                                {p.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{p.phone}</span>}
+                                {p.bar_number && <span className="flex items-center gap-1"><Scale className="w-3.5 h-3.5" />Bar: {p.bar_number}</span>}
+                                {p.years_experience > 0 && <span>{p.years_experience} yrs exp</span>}
+                              </div>
+                              <div className="flex flex-wrap gap-1.5 mt-2">
+                                {(p.states_licensed || []).slice(0, 4).map(s => <span key={s} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{s}</span>)}
+                                {(p.practice_areas || []).slice(0, 2).map(a => <span key={a} className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">{a}</span>)}
+                              </div>
+                              {p.bio && <p className="text-xs text-gray-400 mt-1 line-clamp-2">{p.bio}</p>}
+                              <p className="text-xs text-gray-400 mt-1">
+                                Created: {p.created_date ? new Date(p.created_date).toLocaleDateString() : '—'}
+                                {p.approved_at && ` · Approved: ${new Date(p.approved_at).toLocaleDateString()}`}
+                                {p.approved_by && ` by ${p.approved_by}`}
+                              </p>
+                            </div>
+                          </div>
+                          {p.status === 'pending' && (
+                            <div className="shrink-0">
+                              <button onClick={() => { setApprovingProfile(p); setProfileFreeTrialMonths(0); }}
+                                className="flex items-center gap-1.5 text-sm text-emerald-600 hover:underline font-medium">
+                                <CheckCircle2 className="w-4 h-4" /> Approve
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
         </div>
       </div>
 
