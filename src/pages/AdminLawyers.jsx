@@ -164,6 +164,45 @@ export default function AdminLawyers() {
     return true;
   });
 
+  // ── Profile Computed ──────────────────────────────────────────────────────
+
+  const profileCounts = lawyerProfiles.reduce((acc, p) => {
+    const s = p.status || 'pending';
+    acc[s] = (acc[s] || 0) + 1;
+    return acc;
+  }, {});
+
+  const filteredProfiles = lawyerProfiles.filter(p => {
+    if (p.status !== profileTab) return false;
+    if (profileSearch) {
+      const s = profileSearch.toLowerCase();
+      return p.firm_name?.toLowerCase().includes(s) || p.bar_number?.toLowerCase().includes(s) ||
+        (p.states_licensed || []).some(st => st.toLowerCase().includes(s)) ||
+        (p.practice_areas || []).some(a => a.toLowerCase().includes(s));
+    }
+    return true;
+  });
+
+  const handleProfileApprove = async () => {
+    setProfileActionLoading(true);
+    try {
+      // Find the user for this profile so we can use approveLawyer (which sends the email)
+      const res = await base44.functions.invoke('approveLawyer', {
+        user_id: approvingProfile.user_id,
+        free_trial_months: profileFreeTrialMonths,
+      });
+      if (res.data?.success) {
+        showToast('Profile approved and email sent.');
+        setApprovingProfile(null); setProfileFreeTrialMonths(0);
+        refetchProfiles();
+      } else {
+        showToast(res.data?.error || 'Approval failed.', 'error');
+      }
+    } catch (err) {
+      showToast(err.response?.data?.error || err.message || 'Error approving.', 'error');
+    } finally { setProfileActionLoading(false); }
+  };
+
   // ── Application Actions ───────────────────────────────────────────────────
 
   const handleAppApprove = async () => {
