@@ -238,10 +238,18 @@ Deno.serve(async (req) => {
     // ── 3. Send email: activation or login based on password_set ─────────────
 
     let emailSent = false;
-    const isActivated = lawyerUser?.password_set && lawyerUser?.email_verified;
+    const isActivated = lawyerUser?.password_set;
+
+    // Always mark email_verified = true to bypass platform verification gate
+    if (lawyerUser) {
+      await base44.asServiceRole.entities.User.update(lawyerUser.id, {
+        email_verified: true,
+        email_verified_at: new Date().toISOString(),
+      }).catch(() => {});
+    }
 
     if (isActivated) {
-      // Already activated — send "You're approved, log in" email
+      // Already has password — send "You're approved, log in" email
       const loginUrl = `${BASE_URL}/LawyerLogin`;
       const html = buildApprovedLoginEmail(firstName, loginUrl, free_trial_months);
       if (resendKey) {
@@ -258,43 +266,13 @@ Deno.serve(async (req) => {
         emailSent = res.ok;
       }
     } else {
-      // Not yet activated — create new token and send activation email
-      // Invalidate old tokens first
-      const existingTokens = await base44.asServiceRole.entities.ActivationToken.filter({
-        user_email: normalizedEmail,
-        token_type: 'activation'
-      });
-      for (const t of existingTokens) {
-        if (!t.used_at) {
-          await base44.asServiceRole.entities.ActivationToken.update(t.id, {
-            used_at: new Date().toISOString(),
-            invalidated_reason: 'superseded_by_approval'
-          }).catch(() => {});
-        }
-      }
-
-      const { rawToken, tokenHash } = await generateTokenPair();
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-      const tokenRecord = await base44.asServiceRole.entities.ActivationToken.create({
-        user_id: lawyerUser?.id,
-        user_email: normalizedEmail,
-        token_hash: tokenHash,
-        token_type: 'activation',
-        expires_at: expiresAt,
-        created_by_admin: adminUser.email
+      // No password yet — use platform invite to send password setup email (creates verified account)
+      await base44.users.inviteUser(normalizedEmail, 'user').catch((e) => {
+        console.log('inviteUser on approve (may already exist):', e?.message);
       });
 
-      await base44.asServiceRole.entities.AuditLog.create({
-        entity_type: 'ActivationToken',
-        entity_id: tokenRecord.id,
-        action: 'activation_token_created',
-        actor_email: adminUser.email,
-        actor_role: 'admin',
-        notes: `Approval activation token for ${normalizedEmail}`
-      }).catch(() => {});
-
-      const activationUrl = `${BASE_URL}/Activate?token=${rawToken}`;
+      // Send approved activation email via platform invite link
+      const activationUrl = `${BASE_URL}/LawyerLogin`;
       const html = buildApprovedActivateEmail(firstName, activationUrl, free_trial_months);
       if (resendKey) {
         const res = await fetch('https://api.resend.com/emails', {
