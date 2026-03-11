@@ -99,6 +99,45 @@ export default function CaseExchange() {
     </svg>
   );
 
+  const ClassActionSVG = (
+    <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Outer circle */}
+      <circle cx="50" cy="50" r="44" stroke="white" strokeWidth="2" strokeDasharray="4 3"/>
+      {/* Top person */}
+      <circle cx="50" cy="12" r="5" stroke="white" strokeWidth="2"/>
+      <path d="M44 20 Q50 24 56 20" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      <line x1="50" y1="24" x2="50" y2="32" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      {/* Bottom person */}
+      <circle cx="50" cy="88" r="5" stroke="white" strokeWidth="2"/>
+      <path d="M44 80 Q50 76 56 80" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      <line x1="50" y1="76" x2="50" y2="68" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      {/* Left person */}
+      <circle cx="12" cy="50" r="5" stroke="white" strokeWidth="2"/>
+      <path d="M20 44 Q24 50 20 56" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      <line x1="24" y1="50" x2="32" y2="50" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      {/* Right person */}
+      <circle cx="88" cy="50" r="5" stroke="white" strokeWidth="2"/>
+      <path d="M80 44 Q76 50 80 56" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      <line x1="76" y1="50" x2="68" y2="50" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      {/* Top-left person */}
+      <circle cx="22" cy="22" r="5" stroke="white" strokeWidth="2"/>
+      <path d="M27 28 Q30 32 34 28" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      <line x1="30" y1="32" x2="34" y2="38" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      {/* Top-right person */}
+      <circle cx="78" cy="22" r="5" stroke="white" strokeWidth="2"/>
+      <path d="M66 28 Q70 32 73 28" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      <line x1="70" y1="32" x2="66" y2="38" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      {/* Bottom-left person */}
+      <circle cx="22" cy="78" r="5" stroke="white" strokeWidth="2"/>
+      <path d="M27 72 Q30 68 34 72" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      <line x1="30" y1="68" x2="34" y2="62" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      {/* Bottom-right person */}
+      <circle cx="78" cy="78" r="5" stroke="white" strokeWidth="2"/>
+      <path d="M66 72 Q70 68 73 72" stroke="white" strokeWidth="2" strokeLinecap="round" fill="none"/>
+      <line x1="70" y1="68" x2="66" y2="62" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
+
   const KeySVG = (
     <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Key ring / bow */}
@@ -138,7 +177,7 @@ export default function CaseExchange() {
     { name: 'Estate', icon: HouseSVG, desc: 'Estate Planning', isSVG: true },
     { name: 'Personal Injury', icon: InjurySVG, desc: 'Personal Injury', isSVG: true },
     { name: 'Mass Torts', icon: '⚖️', desc: 'Mass Tort Litigation' },
-    { name: 'Class Actions', icon: '🏛️', desc: 'Class Actions' },
+    { name: 'Class Actions', icon: ClassActionSVG, desc: 'Class Actions', isSVG: true },
   ];
 
   const hasActiveFilters = filters.state || filters.search;
