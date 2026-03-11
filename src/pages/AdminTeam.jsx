@@ -187,6 +187,24 @@ export default function AdminTeam() {
                             Joined: {u.created_date ? new Date(u.created_date).toLocaleDateString() : '—'}
                           </p>
                         </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            onClick={() => handleSendReset(u.email)}
+                            disabled={sendingReset === u.email}
+                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
+                            title="Send password reset"
+                          >
+                            {sendingReset === u.email ? <Loader2 className="w-3 h-3 animate-spin" /> : <KeyRound className="w-3 h-3" />}
+                            Reset Password
+                          </button>
+                          <button
+                            onClick={() => openEdit(u)}
+                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
+                            title="Edit admin"
+                          >
+                            <Pencil className="w-3 h-3" /> Edit
+                          </button>
+                        </div>
                       </div>
                     </TMLCardContent>
                   </TMLCard>
