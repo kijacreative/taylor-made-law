@@ -85,10 +85,7 @@ export default function LawyerLogin() {
       navigate(createPageUrl('LawyerDashboard'), { replace: true });
     } catch (err) {
       const msg = (err.response?.data?.error || err.response?.data?.message || err.message || '').toLowerCase();
-      if (msg.includes('verify') || msg.includes('verification') || msg.includes('otp') || msg.includes('code')) {
-        base44.auth.redirectToLogin(createPageUrl('LawyerDashboard'));
-        return;
-      } else if (msg.includes('disabled') || msg.includes('blocked')) {
+      if (msg.includes('disabled') || msg.includes('blocked')) {
         setDisabledBlock(true);
       } else if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('password') || msg.includes('credentials') || msg.includes('not found') || msg.includes('wrong')) {
         setError('Invalid email or password. Please try again.');
