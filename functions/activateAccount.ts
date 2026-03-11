@@ -157,6 +157,12 @@ Deno.serve(async (req) => {
         if (!userEntity.years_experience && app.years_experience) {
           updateData.years_experience = app.years_experience;
         }
+        // If application was approved, carry that status forward to the user
+        if (app.status === 'approved' && (!userEntity.user_status || userEntity.user_status === 'pending' || userEntity.user_status === 'invited')) {
+          updateData.user_status = 'approved';
+          if (app.reviewed_by) updateData.approved_by = app.reviewed_by;
+          if (app.reviewed_at) updateData.approved_at = app.reviewed_at;
+        }
         // Mark application user_created
         await base44.asServiceRole.entities.LawyerApplication.update(app.id, {
           user_created: true,
