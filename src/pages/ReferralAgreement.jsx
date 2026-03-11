@@ -36,7 +36,7 @@ export default function ReferralAgreement() {
             </div>
 
             <div>
-              <h3 className="text-lg font-semibold text="gray-900 mb-2">3. Referral Process</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">3. Referral Process</h3>
               <p>Taylor Made Law will provide Attorney with case information through the Platform for cases matching Attorney's stated practice areas and licensed states. Attorney has sole discretion to accept or decline any referral. Upon accepting a case, Attorney agrees to: (a) contact the referred client within 24 hours; (b) conduct an independent evaluation of the case; and (c) maintain regular communication with Taylor Made Law regarding case status.</p>
             </div>
 
