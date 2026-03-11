@@ -8,7 +8,7 @@ import {
   Search, Users, CheckCircle2, XCircle, Clock, Mail, Phone,
   Scale, Building2, Loader2, X, Shield, Eye,
   Plus, AlertCircle, Ban, RotateCcw, Info, Send, Download,
-  FileText, BadgeCheck, ArrowLeft, UserCheck
+  FileText, BadgeCheck, ArrowLeft
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
@@ -49,7 +49,7 @@ export default function AdminLawyers() {
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Top-level section: 'applications' | 'attorneys' | 'profiles'
+  // Top-level section: 'applications' | 'attorneys'
   const [section, setSection] = useState('applications');
 
   // Applications state
@@ -67,13 +67,6 @@ export default function AdminLawyers() {
   const [saving, setSaving] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
-  // Profiles state
-  const [profileTab, setProfileTab] = useState('pending');
-  const [profileSearch, setProfileSearch] = useState('');
-  const [approvingProfile, setApprovingProfile] = useState(null);
-  const [profileFreeTrialMonths, setProfileFreeTrialMonths] = useState(0);
-  const [profileActionLoading, setProfileActionLoading] = useState(false);
-
   const [viewingUser, setViewingUser] = useState(null);
   const [approvingUser, setApprovingUser] = useState(null);
   const [disablingUser, setDisablingUser] = useState(null);
@@ -117,13 +110,6 @@ export default function AdminLawyers() {
     refetchInterval: 30000,
   });
 
-  const { data: lawyerProfiles = [], isLoading: profilesLoading, refetch: refetchProfiles } = useQuery({
-    queryKey: ['lawyerProfiles'],
-    queryFn: () => base44.entities.LawyerProfile.list('-created_date'),
-    enabled: !!authUser,
-    refetchInterval: 30000,
-  });
-
   const { data: allUsers = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery({
     queryKey: ['allLawyerUsers'],
     queryFn: () => base44.entities.User.list('-created_date'),
@@ -163,45 +149,6 @@ export default function AdminLawyers() {
     }
     return true;
   });
-
-  // ── Profile Computed ──────────────────────────────────────────────────────
-
-  const profileCounts = lawyerProfiles.reduce((acc, p) => {
-    const s = p.status || 'pending';
-    acc[s] = (acc[s] || 0) + 1;
-    return acc;
-  }, {});
-
-  const filteredProfiles = lawyerProfiles.filter(p => {
-    if (p.status !== profileTab) return false;
-    if (profileSearch) {
-      const s = profileSearch.toLowerCase();
-      return p.firm_name?.toLowerCase().includes(s) || p.bar_number?.toLowerCase().includes(s) ||
-        (p.states_licensed || []).some(st => st.toLowerCase().includes(s)) ||
-        (p.practice_areas || []).some(a => a.toLowerCase().includes(s));
-    }
-    return true;
-  });
-
-  const handleProfileApprove = async () => {
-    setProfileActionLoading(true);
-    try {
-      // Find the user for this profile so we can use approveLawyer (which sends the email)
-      const res = await base44.functions.invoke('approveLawyer', {
-        user_id: approvingProfile.user_id,
-        free_trial_months: profileFreeTrialMonths,
-      });
-      if (res.data?.success) {
-        showToast('Profile approved and email sent.');
-        setApprovingProfile(null); setProfileFreeTrialMonths(0);
-        refetchProfiles();
-      } else {
-        showToast(res.data?.error || 'Approval failed.', 'error');
-      }
-    } catch (err) {
-      showToast(err.response?.data?.error || err.message || 'Error approving.', 'error');
-    } finally { setProfileActionLoading(false); }
-  };
 
   // ── Application Actions ───────────────────────────────────────────────────
 
@@ -402,15 +349,6 @@ export default function AdminLawyers() {
               className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${section === 'attorneys' ? 'bg-[#3a164d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
               <Users className="w-4 h-4" /> Active Attorneys
             </button>
-            <button onClick={() => setSection('profiles')}
-              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${section === 'profiles' ? 'bg-[#3a164d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
-              <BadgeCheck className="w-4 h-4" /> Lawyer Profiles
-              {(profileCounts.pending || 0) > 0 && (
-                <span className={`text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold ${section === 'profiles' ? 'bg-white/20' : 'bg-amber-100 text-amber-700'}`}>
-                  {profileCounts.pending}
-                </span>
-              )}
-            </button>
           </div>
 
           {/* ── APPLICATIONS SECTION ── */}
@@ -591,102 +529,6 @@ export default function AdminLawyers() {
               )}
             </>
           )}
-          {/* ── LAWYER PROFILES SECTION ── */}
-          {section === 'profiles' && (
-            <>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                {[
-                  { label: 'Total Profiles', count: lawyerProfiles.length, border: 'border-gray-100' },
-                  { label: 'Pending', count: profileCounts.pending || 0, border: 'border-amber-100' },
-                  { label: 'Approved', count: profileCounts.approved || 0, border: 'border-emerald-100' },
-                  { label: 'Restricted', count: (profileCounts.restricted || 0) + (profileCounts.cancelled || 0), border: 'border-red-100' },
-                ].map(s => (
-                  <div key={s.label} className={`bg-white rounded-xl border px-5 py-4 ${s.border}`}>
-                    <p className="text-sm text-gray-500">{s.label}</p>
-                    <p className="text-2xl font-bold text-gray-900">{s.count}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex gap-1 mb-6 bg-white border border-gray-200 rounded-xl p-1 w-fit flex-wrap">
-                {['pending', 'approved', 'restricted', 'cancelled'].map(tab => (
-                  <button key={tab} onClick={() => setProfileTab(tab)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-all ${profileTab === tab ? 'bg-[#3a164d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
-                    {tab} <span className={`ml-1.5 text-xs ${profileTab === tab ? 'opacity-75' : 'text-gray-400'}`}>({profileCounts[tab] || 0})</span>
-                  </button>
-                ))}
-              </div>
-
-              <div className="relative mb-5 max-w-md">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                <input type="text" placeholder="Search firm, bar #, state, practice area..." value={profileSearch} onChange={e => setProfileSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]" />
-              </div>
-
-              {profilesLoading ? (
-                <div className="flex items-center justify-center py-24"><Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" /></div>
-              ) : filteredProfiles.length === 0 ? (
-                <div className="text-center py-24 bg-white rounded-2xl border border-gray-100">
-                  <BadgeCheck className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                  <p className="text-gray-500 font-medium">No profiles in this category.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {filteredProfiles.map((p, i) => (
-                    <motion.div key={p.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
-                      <div className="bg-white rounded-2xl border border-gray-100 p-5 shadow-sm hover:shadow-md transition-all">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex items-start gap-4 flex-1">
-                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[#a47864] to-[#3a164d] flex items-center justify-center text-white font-semibold flex-shrink-0 text-lg">
-                              {(p.firm_name || 'L').charAt(0).toUpperCase()}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 flex-wrap mb-1">
-                                <h3 className="font-semibold text-gray-900">{p.firm_name || '—'}</h3>
-                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                                  p.status === 'approved' ? 'bg-emerald-100 text-emerald-700' :
-                                  p.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                  'bg-red-100 text-red-700'
-                                }`}>{p.status}</span>
-                                {p.subscription_status && p.subscription_status !== 'none' && (
-                                  <span className="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full">{p.subscription_status}</span>
-                                )}
-                              </div>
-                              <div className="flex flex-wrap gap-3 text-sm text-gray-500">
-                                {p.email && <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{p.email}</span>}
-                                {p.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{p.phone}</span>}
-                                {p.bar_number && <span className="flex items-center gap-1"><Scale className="w-3.5 h-3.5" />Bar: {p.bar_number}</span>}
-                                {p.years_experience > 0 && <span>{p.years_experience} yrs exp</span>}
-                              </div>
-                              <div className="flex flex-wrap gap-1.5 mt-2">
-                                {(p.states_licensed || []).slice(0, 4).map(s => <span key={s} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{s}</span>)}
-                                {(p.practice_areas || []).slice(0, 2).map(a => <span key={a} className="text-xs bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full">{a}</span>)}
-                              </div>
-                              {p.bio && <p className="text-xs text-gray-400 mt-1 line-clamp-2">{p.bio}</p>}
-                              <p className="text-xs text-gray-400 mt-1">
-                                Created: {p.created_date ? new Date(p.created_date).toLocaleDateString() : '—'}
-                                {p.approved_at && ` · Approved: ${new Date(p.approved_at).toLocaleDateString()}`}
-                                {p.approved_by && ` by ${p.approved_by}`}
-                              </p>
-                            </div>
-                          </div>
-                          {p.status === 'pending' && (
-                            <div className="shrink-0">
-                              <button onClick={() => { setApprovingProfile(p); setProfileFreeTrialMonths(0); }}
-                                className="flex items-center gap-1.5 text-sm text-emerald-600 hover:underline font-medium">
-                                <CheckCircle2 className="w-4 h-4" /> Approve
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-
         </div>
       </div>
 
@@ -832,21 +674,6 @@ export default function AdminLawyers() {
             <div className="sticky bottom-0 bg-white border-t border-gray-100 p-6 flex gap-3">
               <TMLButton variant="outline" onClick={() => setShowInviteModal(false)} className="flex-1">Cancel</TMLButton>
               <TMLButton variant="primary" onClick={handleInvite} className="flex-1" loading={saving}><Mail className="w-4 h-4 mr-2" /> Send Invitation</TMLButton>
-            </div>
-          </motion.div>
-        </div>
-      )}
-
-      {/* ── Approve Profile Modal ── */}
-      {approvingProfile && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl max-w-md w-full p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-1">Approve Lawyer Profile</h3>
-            <p className="text-gray-600 mb-4">Approve <strong>{approvingProfile.firm_name || 'this profile'}</strong>. The attorney will receive an approval email with login access.</p>
-            <TMLSelect label="Free Trial Period" options={[{ value: '0', label: 'No free trial' }, { value: '1', label: '1 month free' }, { value: '3', label: '3 months free' }, { value: '6', label: '6 months free' }, { value: '12', label: '12 months free' }]} value={String(profileFreeTrialMonths)} onChange={e => setProfileFreeTrialMonths(parseInt(e.target.value) || 0)} />
-            <div className="flex gap-3 mt-6">
-              <TMLButton variant="outline" onClick={() => setApprovingProfile(null)} className="flex-1">Cancel</TMLButton>
-              <TMLButton variant="success" onClick={handleProfileApprove} className="flex-1" loading={profileActionLoading}><CheckCircle2 className="w-4 h-4 mr-2" /> Approve & Send Email</TMLButton>
             </div>
           </motion.div>
         </div>

@@ -1,14 +1,7 @@
 /**
- * ============================================================
- * CANONICAL ATTORNEY ONBOARDING FLOW
- * ============================================================
- * This is the ONE and ONLY lawyer signup page.
- * All CTAs, nav links, and invite email links must point here.
- * Backend: functions/applyToNetwork (the canonical backend function)
- *
- * DO NOT create additional lawyer signup pages or flows.
- * pages/ForLawyers redirects here for backward compatibility.
- * ============================================================
+ * JoinNetwork — Option C Unified Identity Apply Flow
+ * Collects profile info, submits to applyToNetwork (no password here).
+ * User receives activation email to set password.
  */
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -16,7 +9,7 @@ import { createPageUrl } from '@/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Mail,
-  Briefcase, DollarSign, Users, Shield, Plus, Trash2
+  Briefcase, DollarSign, Users, Shield, Loader2
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import PublicNav from '@/components/layout/PublicNav';
@@ -24,16 +17,12 @@ import PublicFooter from '@/components/layout/PublicFooter';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLCard from '@/components/ui/TMLCard';
 import TMLInput from '@/components/ui/TMLInput';
-import TMLTextarea from '@/components/ui/TMLTextarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
 import StepProgress from '@/components/attorney/StepProgress';
 
 const STEPS = [
-  { number: 1, label: 'Account Setup' },
+  { number: 1, label: 'Contact Info' },
   { number: 2, label: 'Practice Details' },
-  { number: 3, label: 'Bio / Profile' },
-  { number: 4, label: 'Agreements' },
 ];
 
 const benefits = [
@@ -46,7 +35,7 @@ const benefits = [
 export default function JoinNetwork() {
   const navigate = useNavigate();
 
-  // Pre-fill from invite email URL params (e.g. ?email=...&name=...)
+  // Read URL params for pre-fill (from email invite links)
   const urlParams = new URLSearchParams(window.location.search);
   const prefilledEmail = urlParams.get('email') || '';
   const prefilledName = urlParams.get('name') || '';
@@ -64,14 +53,11 @@ export default function JoinNetwork() {
     email: prefilledEmail,
     phone: '',
     firm_name: '',
-    password: '',
-    password_confirm: '',
     bar_number: '',
     states_licensed: [],
     practice_areas: [],
+    years_experience: '',
     bio: '',
-    consent_terms: false,
-    consent_referral: false,
   });
 
   const updateField = (field, value) => {
@@ -84,10 +70,6 @@ export default function JoinNetwork() {
     updateField(field, current.includes(item) ? current.filter(i => i !== item) : [...current, item]);
   };
 
-
-
-
-
   const validateStep = (s) => {
     const e = {};
     if (s === 1) {
@@ -95,20 +77,11 @@ export default function JoinNetwork() {
       if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Valid email is required';
       if (!formData.phone || formData.phone.replace(/\D/g, '').length < 10) e.phone = 'Valid phone number is required';
       if (!formData.firm_name.trim()) e.firm_name = 'Law firm name is required';
-      if (!formData.password || formData.password.length < 8) e.password = 'Password must be at least 8 characters';
-      if (formData.password !== formData.password_confirm) e.password_confirm = 'Passwords do not match';
     }
     if (s === 2) {
       if (!formData.states_licensed.length) e.states_licensed = 'Select at least one state';
       if (!formData.practice_areas.length) e.practice_areas = 'Select at least one practice area';
       if (!formData.bar_number.trim()) e.bar_number = 'Bar number is required';
-    }
-    if (s === 3) {
-      if (!formData.bio || formData.bio.length < 50) e.bio = 'Please provide a bio (at least 50 characters)';
-    }
-    if (s === 4) {
-      if (!formData.consent_terms) e.consent_terms = 'You must accept the Terms & Privacy Policy';
-      if (!formData.consent_referral) e.consent_referral = 'You must accept the Referral Agreement';
     }
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -120,28 +93,29 @@ export default function JoinNetwork() {
   const prevStep = () => setStep(step - 1);
 
   const handleSubmit = async () => {
-    if (!validateStep(4)) return;
+    if (!validateStep(step)) return;
     setLoading(true);
     setErrors({});
     try {
-      // Create user with password + store profile + send emails
-      const res = await base44.functions.invoke('completeOnboarding', {
+      const res = await base44.functions.invoke('applyToNetwork', {
         full_name: formData.full_name,
         email: formData.email,
         phone: formData.phone,
         firm_name: formData.firm_name,
         bar_number: formData.bar_number,
-        password: formData.password,
         states_licensed: formData.states_licensed,
         practice_areas: formData.practice_areas,
-        bio: formData.bio,
-        consent_terms: formData.consent_terms,
-        consent_referral: formData.consent_referral,
+        years_experience: formData.years_experience ? parseInt(formData.years_experience) : null,
+        bio: formData.bio || null,
       });
 
       if (res.data?.success) {
-        setSubmittedEmail(formData.email.toLowerCase().trim());
-        setSubmitted(true);
+        if (res.data?.already_activated) {
+          setAlreadyActivated(true);
+        } else {
+          setSubmittedEmail(formData.email.toLowerCase().trim());
+          setSubmitted(true);
+        }
       } else {
         setErrors({ submit: res.data?.error || 'Submission failed. Please try again.' });
       }
@@ -152,43 +126,33 @@ export default function JoinNetwork() {
     }
   };
 
-  // ── Success screen ──────────────────────────────────────────────
+  // Success state — check email
   if (submitted) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
         <PublicNav />
-        <div className="pt-32 pb-24 px-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="max-w-2xl mx-auto text-center"
-          >
-            <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-8">
-              <CheckCircle2 className="w-12 h-12 text-emerald-600" />
-            </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Application Received!</h1>
-            <p className="text-xl text-gray-600 mb-4">
-              Thank you, <strong>{formData.full_name}</strong>. We've received your application.
-            </p>
-            <p className="text-gray-600 mb-6">
-              We sent a confirmation to <strong>{submittedEmail}</strong>. Our team will review your application within 2–3 business days.
-            </p>
-            <div className="bg-[#f5f0fa] rounded-xl p-6 mb-8 text-left">
-              <p className="font-semibold text-[#3a164d] mb-3">What happens next:</p>
-              <ul className="space-y-2 text-gray-700 text-sm">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Admin reviews your application (2–3 business days)</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Upon approval you'll receive an account activation email</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Set your password and get full access to the Case Exchange</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Browse and accept case referrals</li>
-              </ul>
-            </div>
-            <div className="flex gap-4 justify-center">
-              <Link to={createPageUrl('Home')}>
-                <TMLButton variant="primary">Return to Home</TMLButton>
-              </Link>
-              <a href="mailto:support@taylormadelaw.com">
-                <TMLButton variant="secondary">Contact Support</TMLButton>
-              </a>
+        <div className="flex items-center justify-center min-h-screen px-4 pt-20">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full">
+            <div className="bg-white rounded-2xl shadow-xl text-center p-10">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Received!</h2>
+              <p className="text-gray-600 mb-2">
+                We've sent an activation link to <strong>{submittedEmail}</strong>.
+              </p>
+              <p className="text-gray-600 mb-6">
+                Click the link in that email to verify your email and set your password. Our team will review your application within 2–3 business days.
+              </p>
+              <p className="text-sm text-gray-500">
+                Can't find it? Check your spam folder or{' '}
+                <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">contact support</a>.
+              </p>
+              <div className="mt-6">
+                <Link to={createPageUrl('LawyerLogin')} className="text-[#3a164d] text-sm font-semibold hover:underline">
+                  Already activated? Sign in →
+                </Link>
+              </div>
             </div>
           </motion.div>
         </div>
@@ -197,7 +161,7 @@ export default function JoinNetwork() {
     );
   }
 
-  // ── Already activated screen ────────────────────────────────────
+  // Already activated — tell them to log in
   if (alreadyActivated) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
@@ -223,7 +187,6 @@ export default function JoinNetwork() {
     );
   }
 
-  // ── Landing page ────────────────────────────────────────────────
   if (!showForm) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
@@ -235,7 +198,7 @@ export default function JoinNetwork() {
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
               <h1 className="text-5xl md:text-6xl font-bold text-white mb-6">Join the Attorney Network</h1>
               <p className="text-xl text-white/80 max-w-2xl mx-auto mb-4">
-                Get access to pre-screened, quality case referrals matched to your practice areas. Apply in minutes.
+                Apply for access to pre-screened case referrals matched to your practice areas.
               </p>
               <p className="text-white/60 mb-10 text-sm">Applications are reviewed within 2–3 business days.</p>
               <TMLButton variant="accent" size="lg" onClick={() => setShowForm(true)}>
@@ -274,7 +237,7 @@ export default function JoinNetwork() {
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Grow Your Practice?</h2>
             <p className="text-gray-600 mb-8">Apply in minutes. Our team reviews applications within 2–3 business days.</p>
             <TMLButton variant="primary" size="lg" onClick={() => setShowForm(true)}>
-              Start Your Application
+              Apply Now
               <ArrowRight className="ml-2 w-5 h-5" />
             </TMLButton>
           </div>
@@ -285,7 +248,6 @@ export default function JoinNetwork() {
     );
   }
 
-  // ── Multi-step application form ─────────────────────────────────
   return (
     <div className="min-h-screen bg-[#faf8f5]">
       <PublicNav />
@@ -297,8 +259,8 @@ export default function JoinNetwork() {
               alt="Taylor Made Law"
               className="h-12 mx-auto mb-4"
             />
-            <h1 className="text-3xl font-bold text-gray-900">Attorney Network Application</h1>
-            <p className="text-gray-500 mt-2">Complete all steps to submit your application for review</p>
+            <h1 className="text-3xl font-bold text-gray-900">Apply to the Attorney Network</h1>
+            <p className="text-gray-500 mt-2">Submit your application — you'll receive an email to activate your account</p>
           </div>
 
           <div className="mb-8">
@@ -315,24 +277,24 @@ export default function JoinNetwork() {
             >
               <TMLCard variant="elevated" className="p-8">
 
-                {/* Step 1: Account Setup */}
+                {/* Step 1: Contact Info */}
                 {step === 1 && (
                   <div className="space-y-5">
                     <div>
-                      <h2 className="text-xl font-bold text-gray-900 mb-1">Create Your Account</h2>
-                      <p className="text-gray-500 text-sm">Set up your login credentials and basic information.</p>
+                      <h2 className="text-xl font-bold text-gray-900 mb-1">Contact Information</h2>
+                      <p className="text-gray-500 text-sm">Tell us who you are and where to reach you.</p>
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
                       <TMLInput label="Full Name" required value={formData.full_name} onChange={e => updateField('full_name', e.target.value)} placeholder="Jane Smith" error={errors.full_name} />
-                      <TMLInput label="Email Address" type="email" required value={formData.email} onChange={e => updateField('email', e.target.value)} placeholder="jane@smithlaw.com" error={errors.email} />
-                    </div>
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <TMLInput label="Phone Number" type="tel" required value={formData.phone} onChange={e => updateField('phone', e.target.value)} placeholder="(555) 555-5555" error={errors.phone} />
                       <TMLInput label="Law Firm Name" required value={formData.firm_name} onChange={e => updateField('firm_name', e.target.value)} placeholder="Smith & Associates" error={errors.firm_name} />
                     </div>
                     <div className="grid md:grid-cols-2 gap-4">
-                      <TMLInput label="Password" type="password" required value={formData.password} onChange={e => updateField('password', e.target.value)} placeholder="Min 8 characters" error={errors.password} />
-                      <TMLInput label="Confirm Password" type="password" required value={formData.password_confirm} onChange={e => updateField('password_confirm', e.target.value)} placeholder="Confirm password" error={errors.password_confirm} />
+                      <TMLInput label="Email Address" type="email" required value={formData.email} onChange={e => updateField('email', e.target.value)} placeholder="jane@smithlaw.com" error={errors.email} />
+                      <TMLInput label="Phone Number" type="tel" required value={formData.phone} onChange={e => updateField('phone', e.target.value)} placeholder="(555) 555-5555" error={errors.phone} />
+                    </div>
+                    <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800">
+                      <Mail className="w-5 h-5 shrink-0 text-blue-500 mt-0.5" />
+                      <p>You'll receive an activation email to set your password after submitting your application.</p>
                     </div>
                   </div>
                 )}
@@ -342,8 +304,9 @@ export default function JoinNetwork() {
                   <div className="space-y-6">
                     <div>
                       <h2 className="text-xl font-bold text-gray-900 mb-1">Practice Details</h2>
-                      <p className="text-gray-500 text-sm">Tell us about your legal practice and licensing.</p>
+                      <p className="text-gray-500 text-sm">Tell us about your legal practice.</p>
                     </div>
+                    <TMLInput label="Bar Number" required value={formData.bar_number} onChange={e => updateField('bar_number', e.target.value)} placeholder="BAR123456" error={errors.bar_number} />
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">States Where Licensed <span className="text-red-500">*</span></label>
                       {errors.states_licensed && <p className="text-red-600 text-xs mb-2">{errors.states_licensed}</p>}
@@ -371,86 +334,9 @@ export default function JoinNetwork() {
                         ))}
                       </div>
                     </div>
-                    <TMLInput label="Bar Number" required value={formData.bar_number} onChange={e => updateField('bar_number', e.target.value)} placeholder="BAR123456" error={errors.bar_number} />
-                  </div>
-                )}
-
-                {/* Step 3: Bio / Profile */}
-                {step === 3 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-gray-900 mb-1">Professional Profile</h2>
-                      <p className="text-gray-500 text-sm">Tell us about your legal background and experience.</p>
-                    </div>
-                    <TMLTextarea
-                      label="Professional Bio"
-                      required
-                      value={formData.bio}
-                      onChange={e => updateField('bio', e.target.value)}
-                      placeholder="Tell us about your legal background, specialties, and what makes you a great fit for our network..."
-                      rows={5}
-                      error={errors.bio}
-                      helperText={`${formData.bio.length} characters (min 50)`}
-                    />
-                  </div>
-                )}
-
-                {/* Step 4: Review & Agree */}
-                {step === 4 && (
-                  <div className="space-y-6">
-                    <div>
-                      <h2 className="text-xl font-bold text-gray-900 mb-1">Review & Agree</h2>
-                      <p className="text-gray-500 text-sm">Confirm your information and accept the agreements.</p>
-                    </div>
-
-                    {/* Summary */}
-                    <div className="bg-gray-50 rounded-xl p-5 space-y-3 text-sm">
-                      <p className="font-semibold text-gray-700">Application Summary</p>
-                      <div className="grid grid-cols-2 gap-2 text-gray-600">
-                        <span className="font-medium">Name:</span><span>{formData.full_name}</span>
-                        <span className="font-medium">Email:</span><span>{formData.email}</span>
-                        <span className="font-medium">Firm:</span><span>{formData.firm_name}</span>
-                        <span className="font-medium">Bar #:</span><span>{formData.bar_number}</span>
-                        <span className="font-medium">States:</span><span>{formData.states_licensed.join(', ')}</span>
-                        <span className="font-medium">Practice Areas:</span><span>{formData.practice_areas.join(', ')}</span>
-                        <span className="font-medium">Experience:</span><span>{formData.years_experience} years</span>
-                      </div>
-                    </div>
-
-                    {/* Agreements */}
-                    <div className="space-y-4">
-                      <label className="flex items-start gap-3 cursor-pointer">
-                        <Checkbox
-                          checked={formData.consent_terms}
-                          onCheckedChange={v => updateField('consent_terms', v)}
-                          className="mt-0.5"
-                        />
-                        <span className="text-sm text-gray-700">
-                          I accept the{' '}
-                          <Link to={createPageUrl('TermsAndPrivacy')} target="_blank" className="text-[#3a164d] hover:underline">Terms & Conditions</Link>
-                          {' '}and{' '}
-                          <Link to={createPageUrl('TermsAndPrivacy')} target="_blank" className="text-[#3a164d] hover:underline">Privacy Policy</Link>
-                        </span>
-                      </label>
-                      {errors.consent_terms && <p className="text-red-600 text-xs">{errors.consent_terms}</p>}
-
-                      <label className="flex items-start gap-3 cursor-pointer">
-                        <Checkbox
-                          checked={formData.consent_referral}
-                          onCheckedChange={v => updateField('consent_referral', v)}
-                          className="mt-0.5"
-                        />
-                        <span className="text-sm text-gray-700">
-                          I accept the{' '}
-                          <Link to={createPageUrl('ReferralAgreement')} target="_blank" className="text-[#3a164d] hover:underline">Referral Agreement</Link>
-                          {' '}with Taylor Made Law
-                        </span>
-                      </label>
-                      {errors.consent_referral && <p className="text-red-600 text-xs">{errors.consent_referral}</p>}
-                    </div>
 
                     {errors.submit && (
-                      <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                      <div className="flex items-start gap-2 p-4 bg-red-50 border border-red-200 rounded-xl">
                         <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
                         <div>
                           <p className="text-sm text-red-800">{errors.submit}</p>
@@ -475,12 +361,12 @@ export default function JoinNetwork() {
                     </TMLButton>
                   )}
 
-                  {step < 4 && (
+                  {step < 2 && (
                     <TMLButton variant="primary" onClick={nextStep}>
                       Continue <ArrowRight className="w-4 h-4 ml-1" />
                     </TMLButton>
                   )}
-                  {step === 4 && (
+                  {step === 2 && (
                     <TMLButton variant="primary" loading={loading} onClick={handleSubmit}>
                       Submit Application
                     </TMLButton>

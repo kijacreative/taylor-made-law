@@ -50,31 +50,7 @@ export default function AdminLogin() {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    setError('');
-    if (!email || !password) { setError('Please enter your email and password.'); return; }
-    setLoading(true);
-    try {
-      await base44.auth.loginViaEmailPassword(email.toLowerCase().trim(), password);
-      const userData = await base44.auth.me();
-      if (userData.role !== 'admin') {
-        await base44.auth.logout();
-        setError('Access denied. This portal is for administrators only.');
-        return;
-      }
-      navigate(createPageUrl('AdminDashboard'), { replace: true });
-    } catch (err) {
-      const msg = (err.response?.data?.error || err.response?.data?.message || err.message || '').toLowerCase();
-      if (msg.includes('otp') || msg.includes('mfa') || msg.includes('two') || msg.includes('verif') || msg.includes('code')) {
-        // Admin accounts may require OTP — show the OTP step UI
-        setStep('otp');
-      } else if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('password') || msg.includes('credentials') || msg.includes('not found') || msg.includes('wrong')) {
-        setError('Invalid email or password. Please try again.');
-      } else {
-        setError(err.response?.data?.message || err.response?.data?.error || err.message || 'Login failed. Please try again.');
-      }
-    } finally {
-      setLoading(false);
-    }
+    base44.auth.redirectToLogin(createPageUrl('AdminDashboard'));
   };
 
   const handleOtpChange = (index, value) => {

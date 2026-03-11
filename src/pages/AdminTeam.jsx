@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Loader2, UserPlus, Mail, Shield, X, CheckCircle2, AlertCircle, Users, Pencil, KeyRound
+  Loader2, UserPlus, Mail, Shield, X, CheckCircle2, AlertCircle, Users
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
@@ -23,10 +23,6 @@ export default function AdminTeam() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
-  const [editingUser, setEditingUser] = useState(null);
-  const [editName, setEditName] = useState('');
-  const [editEmail, setEditEmail] = useState('');
-  const [sendingReset, setSendingReset] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -52,39 +48,6 @@ export default function AdminTeam() {
 
   const notify = (msg) => { setSuccess(msg); setTimeout(() => setSuccess(null), 4000); };
   const notifyError = (msg) => { setError(msg); setTimeout(() => setError(null), 5000); };
-
-  const openEdit = (u) => {
-    setEditingUser(u);
-    setEditName(u.full_name || '');
-    setEditEmail(u.email || '');
-  };
-
-  const handleEditSave = async () => {
-    if (!editName.trim()) { notifyError('Name is required.'); return; }
-    setSaving(true);
-    try {
-      await base44.entities.User.update(editingUser.id, { full_name: editName.trim() });
-      notify('Admin details updated.');
-      setEditingUser(null);
-      refetch();
-    } catch (err) {
-      notifyError(err.response?.data?.error || err.message || 'Failed to update.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleSendReset = async (email) => {
-    setSendingReset(email);
-    try {
-      await base44.functions.invoke('sendPasswordReset', { email });
-      notify(`Password reset email sent to ${email}.`);
-    } catch (err) {
-      notifyError(err.response?.data?.error || err.message || 'Failed to send reset email.');
-    } finally {
-      setSendingReset(false);
-    }
-  };
 
   const handleInvite = async () => {
     if (!inviteEmail.trim()) { notifyError('Email is required.'); return; }
@@ -187,24 +150,6 @@ export default function AdminTeam() {
                             Joined: {u.created_date ? new Date(u.created_date).toLocaleDateString() : '—'}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <button
-                            onClick={() => handleSendReset(u.email)}
-                            disabled={sendingReset === u.email}
-                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors disabled:opacity-50"
-                            title="Send password reset"
-                          >
-                            {sendingReset === u.email ? <Loader2 className="w-3 h-3 animate-spin" /> : <KeyRound className="w-3 h-3" />}
-                            Reset Password
-                          </button>
-                          <button
-                            onClick={() => openEdit(u)}
-                            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors"
-                            title="Edit admin"
-                          >
-                            <Pencil className="w-3 h-3" /> Edit
-                          </button>
-                        </div>
                       </div>
                     </TMLCardContent>
                   </TMLCard>
@@ -214,43 +159,6 @@ export default function AdminTeam() {
           )}
         </div>
       </main>
-
-      {/* Edit Modal */}
-      {editingUser && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl max-w-md w-full p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900">Edit Admin</h3>
-                <p className="text-sm text-gray-500 mt-0.5">{editingUser.email}</p>
-              </div>
-              <button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <TMLInput
-                label="Full Name"
-                value={editName}
-                onChange={e => setEditName(e.target.value)}
-                placeholder="Jane Smith"
-                required
-              />
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
-                <p className="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2">{editEmail}</p>
-                <p className="text-xs text-gray-400 mt-1">Email cannot be changed here.</p>
-              </div>
-            </div>
-            <div className="flex gap-3 mt-6">
-              <TMLButton variant="outline" onClick={() => setEditingUser(null)} className="flex-1">Cancel</TMLButton>
-              <TMLButton variant="primary" onClick={handleEditSave} className="flex-1" loading={saving}>
-                Save Changes
-              </TMLButton>
-            </div>
-          </motion.div>
-        </div>
-      )}
 
       {/* Invite Modal */}
       {showInviteModal && (

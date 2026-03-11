@@ -20,9 +20,7 @@ import {
   Shield,
   Building2,
   Loader2,
-  MessageSquare,
-  RefreshCw,
-  ExternalLink
+  MessageSquare
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
@@ -39,7 +37,6 @@ export default function AdminLeadDetail() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [retrying, setRetrying] = useState(false);
   const [internalNotes, setInternalNotes] = useState('');
   const [rejectionReason, setRejectionReason] = useState('');
   const [estimatedValue, setEstimatedValue] = useState('');
@@ -284,25 +281,6 @@ Taylor Made Law Team
     }
   };
 
-  const handleRetryLeadDocket = async () => {
-    setRetrying(true);
-    setError(null);
-    setSuccess(null);
-    try {
-      const res = await base44.functions.invoke('retryLeadDocketSync', { lead_id: leadId });
-      if (res.data?.sync_status === 'sent') {
-        setSuccess('Lead Docket sync successful!');
-      } else {
-        setError('Sync retry attempted but failed. Check the activity log for details.');
-      }
-      refetch();
-    } catch (err) {
-      setError('Failed to retry Lead Docket sync.');
-    } finally {
-      setRetrying(false);
-    }
-  };
-
   const handleRouteToCochran = async () => {
     if (!lead) return;
     setSaving(true);
@@ -542,6 +520,14 @@ This lead has been routed to Cochran Firm by ${user.email}
                     placeholder="Add internal notes about this lead..."
                   />
                   
+                  <TMLInput
+                    label="Estimated Case Value ($)"
+                    type="number"
+                    value={estimatedValue}
+                    onChange={(e) => setEstimatedValue(e.target.value)}
+                    placeholder="Enter estimated value"
+                  />
+                  
                   <TMLButton variant="outline" onClick={handleSaveNotes} loading={saving}>
                     Save Notes
                   </TMLButton>
@@ -728,51 +714,6 @@ This lead has been routed to Cochran Firm by ${user.email}
                   </TMLCardContent>
                 </TMLCard>
               )}
-
-              {/* Lead Docket Sync Status */}
-              <TMLCard variant="cream">
-                <TMLCardHeader>
-                  <TMLCardTitle className="text-base flex items-center gap-2">
-                    <ExternalLink className="w-4 h-4 text-[#3a164d]" />
-                    Lead Docket Sync
-                  </TMLCardTitle>
-                </TMLCardHeader>
-                <TMLCardContent className="space-y-3 text-sm">
-                  <div className="flex items-center gap-2">
-                    {lead.sync_status === 'sent' && <CheckCircle2 className="w-4 h-4 text-emerald-600" />}
-                    {(lead.sync_status === 'failed') && <AlertCircle className="w-4 h-4 text-red-500" />}
-                    {(lead.sync_status === 'pending' || lead.sync_status === 'retrying') && <RefreshCw className="w-4 h-4 text-amber-500" />}
-                    <span className={`font-semibold capitalize ${
-                      lead.sync_status === 'sent' ? 'text-emerald-700' :
-                      lead.sync_status === 'failed' ? 'text-red-600' :
-                      'text-amber-600'
-                    }`}>
-                      {lead.sync_status || 'Unknown'}
-                    </span>
-                  </div>
-                  {lead.lead_docket_id && (
-                    <p className="text-gray-500">LD ID: <span className="font-mono text-gray-700">{lead.lead_docket_id}</span></p>
-                  )}
-                  {lead.last_sync_attempt_at && (
-                    <p className="text-gray-400 text-xs">Last attempt: {new Date(lead.last_sync_attempt_at).toLocaleString()}</p>
-                  )}
-                  {lead.sync_error_message && lead.sync_status !== 'sent' && (
-                    <p className="text-xs text-red-600 bg-red-50 rounded p-2 break-words">{lead.sync_error_message}</p>
-                  )}
-                  {(lead.sync_status === 'failed' || lead.sync_status === 'pending') && (
-                    <TMLButton
-                      variant="outline"
-                      size="sm"
-                      className="w-full"
-                      loading={retrying}
-                      onClick={handleRetryLeadDocket}
-                    >
-                      <RefreshCw className="w-3 h-3 mr-1" />
-                      Retry Sync
-                    </TMLButton>
-                  )}
-                </TMLCardContent>
-              </TMLCard>
 
               {/* Consent Info */}
               {lead.consent_given && (

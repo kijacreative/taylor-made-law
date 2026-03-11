@@ -16,23 +16,18 @@ import {
   Clock,
   BarChart3,
   Loader2,
-  MapPin,
-  Zap,
-  Database } from
+  MapPin } from
 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
 import TMLBadge from '@/components/ui/TMLBadge';
 import { LEAD_STATUSES, PRACTICE_AREAS } from '@/components/design/DesignTokens';
-import Phase7Phase8Summary from '@/components/admin/Phase7Phase8Summary';
 
 export default function AdminDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [cleanupLoading, setCleanupLoading] = useState(false);
-  const [cleanupResult, setCleanupResult] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -115,19 +110,6 @@ export default function AdminDashboard() {
   const topAreas = Object.entries(lawyersByArea).
   sort(([, a], [, b]) => b - a).
   slice(0, 5);
-
-  const handleDataCleanup = async () => {
-    setCleanupLoading(true);
-    try {
-      const res = await base44.functions.invoke('dataCleanup', {});
-      setCleanupResult(res.data?.summary);
-    } catch (err) {
-      console.error('Cleanup error:', err);
-      setCleanupResult({ error: err.message || 'Cleanup failed' });
-    } finally {
-      setCleanupLoading(false);
-    }
-  };
 
   // Recent leads needing review
   const recentPendingLeads = leads.
@@ -359,45 +341,7 @@ export default function AdminDashboard() {
                 </TMLCardContent>
               </TMLCard>
 
-              {/* Data Cleanup */}
-              <TMLCard variant="elevated">
-                <TMLCardHeader>
-                  <TMLCardTitle className="flex items-center gap-2 text-base">
-                    <Database className="w-4 h-4 text-[#3a164d]" />
-                    Data Cleanup (Phase 6)
-                  </TMLCardTitle>
-                </TMLCardHeader>
-                <TMLCardContent className="space-y-3">
-                  <p className="text-xs text-gray-600">Normalize emails, merge duplicates, clean old tokens</p>
-                  <TMLButton 
-                    variant="primary" 
-                    size="sm"
-                    onClick={handleDataCleanup}
-                    loading={cleanupLoading}
-                    disabled={cleanupLoading}
-                    className="w-full">
-                    <Zap className="w-4 h-4 mr-1" /> Run Cleanup
-                  </TMLButton>
-                  
-                  {cleanupResult && (
-                    <div className={`p-3 rounded-lg text-xs ${cleanupResult.error ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
-                      {cleanupResult.error ? (
-                        <p>{cleanupResult.error}</p>
-                      ) : (
-                        <div className="space-y-1">
-                          <p className="font-medium">✓ Cleanup Complete</p>
-                          <p>Emails normalized: {cleanupResult.emails_normalized}</p>
-                          <p>Users merged: {cleanupResult.duplicates_merged}</p>
-                          <p>Tokens cleaned: {cleanupResult.tokens_invalidated}</p>
-                          {cleanupResult.errors?.length > 0 && (
-                            <p className="text-amber-700 mt-1">⚠ {cleanupResult.errors.length} warnings</p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </TMLCardContent>
-              </TMLCard>
+              {/* Quick Actions */}
               
 
 
@@ -424,19 +368,6 @@ export default function AdminDashboard() {
 
 
             </div>
-          </div>
-
-          {/* Phase 7 & 8 Summary (collapsible) */}
-          <div className="mt-12 border-t-2 border-gray-300 pt-8">
-            <details className="group">
-              <summary className="cursor-pointer py-4 px-6 bg-gradient-to-r from-purple-50 to-indigo-50 rounded-xl border-2 border-purple-300 font-bold text-gray-900 flex items-center justify-between hover:from-purple-100 hover:to-indigo-100 transition-colors">
-                <span>📋 Phase 7 & 8: UAT Testing & Audit Logging (Platform Ready for Production)</span>
-                <span className="text-xl group-open:rotate-180 transition-transform">▼</span>
-              </summary>
-              <div className="mt-6">
-                <Phase7Phase8Summary />
-              </div>
-            </details>
           </div>
         </div>
       </main>

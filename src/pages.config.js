@@ -63,8 +63,6 @@ import AdminPopups from './pages/AdminPopups';
 import AdminResourceEdit from './pages/AdminResourceEdit';
 import AdminResources from './pages/AdminResources';
 import AdminTeam from './pages/AdminTeam';
-import AdminUAT from './pages/AdminUAT';
-import Apply from './pages/Apply';
 import AuthRedirect from './pages/AuthRedirect';
 import Blog from './pages/Blog';
 import CaseDetail from './pages/CaseDetail';
@@ -79,7 +77,6 @@ import GroupDetail from './pages/GroupDetail';
 import GroupInvitations from './pages/GroupInvitations';
 import Groups from './pages/Groups';
 import Home from './pages/Home';
-import Join from './pages/Join';
 import JoinNetwork from './pages/JoinNetwork';
 import LawyerBlog from './pages/LawyerBlog';
 import LawyerBlogDetail from './pages/LawyerBlogDetail';
@@ -88,13 +85,10 @@ import LawyerLogin from './pages/LawyerLogin';
 import LawyerResourceDetail from './pages/LawyerResourceDetail';
 import LawyerResources from './pages/LawyerResources';
 import LawyerSettings from './pages/LawyerSettings';
-import Logout from './pages/Logout';
 import MassTortDetail from './pages/MassTortDetail';
 import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
-import ReferralAgreement from './pages/ReferralAgreement';
 import ResetPassword from './pages/ResetPassword';
-import TermsAndPrivacy from './pages/TermsAndPrivacy';
 import __Layout from './Layout.jsx';
 
 
@@ -115,8 +109,6 @@ export const PAGES = {
     "AdminResourceEdit": AdminResourceEdit,
     "AdminResources": AdminResources,
     "AdminTeam": AdminTeam,
-    "AdminUAT": AdminUAT,
-    "Apply": Apply,
     "AuthRedirect": AuthRedirect,
     "Blog": Blog,
     "CaseDetail": CaseDetail,
@@ -131,7 +123,6 @@ export const PAGES = {
     "GroupInvitations": GroupInvitations,
     "Groups": Groups,
     "Home": Home,
-    "Join": Join,
     "JoinNetwork": JoinNetwork,
     "LawyerBlog": LawyerBlog,
     "LawyerBlogDetail": LawyerBlogDetail,
@@ -140,13 +131,10 @@ export const PAGES = {
     "LawyerResourceDetail": LawyerResourceDetail,
     "LawyerResources": LawyerResources,
     "LawyerSettings": LawyerSettings,
-    "Logout": Logout,
     "MassTortDetail": MassTortDetail,
     "MassTorts": MassTorts,
     "MyCases": MyCases,
-    "ReferralAgreement": ReferralAgreement,
     "ResetPassword": ResetPassword,
-    "TermsAndPrivacy": TermsAndPrivacy,
 }
 
 export const pagesConfig = {
