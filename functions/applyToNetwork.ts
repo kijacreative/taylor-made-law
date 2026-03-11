@@ -244,7 +244,7 @@ Deno.serve(async (req) => {
     if (userEntity?.password_set) {
       // Already activated — just alert admins, no activation email needed
       if (resendKey) {
-        const allAdmins = (await base44.asServiceRole.entities.User.list()).filter(u => u.role === 'admin');
+        const allAdmins = await base44.asServiceRole.entities.User.filter({ role: 'admin' }).catch(() => []);
         for (const admin of allAdmins) {
           await fetch('https://api.resend.com/emails', {
             method: 'POST',
