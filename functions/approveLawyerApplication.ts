@@ -134,6 +134,36 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Failed to upsert user to approved status' }, { status: 500 });
     }
 
+    // ── 1b. Create / update LawyerProfile ─────────────────────────
+    const createdUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+    const newUser = createdUsers[0];
+    if (newUser) {
+      const existingProfiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id: newUser.id });
+      const profileData = {
+        user_id: newUser.id,
+        firm_name: application.firm_name || '',
+        phone: application.phone || '',
+        bar_number: application.bar_number || '',
+        bio: application.bio || '',
+        states_licensed: application.states_licensed || [],
+        practice_areas: application.practice_areas || [],
+        years_experience: application.years_experience || 0,
+        status: 'approved',
+        approved_at: now,
+        approved_by: adminUser.email,
+        ...(parseInt(free_trial_months) > 0 ? {
+          subscription_status: 'trial',
+          free_trial_months: parseInt(free_trial_months),
+          trial_ends_at: new Date(Date.now() + parseInt(free_trial_months) * 30 * 24 * 60 * 60 * 1000).toISOString()
+        } : { subscription_status: 'active' })
+      };
+      if (existingProfiles.length === 0) {
+        await base44.asServiceRole.entities.LawyerProfile.create(profileData);
+      } else {
+        await base44.asServiceRole.entities.LawyerProfile.update(existingProfiles[0].id, profileData);
+      }
+    }
+
     // ── 2. Generate & store activation token ───────────────────────
     const { rawToken, tokenHash } = await generateTokenPair();
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
