@@ -194,22 +194,10 @@ Deno.serve(async (req) => {
     } else {
       // Try direct create first
       try {
-        userEntity = await base44.asServiceRole.entities.User.create({
-          email: normalizedEmail,
-          user_status: 'pending',
-          email_verified: false,
-          password_set: false,
-          full_name: full_name || '',
-          firm_name: firm_name || '',
-          phone: phone || '',
-          bar_number: bar_number || '',
-          bio: bio || '',
-          states_licensed: states_licensed || [],
-          practice_areas: practice_areas || [],
+        // Use inviteUser to create the auth account (User.create doesn't create auth accounts)
+        await base44.users.inviteUser(normalizedEmail, 'user').catch((e) => {
+          console.log('inviteUser (new user):', e?.message);
         });
-      } catch (createErr) {
-        console.log('Direct User.create failed, falling back to inviteUser:', createErr.message);
-        await base44.users.inviteUser(normalizedEmail, 'user').catch(() => {});
         await new Promise(r => setTimeout(r, 1500));
         const found = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
         userEntity = found[0] || null;
