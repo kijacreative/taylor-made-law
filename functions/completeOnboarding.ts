@@ -11,6 +11,8 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
+    const normalizedEmail = payload.email.toLowerCase().trim();
+
     // Hash password
     const passwordHash = await crypto.subtle.digest(
       'SHA-256',
@@ -20,61 +22,65 @@ Deno.serve(async (req) => {
       .map(b => b.toString(16).padStart(2, '0'))
       .join('');
 
-    // Create/update user via upsertUserByEmail
-    const res = await base44.asServiceRole.functions.invoke('upsertUserByEmail', {
-      email: payload.email,
+    // 1. Create LawyerApplication record so admin can review it
+    const appRes = await base44.asServiceRole.entities.LawyerApplication.create({
       full_name: payload.full_name,
+      email: normalizedEmail,
       phone: payload.phone,
-      password_hash: passwordHashHex,
-      password_set: true,
-      user_status: 'approved', // Auto-approve on signup
-      user_type: 'lawyer',
+      firm_name: payload.firm_name,
+      bar_number: payload.bar_number,
+      states_licensed: payload.states_licensed || [],
+      practice_areas: payload.practice_areas || [],
+      bio: payload.bio,
+      years_experience: payload.years_experience || null,
+      consent_terms: payload.consent_terms || false,
+      consent_referral: payload.consent_referral || false,
+      status: 'pending',
+    });
+
+    // 2. Upsert User record with correct params
+    const res = await base44.asServiceRole.functions.invoke('upsertUserByEmail', {
+      email: normalizedEmail,
+      requested_status: 'pending',
+      entry_source: 'apply',
+      create_if_missing: true,
+      actor_email: normalizedEmail,
+      actor_role: 'self',
+      profile: {
+        full_name: payload.full_name,
+        phone: payload.phone,
+        firm_name: payload.firm_name,
+        bar_number: payload.bar_number,
+        states_licensed: payload.states_licensed || [],
+        practice_areas: payload.practice_areas || [],
+        bio: payload.bio,
+        password_hash: passwordHashHex,
+        password_set: true,
+        user_type: 'lawyer',
+      },
     });
 
     if (!res.data?.success) {
       return Response.json({ error: 'Failed to create user account' }, { status: 500 });
     }
 
-    const userId = res.data.user_id;
+    const userId = res.data.user?.id;
 
-    // Create LawyerProfile
-    const profileRes = await base44.asServiceRole.entities.LawyerProfile.create({
-      user_id: userId,
-      firm_name: payload.firm_name,
-      phone: payload.phone,
-      bar_number: payload.bar_number,
-      states_licensed: payload.states_licensed,
-      practice_areas: payload.practice_areas,
-      bio: payload.bio,
-      years_experience: payload.years_experience || null,
-      status: 'approved',
-      referral_agreement_accepted: payload.consent_referral,
-      referral_agreement_accepted_at: new Date().toISOString(),
-    });
-
-    if (!profileRes?.id) {
-      return Response.json({ error: 'Failed to create lawyer profile' }, { status: 500 });
-    }
-
-    // ── Phase 8: Audit logging ─────────────────────────────────────
+    // Audit log
     if (userId) {
       await base44.asServiceRole.entities.AuditLog.create({
         entity_type: 'User',
         entity_id: userId,
-        action: 'activation_completed',
-        actor_email: payload.email,
+        action: 'application_submitted',
+        actor_email: normalizedEmail,
         actor_role: 'self',
-        notes: `Account activated. Password set. Profile created.`,
+        notes: `Attorney application submitted. Pending admin review.`,
       });
     }
 
-    // Send admin alert email (optional, can be async)
-    // await base44.integrations.Core.SendEmail({...})
-
     return Response.json({
       success: true,
-      user_id: userId,
-      profile_id: profileRes.id,
+      application_id: appRes?.id,
     });
   } catch (error) {
     console.error('Onboarding error:', error);
