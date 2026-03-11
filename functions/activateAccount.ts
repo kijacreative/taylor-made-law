@@ -134,6 +134,8 @@ Deno.serve(async (req) => {
         email_verified: true,
         email_verified_at: new Date().toISOString(),
         password_set: true,
+        // Ensure platform-level verification is bypassed
+        skip_email_verification: true,
       };
 
       // Copy profile fields from LawyerApplication if User is missing them
