@@ -402,6 +402,15 @@ export default function AdminLawyers() {
               className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${section === 'attorneys' ? 'bg-[#3a164d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
               <Users className="w-4 h-4" /> Active Attorneys
             </button>
+            <button onClick={() => setSection('profiles')}
+              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${section === 'profiles' ? 'bg-[#3a164d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+              <BadgeCheck className="w-4 h-4" /> Lawyer Profiles
+              {(profileCounts.pending || 0) > 0 && (
+                <span className={`text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold ${section === 'profiles' ? 'bg-white/20' : 'bg-amber-100 text-amber-700'}`}>
+                  {profileCounts.pending}
+                </span>
+              )}
+            </button>
           </div>
 
           {/* ── APPLICATIONS SECTION ── */}
