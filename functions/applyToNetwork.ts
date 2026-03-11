@@ -241,7 +241,7 @@ Deno.serve(async (req) => {
 
     // ── 3. Send activation email (if not already activated) ──────────────────
 
-    if (userEntity?.password_set && userEntity?.email_verified) {
+    if (userEntity?.password_set) {
       // Already activated — just alert admins, no activation email needed
       if (resendKey) {
         const allAdmins = (await base44.asServiceRole.entities.User.list()).filter(u => u.role === 'admin');
