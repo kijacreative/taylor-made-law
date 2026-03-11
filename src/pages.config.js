@@ -92,9 +92,9 @@ import Logout from './pages/Logout';
 import MassTortDetail from './pages/MassTortDetail';
 import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
+import ReferralAgreement from './pages/ReferralAgreement';
 import ResetPassword from './pages/ResetPassword';
 import TermsAndPrivacy from './pages/TermsAndPrivacy';
-import ReferralAgreement from './pages/ReferralAgreement';
 import __Layout from './Layout.jsx';
 
 
@@ -144,9 +144,9 @@ export const PAGES = {
     "MassTortDetail": MassTortDetail,
     "MassTorts": MassTorts,
     "MyCases": MyCases,
+    "ReferralAgreement": ReferralAgreement,
     "ResetPassword": ResetPassword,
     "TermsAndPrivacy": TermsAndPrivacy,
-    "ReferralAgreement": ReferralAgreement,
 }
 
 export const pagesConfig = {

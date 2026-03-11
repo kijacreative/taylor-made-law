@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Loader2, UserPlus, Mail, Shield, X, CheckCircle2, AlertCircle, Users
+  Loader2, UserPlus, Mail, Shield, X, CheckCircle2, AlertCircle, Users, Pencil, KeyRound
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
