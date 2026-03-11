@@ -542,14 +542,6 @@ This lead has been routed to Cochran Firm by ${user.email}
                     placeholder="Add internal notes about this lead..."
                   />
                   
-                  <TMLInput
-                    label="Estimated Case Value ($)"
-                    type="number"
-                    value={estimatedValue}
-                    onChange={(e) => setEstimatedValue(e.target.value)}
-                    placeholder="Enter estimated value"
-                  />
-                  
                   <TMLButton variant="outline" onClick={handleSaveNotes} loading={saving}>
                     Save Notes
                   </TMLButton>

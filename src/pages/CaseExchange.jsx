@@ -385,8 +385,13 @@ export default function CaseExchange() {
                                 <span className="flex items-center gap-1"><Scale className="w-4 h-4" />{caseItem.practice_area}</span>
                                 {caseItem.state && <span className="flex items-center gap-1">📍 {caseItem.state}</span>}
                               </div>
+                            {caseItem.estimated_value && isApproved && (
+                              <div className="text-right">
+                                <p className="text-xs text-gray-500 uppercase tracking-wide">Est. Value</p>
+                                <p className="text-2xl font-bold text-emerald-600">${caseItem.estimated_value.toLocaleString()}</p>
+                              </div>
+                            )}
                             </div>
-
                           </div>
                         </div>
                       </a>
