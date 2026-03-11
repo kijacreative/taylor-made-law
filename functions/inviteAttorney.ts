@@ -179,55 +179,31 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Failed to create or find user record' }, { status: 500 });
     }
 
-    // Invalidate all previous unused activation tokens
-    const existingTokens = await base44.asServiceRole.entities.ActivationToken.filter({
-      user_email: normalizedEmail,
-      token_type: 'activation'
-    });
-    for (const t of existingTokens) {
-      if (!t.used_at) {
-        await base44.asServiceRole.entities.ActivationToken.update(t.id, {
-          used_at: new Date().toISOString(),
-          invalidated_reason: 'superseded_by_invite_resend'
-        });
-      }
-    }
-
-    // Create new activation token
-    const { rawToken, tokenHash } = await generateTokenPair();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    const tokenRecord = await base44.asServiceRole.entities.ActivationToken.create({
-      user_id: lawyerUser.id,
-      user_email: normalizedEmail,
-      token_hash: tokenHash,
-      token_type: 'activation',
-      expires_at: expiresAt,
-      created_by_admin: adminUser.email
+    // Use platform inviteUser — creates a verified account + sends password setup email
+    await base44.users.inviteUser(normalizedEmail, 'user').catch((e) => {
+      console.log('inviteUser note (may already exist):', e?.message);
     });
 
-    // Audit logs
+    // Mark email_verified so login is never blocked
+    await base44.asServiceRole.entities.User.update(lawyerUser.id, {
+      email_verified: true,
+      email_verified_at: new Date().toISOString(),
+    }).catch(() => {});
+
+    // Audit log
     await base44.asServiceRole.entities.AuditLog.create({
       entity_type: 'User',
       entity_id: lawyerUser.id,
       action: 'invite_sent',
       actor_email: adminUser.email,
       actor_role: 'admin',
-      notes: `Admin invited ${normalizedEmail}${admin_note ? '. Note: ' + admin_note : ''}`
-    });
-    await base44.asServiceRole.entities.AuditLog.create({
-      entity_type: 'ActivationToken',
-      entity_id: tokenRecord.id,
-      action: 'activation_token_created',
-      actor_email: adminUser.email,
-      actor_role: 'admin',
-      notes: `Activation token created for ${normalizedEmail}`
+      notes: `Admin invited ${normalizedEmail} via platform invite${admin_note ? '. Note: ' + admin_note : ''}`
     });
 
-    // Send invite email with ACTIVATION URL (not login URL)
+    // Also send a branded invite email so they have TML context
     if (send_email && resendKey) {
-      const activationUrl = `${BASE_URL}/Activate?token=${rawToken}`;
-      const html = buildInviteEmail(full_name || 'there', activationUrl, admin_note);
+      const loginUrl = `${BASE_URL}/LawyerLogin`;
+      const html = buildInviteEmail(full_name || 'there', loginUrl, admin_note);
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
