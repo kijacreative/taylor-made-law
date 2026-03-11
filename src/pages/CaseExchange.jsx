@@ -99,6 +99,19 @@ export default function CaseExchange() {
     </svg>
   );
 
+  const KeySVG = (
+    <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Key ring / bow */}
+      <circle cx="35" cy="38" r="20" stroke="white" strokeWidth="2.5"/>
+      <circle cx="35" cy="38" r="10" stroke="white" strokeWidth="2.5"/>
+      {/* Key blade */}
+      <line x1="50" y1="50" x2="88" y2="82" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* Teeth */}
+      <line x1="68" y1="62" x2="74" y2="56" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="76" y1="70" x2="82" y2="64" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+    </svg>
+  );
+
   const InjurySVG = (
     <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Head */}
@@ -120,7 +133,7 @@ export default function CaseExchange() {
   );
 
   const categories = [
-    { name: 'Criminal', icon: '⚖️', desc: 'Criminal Defense' },
+    { name: 'Criminal', icon: KeySVG, desc: 'Criminal Defense', isSVG: true },
     { name: 'Family', icon: FamilySVG, desc: 'Family Law', isSVG: true },
     { name: 'Estate', icon: HouseSVG, desc: 'Estate Planning', isSVG: true },
     { name: 'Personal Injury', icon: InjurySVG, desc: 'Personal Injury', isSVG: true },
