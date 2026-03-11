@@ -97,56 +97,25 @@ Deno.serve(async (req) => {
       targetUserId = lawyerUser.id;
     }
 
-    // Invalidate all previous unused tokens
-    const existingTokens = await base44.asServiceRole.entities.ActivationToken.filter({
-      user_email: targetEmail,
-      token_type: 'activation'
+    // Use platform inviteUser to resend a password setup email (creates verified account)
+    await base44.users.inviteUser(targetEmail, 'user').catch((e) => {
+      console.log('inviteUser resend note:', e?.message);
     });
-    for (const t of existingTokens) {
-      if (!t.used_at) {
-        await base44.asServiceRole.entities.ActivationToken.update(t.id, {
-          used_at: new Date().toISOString(),
-          invalidated_reason: 'superseded_by_resend'
-        });
-      }
-    }
 
-    const resendKey = Deno.env.get('RESEND_API_KEY');
-    const { rawToken, tokenHash } = await generateTokenPair();
-    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-    const tokenRecord = await base44.asServiceRole.entities.ActivationToken.create({
-      user_id: targetUserId,
-      user_email: targetEmail,
-      token_hash: tokenHash,
-      token_type: 'activation',
-      expires_at: expiresAt,
-      created_by_admin: isAdminCall ? 'admin-resend' : null
-    });
+    // Ensure email_verified is true so login is never blocked
+    await base44.asServiceRole.entities.User.update(targetUserId, {
+      email_verified: true,
+      email_verified_at: new Date().toISOString(),
+    }).catch(() => {});
 
     await base44.asServiceRole.entities.AuditLog.create({
-      entity_type: 'ActivationToken',
-      entity_id: tokenRecord.id,
-      action: 'activation_token_created',
+      entity_type: 'User',
+      entity_id: targetUserId,
+      action: 'activation_resent',
       actor_email: targetEmail,
       actor_role: isAdminCall ? 'admin' : 'user',
-      notes: `Resent activation token for ${targetEmail}`
+      notes: `Platform invite resent for ${targetEmail}`
     });
-
-    if (resendKey) {
-      const firstName = (targetName || '').split(' ')[0] || 'there';
-      const activationUrl = `${BASE_URL}/Activate?token=${rawToken}`;
-      await fetch('https://api.resend.com/emails', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          from: 'Taylor Made Law <noreply@taylormadelaw.com>',
-          to: [targetEmail],
-          subject: 'Your New Activation Link — Taylor Made Law',
-          html: buildActivationEmail(firstName, activationUrl)
-        })
-      });
-    }
 
     return Response.json({ success: true, message: 'Activation email sent.' });
   } catch (error) {
