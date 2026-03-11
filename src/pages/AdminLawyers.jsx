@@ -836,6 +836,21 @@ export default function AdminLawyers() {
         </div>
       )}
 
+      {/* ── Approve Profile Modal ── */}
+      {approvingProfile && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-1">Approve Lawyer Profile</h3>
+            <p className="text-gray-600 mb-4">Approve <strong>{approvingProfile.firm_name || 'this profile'}</strong>. The attorney will receive an approval email with login access.</p>
+            <TMLSelect label="Free Trial Period" options={[{ value: '0', label: 'No free trial' }, { value: '1', label: '1 month free' }, { value: '3', label: '3 months free' }, { value: '6', label: '6 months free' }, { value: '12', label: '12 months free' }]} value={String(profileFreeTrialMonths)} onChange={e => setProfileFreeTrialMonths(parseInt(e.target.value) || 0)} />
+            <div className="flex gap-3 mt-6">
+              <TMLButton variant="outline" onClick={() => setApprovingProfile(null)} className="flex-1">Cancel</TMLButton>
+              <TMLButton variant="success" onClick={handleProfileApprove} className="flex-1" loading={profileActionLoading}><CheckCircle2 className="w-4 h-4 mr-2" /> Approve & Send Email</TMLButton>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* ── View User Detail Modal ── */}
       {viewingUser && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
