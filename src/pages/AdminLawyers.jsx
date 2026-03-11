@@ -117,6 +117,13 @@ export default function AdminLawyers() {
     refetchInterval: 30000,
   });
 
+  const { data: lawyerProfiles = [], isLoading: profilesLoading, refetch: refetchProfiles } = useQuery({
+    queryKey: ['lawyerProfiles'],
+    queryFn: () => base44.entities.LawyerProfile.list('-created_date'),
+    enabled: !!authUser,
+    refetchInterval: 30000,
+  });
+
   const { data: allUsers = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery({
     queryKey: ['allLawyerUsers'],
     queryFn: () => base44.entities.User.list('-created_date'),
