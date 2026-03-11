@@ -154,7 +154,6 @@ Deno.serve(async (req) => {
         user_status: 'approved',
         approved_at: new Date().toISOString(),
         approved_by: adminUser.email,
-        // Fill in profile fields from application if User is missing them
         firm_name: lawyerUser.firm_name || application.firm_name || '',
         phone: lawyerUser.phone || application.phone || '',
         bar_number: lawyerUser.bar_number || application.bar_number || '',
@@ -166,14 +165,24 @@ Deno.serve(async (req) => {
       });
       lawyerUser = { ...lawyerUser, user_status: 'approved' };
     } else {
-      // Create User entity — try direct create, fallback to inviteUser
-      try {
-        lawyerUser = await base44.asServiceRole.entities.User.create({
-          email: normalizedEmail,
-          full_name: application.full_name || '',
+      // No user entity yet — invite them (creates auth account + user entity)
+      await base44.users.inviteUser(normalizedEmail, 'user').catch((e) => {
+        console.log('inviteUser on approve:', e?.message);
+      });
+
+      // Poll up to 5s for the User entity to appear after invite
+      for (let i = 0; i < 5; i++) {
+        await new Promise(r => setTimeout(r, 1000));
+        const found = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+        if (found[0]) { lawyerUser = found[0]; break; }
+      }
+
+      if (lawyerUser) {
+        await base44.asServiceRole.entities.User.update(lawyerUser.id, {
           user_status: 'approved',
-          email_verified: false,
-          password_set: false,
+          email_verified: true,
+          email_verified_at: new Date().toISOString(),
+          full_name: application.full_name || '',
           firm_name: application.firm_name || '',
           phone: application.phone || '',
           bar_number: application.bar_number || '',
@@ -185,29 +194,9 @@ Deno.serve(async (req) => {
           approved_by: adminUser.email,
           ...trialUpdateData,
         });
-      } catch (createErr) {
-        console.log('Direct User.create failed, falling back to inviteUser:', createErr.message);
-        await base44.users.inviteUser(normalizedEmail, 'user').catch(() => {});
-        await new Promise(r => setTimeout(r, 1500));
-        const found = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-        lawyerUser = found[0] || null;
-        if (lawyerUser) {
-          await base44.asServiceRole.entities.User.update(lawyerUser.id, {
-            user_status: 'approved',
-            email_verified: false,
-            password_set: false,
-            full_name: application.full_name || '',
-            firm_name: application.firm_name || '',
-            phone: application.phone || '',
-            bar_number: application.bar_number || '',
-            bio: application.bio || '',
-            states_licensed: application.states_licensed || [],
-            practice_areas: application.practice_areas || [],
-            approved_at: new Date().toISOString(),
-            approved_by: adminUser.email,
-            ...trialUpdateData,
-          });
-        }
+        lawyerUser = { ...lawyerUser, user_status: 'approved', password_set: false };
+      } else {
+        console.log('User entity not found after invite — approval email will still be sent');
       }
     }
 
