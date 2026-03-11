@@ -165,33 +165,34 @@ Deno.serve(async (req) => {
       isNew = true;
     }
 
-    // ── 4. Create or update User record with hashed password ───────
-    const userProfile = {
-      full_name: full_name || '',
-      phone: phone || '',
-      firm_name: firm_name || '',
-      bar_number: bar_number || '',
-      states_licensed: states_licensed || [],
-      practice_areas: practice_areas || [],
-      bio: bio || '',
-      password_hash: passwordHashHex,
-      password_set: true,
-      user_type: 'lawyer',
-    };
-
-    const upsertResult = await base44.asServiceRole.functions.invoke('upsertUserByEmail', {
-      email: normalizedEmail,
-      requested_status: 'pending',
-      entry_source: 'apply',
-      create_if_missing: true,
-      actor_email: normalizedEmail,
-      actor_role: 'self',
-      profile: userProfile,
-    });
-
-    if (!upsertResult.data?.success && !upsertResult.data?.blocked) {
-      // Non-blocking: log but don't fail the whole submission
-      console.warn('upsertUserByEmail non-success:', upsertResult.data);
+    // ── 4. Update User record if they already exist (non-blocking) ─
+    // We only update existing users here. New users are created at approval
+    // time when an admin (with proper auth context) runs approveLawyerApplication.
+    // create_if_missing: false avoids the inviteUser call which requires admin auth.
+    try {
+      await base44.asServiceRole.functions.invoke('upsertUserByEmail', {
+        email: normalizedEmail,
+        requested_status: 'pending',
+        entry_source: 'apply',
+        create_if_missing: false,
+        actor_email: normalizedEmail,
+        actor_role: 'self',
+        profile: {
+          full_name: full_name || '',
+          phone: phone || '',
+          firm_name: firm_name || '',
+          bar_number: bar_number || '',
+          states_licensed: states_licensed || [],
+          practice_areas: practice_areas || [],
+          bio: bio || '',
+          password_hash: passwordHashHex,
+          password_set: true,
+          user_type: 'lawyer',
+        },
+      });
+    } catch (upsertErr) {
+      // Non-fatal: user record update failed but application is still saved.
+      console.warn('upsertUserByEmail (non-fatal):', upsertErr.message);
     }
 
     // ── 5. Audit log ───────────────────────────────────────────────
