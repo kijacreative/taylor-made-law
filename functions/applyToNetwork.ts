@@ -262,52 +262,37 @@ Deno.serve(async (req) => {
     }
 
     if (userEntity) {
-      // Invalidate old tokens
-      const oldTokens = await base44.asServiceRole.entities.ActivationToken.filter({
-        user_email: normalizedEmail,
-        token_type: 'activation'
-      });
-      for (const t of oldTokens) {
-        if (!t.used_at) {
-          await base44.asServiceRole.entities.ActivationToken.update(t.id, {
-            used_at: new Date().toISOString(),
-            invalidated_reason: 'superseded_by_apply'
-          }).catch(() => {});
-        }
-      }
-
-      // Create new activation token
-      const { rawToken, tokenHash } = await generateTokenPair();
-      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
-
-      await base44.asServiceRole.entities.ActivationToken.create({
-        user_id: userEntity.id,
-        user_email: normalizedEmail,
-        token_hash: tokenHash,
-        token_type: 'activation',
-        expires_at: expiresAt,
+      // Invite user via platform — this creates a verified auth account and sends
+      // the platform's password-setup email. No custom activation token needed.
+      await base44.users.inviteUser(normalizedEmail, 'user').catch((e) => {
+        console.log('inviteUser result (may be ok if already exists):', e?.message);
       });
 
-      await base44.asServiceRole.entities.AuditLog.create({
-        entity_type: 'ActivationToken',
-        entity_id: userEntity.id,
-        action: 'activation_token_created',
-        actor_email: normalizedEmail,
-        actor_role: 'system',
-        notes: `Activation token created for ${normalizedEmail} via apply`
+      // Mark user as email_verified since platform handles it
+      await base44.asServiceRole.entities.User.update(userEntity.id, {
+        email_verified: true,
+        email_verified_at: new Date().toISOString(),
       }).catch(() => {});
 
-      // Send activation email to applicant
+      await base44.asServiceRole.entities.AuditLog.create({
+        entity_type: 'User',
+        entity_id: userEntity.id,
+        action: 'invite_sent',
+        actor_email: normalizedEmail,
+        actor_role: 'system',
+        notes: `Platform invite sent to ${normalizedEmail} via apply`
+      }).catch(() => {});
+
+      // Send application confirmation email
       if (resendKey) {
-        const activationUrl = `${BASE_URL}/Activate?token=${rawToken}`;
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
           headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
           body: JSON.stringify({
             from: 'Taylor Made Law <noreply@taylormadelaw.com>',
             to: [normalizedEmail],
-            subject: 'Activate Your Taylor Made Law Account',
-            html: buildActivationEmail(firstName, activationUrl)
+            subject: 'Application Received — Taylor Made Law Network',
+            html: buildApplicationReceivedEmail(firstName)
           })
         }).catch(() => {});
       }
