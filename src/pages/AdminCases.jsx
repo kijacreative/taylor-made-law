@@ -128,7 +128,8 @@ export default function AdminCases() {
   { value: 'published', label: 'Published', count: statusCounts.published || 0 },
   { value: 'accepted', label: 'Accepted', count: statusCounts.accepted || 0 },
   { value: 'in_progress', label: 'In Progress', count: statusCounts.in_progress || 0 },
-  { value: 'closed', label: 'Closed', count: statusCounts.closed || 0 }];
+  { value: 'closed', label: 'Closed', count: statusCounts.closed || 0 },
+  { value: 'withdrawn', label: 'Withdrawn', count: statusCounts.withdrawn || 0 }];
 
 
   const handleToggleTrending = async (caseItem) => {
