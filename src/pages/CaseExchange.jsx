@@ -99,6 +99,26 @@ export default function CaseExchange() {
     </svg>
   );
 
+  const InjurySVG = (
+    <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Head */}
+      <circle cx="50" cy="16" r="10" stroke="white" strokeWidth="2.5"/>
+      {/* Body */}
+      <line x1="50" y1="26" x2="50" y2="58" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* Left arm normal */}
+      <line x1="50" y1="34" x2="28" y2="46" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* Right arm in sling */}
+      <path d="M 50 34 L 68 36 L 72 48 L 58 54 Z" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* Legs */}
+      <line x1="50" y1="58" x2="36" y2="82" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="50" y1="58" x2="64" y2="82" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* Crutch under left arm */}
+      <line x1="28" y1="46" x2="22" y2="82" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="18" y1="44" x2="30" y2="44" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      <line x1="20" y1="82" x2="26" y2="82" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+    </svg>
+  );
+
   const categories = [
     { name: 'Criminal', icon: '⚖️', desc: 'Criminal Defense' },
     { name: 'Family', icon: FamilySVG, desc: 'Family Law', isSVG: true },
