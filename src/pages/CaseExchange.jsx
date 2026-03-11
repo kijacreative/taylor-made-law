@@ -386,12 +386,7 @@ export default function CaseExchange() {
                                 {caseItem.state && <span className="flex items-center gap-1">📍 {caseItem.state}</span>}
                               </div>
                             </div>
-                            {caseItem.estimated_value && isApproved && (
-                              <div className="text-right">
-                                <p className="text-xs text-gray-500 uppercase tracking-wide">Est. Value</p>
-                                <p className="text-2xl font-bold text-emerald-600">${caseItem.estimated_value.toLocaleString()}</p>
-                              </div>
-                            )}
+
                           </div>
                         </div>
                       </a>
