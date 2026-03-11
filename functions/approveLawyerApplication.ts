@@ -198,6 +198,7 @@ Deno.serve(async (req) => {
       const existingProfiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id: approvedUser.id });
       const profileData = {
         user_id: approvedUser.id,
+        email: normalizedEmail,
         firm_name: application.firm_name || '',
         phone: application.phone || '',
         bar_number: application.bar_number || '',
