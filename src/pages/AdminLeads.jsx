@@ -15,7 +15,10 @@ import {
   Mail,
   Loader2,
   X,
-  ChevronDown
+  ChevronDown,
+  CheckCircle2,
+  AlertCircle,
+  RefreshCw
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
@@ -307,6 +310,21 @@ export default function AdminLeads() {
                                   <Clock className="w-3 h-3" />
                                   {new Date(lead.created_date).toLocaleDateString()}
                                 </span>
+                                {lead.sync_status === 'sent' && (
+                                  <span className="flex items-center gap-1 text-emerald-600 text-xs font-medium">
+                                    <CheckCircle2 className="w-3 h-3" /> LD Synced
+                                  </span>
+                                )}
+                                {(lead.sync_status === 'failed' || lead.sync_status === 'pending') && (
+                                  <span className="flex items-center gap-1 text-red-500 text-xs font-medium">
+                                    <AlertCircle className="w-3 h-3" /> LD {lead.sync_status === 'pending' ? 'Pending' : 'Sync Failed'}
+                                  </span>
+                                )}
+                                {lead.sync_status === 'retrying' && (
+                                  <span className="flex items-center gap-1 text-amber-600 text-xs font-medium">
+                                    <RefreshCw className="w-3 h-3" /> LD Retrying
+                                  </span>
+                                )}
                               </div>
                             </div>
                           </div>

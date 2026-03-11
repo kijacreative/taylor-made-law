@@ -13,7 +13,8 @@ import {
   BarChart3,
   BookOpen,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  ClipboardList
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -85,6 +86,12 @@ const AdminSidebar = ({ user }) => {
       icon: ShieldCheck, 
       path: 'AdminTeam',
       active: currentPath.includes('/AdminTeam')
+    },
+    { 
+      label: 'UAT Checklist', 
+      icon: ClipboardList, 
+      path: 'AdminUAT',
+      active: currentPath.includes('/AdminUAT')
     },
   ];
 

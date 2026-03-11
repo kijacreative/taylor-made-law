@@ -22,31 +22,43 @@ export default function LawyerLogin() {
 
   const urlParams = new URLSearchParams(window.location.search);
   const activated = urlParams.get('activated') === '1';
+  const passwordReset = urlParams.get('reset') === '1';
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then(async (auth) => {
-      if (auth) {
-        try {
-          const userData = await base44.auth.me();
-          if (userData.role === 'admin') {
-            navigate(createPageUrl('AdminDashboard'), { replace: true });
-          } else {
-            if (userData.user_status === 'disabled') {
-              await base44.auth.logout();
-              setCheckingAuth(false);
-              setDisabledBlock(true);
-              return;
+    const checkAuth = async () => {
+      try {
+        const auth = await base44.auth.isAuthenticated();
+        if (auth) {
+          try {
+            const userData = await base44.auth.me();
+            if (userData.role === 'admin') {
+              navigate(createPageUrl('AdminDashboard'), { replace: true });
+            } else {
+              if (userData.user_status === 'disabled') {
+                await base44.auth.logout();
+                setCheckingAuth(false);
+                setDisabledBlock(true);
+                return;
+              }
+              // Check if activation is pending
+              if (userData.password_set === false) {
+                navigate(createPageUrl('Activate'), { replace: true });
+                return;
+              }
+              navigate(createPageUrl('LawyerDashboard'), { replace: true });
             }
-            navigate(createPageUrl('LawyerDashboard'), { replace: true });
+          } catch {
+            setCheckingAuth(false);
           }
-        } catch {
+        } else {
           setCheckingAuth(false);
         }
-      } else {
+      } catch {
         setCheckingAuth(false);
       }
-    });
-  }, []);
+    };
+    checkAuth();
+  }, [navigate]);
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -73,6 +85,12 @@ export default function LawyerLogin() {
         return;
       }
 
+      // Check if activation incomplete
+      if (userData.password_set === false) {
+        navigate(createPageUrl('Activate'), { replace: true });
+        return;
+      }
+
       await base44.entities.AuditLog.create({
         entity_type: 'User',
         entity_id: userData.id,
@@ -86,9 +104,7 @@ export default function LawyerLogin() {
     } catch (err) {
       const msg = (err.response?.data?.error || err.response?.data?.message || err.message || '').toLowerCase();
       if (msg.includes('otp') || msg.includes('verif') || msg.includes('two') || msg.includes('mfa') || msg.includes('code')) {
-        // Platform MFA required — redirect to platform's native login flow which handles OTP correctly
-        base44.auth.redirectToLogin(createPageUrl('LawyerDashboard'));
-        return;
+        setError('An additional verification step is required. Please contact support@taylormadelaw.com for assistance.');
       } else if (msg.includes('disabled') || msg.includes('blocked')) {
         setDisabledBlock(true);
       } else if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('password') || msg.includes('credentials') || msg.includes('not found') || msg.includes('wrong')) {
@@ -158,6 +174,20 @@ export default function LawyerLogin() {
             <p className="text-gray-500 mt-2">Sign in to access your dashboard</p>
           </div>
 
+          {passwordReset && (
+            <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
+              <div className="w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0 mt-0.5">
+                <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-blue-800">Password updated!</p>
+                <p className="text-sm text-blue-700">Your password has been reset. Please log in below.</p>
+              </div>
+            </div>
+          )}
+
           {activated && (
             <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
               <div className="w-5 h-5 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 mt-0.5">
@@ -196,9 +226,9 @@ export default function LawyerLogin() {
                 </button>
               </div>
               <div className="flex justify-end">
-                <Link to={createPageUrl('ForgotPassword')} className="text-sm text-[#3a164d] hover:underline font-medium">
+                <a href="/forgot-password" className="text-sm text-[#3a164d] hover:underline font-medium">
                   Forgot password?
-                </Link>
+                </a>
               </div>
               <TMLButton type="submit" variant="primary" className="w-full" loading={loading}>
                 Sign In
@@ -208,9 +238,9 @@ export default function LawyerLogin() {
             <div className="mt-6 pt-6 border-t border-gray-100 text-center space-y-3">
               <p className="text-sm text-gray-500">
                 Not yet a member?{' '}
-                <Link to={createPageUrl('JoinNetwork')} className="text-[#3a164d] font-semibold hover:underline">
+                <a href="/join" className="text-[#3a164d] font-semibold hover:underline">
                   Apply to join the network
-                </Link>
+                </a>
               </p>
               <p className="text-xs text-gray-400">
                 Need help?{' '}

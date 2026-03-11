@@ -1,13 +1,17 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+/**
+ * notifyAdminNewLawyer — Sends an alert email to all admin users when a new lawyer registers.
+ */
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const LOGO = 'https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png';
+const BASE_URL = 'https://app.taylormadelaw.com';
 const YEAR = new Date().getFullYear();
 
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { lawyerName, lawyerEmail, firmName, states, practiceAreas, profileId } = body;
+    const { lawyerName, lawyerEmail, firmName, states, practiceAreas } = body;
 
     if (!lawyerEmail) {
       return Response.json({ error: 'Missing lawyer info' }, { status: 400 });
@@ -15,8 +19,10 @@ Deno.serve(async (req) => {
 
     const allUsers = await base44.asServiceRole.entities.User.list();
     const adminUsers = allUsers.filter(u => u.role === 'admin');
+    const resendKey = Deno.env.get('RESEND_API_KEY');
 
-    const adminLink = `https://app.taylormadelaw.com/admin-lawyers`;
+    // Correct admin route: /AdminLawyers
+    const adminLink = `${BASE_URL}/AdminLawyers`;
 
     const emailBody = `<!DOCTYPE html>
 <html lang="en">
@@ -66,18 +72,26 @@ Deno.serve(async (req) => {
 </body>
 </html>`;
 
-    for (const admin of adminUsers) {
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: admin.email,
-        from_name: 'Taylor Made Law Alerts',
-        subject: `New Attorney Requested Access — Approval Needed: ${lawyerName}`,
-        body: emailBody
-      });
+    let adminsNotified = 0;
+    if (resendKey) {
+      for (const admin of adminUsers) {
+        await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'Taylor Made Law Alerts <noreply@taylormadelaw.com>',
+            to: [admin.email],
+            subject: `New Attorney Requested Access — Approval Needed: ${lawyerName}`,
+            html: emailBody
+          })
+        });
+        adminsNotified++;
+      }
     }
 
-    return Response.json({ success: true, admins_notified: adminUsers.length });
+    return Response.json({ success: true, admins_notified: adminsNotified });
   } catch (error) {
-    console.error('Error notifying admins:', error);
+    console.error('notifyAdminNewLawyer error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

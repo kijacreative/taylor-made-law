@@ -63,6 +63,7 @@ import AdminPopups from './pages/AdminPopups';
 import AdminResourceEdit from './pages/AdminResourceEdit';
 import AdminResources from './pages/AdminResources';
 import AdminTeam from './pages/AdminTeam';
+import AdminUAT from './pages/AdminUAT';
 import AuthRedirect from './pages/AuthRedirect';
 import Blog from './pages/Blog';
 import CaseDetail from './pages/CaseDetail';
@@ -85,10 +86,13 @@ import LawyerLogin from './pages/LawyerLogin';
 import LawyerResourceDetail from './pages/LawyerResourceDetail';
 import LawyerResources from './pages/LawyerResources';
 import LawyerSettings from './pages/LawyerSettings';
+import Logout from './pages/Logout';
 import MassTortDetail from './pages/MassTortDetail';
 import MassTorts from './pages/MassTorts';
 import MyCases from './pages/MyCases';
 import ResetPassword from './pages/ResetPassword';
+import Join from './pages/Join';
+import Apply from './pages/Apply';
 import __Layout from './Layout.jsx';
 
 
@@ -109,6 +113,7 @@ export const PAGES = {
     "AdminResourceEdit": AdminResourceEdit,
     "AdminResources": AdminResources,
     "AdminTeam": AdminTeam,
+    "AdminUAT": AdminUAT,
     "AuthRedirect": AuthRedirect,
     "Blog": Blog,
     "CaseDetail": CaseDetail,
@@ -131,10 +136,13 @@ export const PAGES = {
     "LawyerResourceDetail": LawyerResourceDetail,
     "LawyerResources": LawyerResources,
     "LawyerSettings": LawyerSettings,
+    "Logout": Logout,
     "MassTortDetail": MassTortDetail,
     "MassTorts": MassTorts,
     "MyCases": MyCases,
     "ResetPassword": ResetPassword,
+    "Join": Join,
+    "Apply": Apply,
 }
 
 export const pagesConfig = {

@@ -1,6 +1,12 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+/**
+ * sendApprovalEmail — Admin-only. Legacy approval email sender.
+ * Sends either an activation email (new user, no password) or a login email (existing user).
+ * All URLs use the correct TML routes: /Activate?token=... or /LawyerLogin
+ */
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
 const LOGO = 'https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png';
+const BASE_URL = 'https://app.taylormadelaw.com';
 const YEAR = new Date().getFullYear();
 
 function emailWrapper(content) {
@@ -19,7 +25,6 @@ function emailWrapper(content) {
       </td></tr>
       <tr><td style="padding:28px 0 0;text-align:center;">
         <p style="margin:0 0 4px;color:#9ca3af;font-size:12px;">Taylor Made Law</p>
-        <p style="margin:0 0 4px;color:#9ca3af;font-size:12px;">This is an automated message from the Taylor Made Law Network.</p>
         <p style="margin:0;color:#9ca3af;font-size:12px;">Questions? <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;text-decoration:none;">support@taylormadelaw.com</a></p>
         <p style="margin:8px 0 0;color:#bbb;font-size:11px;">© ${YEAR} Taylor Made Law. All rights reserved.</p>
       </td></tr>
@@ -56,14 +61,8 @@ function buildActivateAccountEmail(name, activationUrl) {
         <a href="${activationUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Set Your Password &amp; Activate Account →</a>
       </td></tr>
     </table>
-    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">After activation, you'll be able to:</p>
-    <ul style="margin:0 0 20px;padding-left:20px;color:#333333;font-size:15px;line-height:1.8;">
-      <li>Access the Case Exchange</li>
-      <li>Accept case opportunities</li>
-      <li>Manage your attorney profile</li>
-      <li>Participate in the TML attorney network</li>
-    </ul>
-    <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;">This link expires in 7 days.</p>
+    <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;text-align:center;">This link expires in 7 days.</p>
+    <p style="margin:0;color:#9ca3af;font-size:11px;text-align:center;word-break:break-all;">Or copy: ${activationUrl}</p>
   `);
 }
 
@@ -89,42 +88,61 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'User not found' }, { status: 404 });
     }
     const lawyerUser = users[0];
+    const resendKey = Deno.env.get('RESEND_API_KEY');
 
+    let emailSent = false;
     if (has_password) {
-      const loginUrl = `https://app.taylormadelaw.com/login`;
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: lawyerUser.email,
-        subject: "You're Approved — You Can Now Access Cases",
-        body: buildAccessGrantedEmail(lawyerUser.full_name || 'there', loginUrl)
-      });
+      // Existing account — direct to /LawyerLogin (not /login)
+      const loginUrl = `${BASE_URL}/LawyerLogin`;
+      if (resendKey) {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'Taylor Made Law <noreply@taylormadelaw.com>',
+            to: [lawyerUser.email],
+            subject: "You're Approved — You Can Now Access Cases",
+            html: buildAccessGrantedEmail(lawyerUser.full_name || 'there', loginUrl)
+          })
+        });
+        emailSent = res.ok;
+      }
     } else {
+      // New account — generate token and point to /Activate?token=...
       const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
-      const token = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
-
+      const rawToken = Array.from(tokenBytes).map(b => b.toString(16).padStart(2, '0')).join('');
       const encoder = new TextEncoder();
-      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(token));
+      const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(rawToken));
       const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-      const expiresAt = new Date();
-      expiresAt.setDate(expiresAt.getDate() + 7);
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
-      await base44.asServiceRole.entities.AttorneyInvitation.create({
-        inviter_admin_user_id: user.id,
-        inviter_name: user.full_name,
-        invitee_email: lawyerUser.email,
-        invitee_name: lawyerUser.full_name,
+      // Store in ActivationToken (canonical token store)
+      await base44.asServiceRole.entities.ActivationToken.create({
+        user_id: lawyerUser.id,
+        user_email: lawyerUser.email,
         token_hash: tokenHash,
-        status: 'sent',
-        expires_at: expiresAt.toISOString(),
-        invitation_type: 'approval_activation'
+        token_type: 'activation',
+        expires_at: expiresAt,
+        created_by_admin: user.email
       });
 
-      const activationUrl = `https://app.taylormadelaw.com/activate?token=${token}`;
-      await base44.asServiceRole.integrations.Core.SendEmail({
-        to: lawyerUser.email,
-        subject: "You're Approved — Activate Your TML Account",
-        body: buildActivateAccountEmail(lawyerUser.full_name || 'there', activationUrl)
-      });
+      // Correct route: /Activate (capital A, matches page name)
+      const activationUrl = `${BASE_URL}/Activate?token=${rawToken}`;
+
+      if (resendKey) {
+        const res = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            from: 'Taylor Made Law <noreply@taylormadelaw.com>',
+            to: [lawyerUser.email],
+            subject: "You're Approved — Activate Your TML Account",
+            html: buildActivateAccountEmail(lawyerUser.full_name || 'there', activationUrl)
+          })
+        });
+        emailSent = res.ok;
+      }
     }
 
     await base44.asServiceRole.entities.AuditLog.create({
@@ -133,13 +151,13 @@ Deno.serve(async (req) => {
       action: 'approval_email_sent',
       actor_email: user.email,
       actor_role: user.role,
-      notes: `Sent approval email to ${lawyerUser.email} (has_password: ${has_password})`
+      notes: `Sent approval email to ${lawyerUser.email} (has_password: ${has_password}). email_sent: ${emailSent}`
     });
 
-    return Response.json({ success: true });
+    return Response.json({ success: true, email_sent: emailSent });
 
   } catch (error) {
-    console.error('Error sending approval email:', error);
+    console.error('sendApprovalEmail error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });

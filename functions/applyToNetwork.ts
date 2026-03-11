@@ -1,7 +1,14 @@
 /**
+ * ============================================================
+ * CANONICAL ATTORNEY ONBOARDING BACKEND FUNCTION
+ * ============================================================
  * applyToNetwork — Public endpoint. No authentication required.
- * Creates a LawyerApplication record and notifies admins.
- * User account creation happens at approval time.
+ * Called by: pages/JoinNetwork
+ *
+ * Uses upsertUserByEmail for deduplication + status precedence.
+ * Creates a LawyerApplication record, then notifies admins.
+ * User account is created at approval time (approveLawyerApplication).
+ * ============================================================
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
@@ -44,16 +51,16 @@ function buildConfirmationEmail(firstName) {
       <p style="margin:0 0 6px;color:#3a164d;font-weight:600;font-size:14px;">What happens next?</p>
       <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:14px;line-height:1.8;">
         <li>Our team reviews your application</li>
-        <li>You'll receive an email with next steps once approved</li>
-        <li>Upon approval, you'll get a link to set up your account and access the Case Exchange</li>
+        <li>You'll receive an approval email with a link to set up your account</li>
+        <li>Upon activation you get full access to the Case Exchange</li>
       </ul>
     </div>
-    <p style="margin:0;color:#6b7280;font-size:14px;line-height:1.7;">If you have any questions in the meantime, don't hesitate to reach out to <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;">support@taylormadelaw.com</a>.</p>
+    <p style="margin:0;color:#6b7280;font-size:14px;line-height:1.7;">Questions? <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;">support@taylormadelaw.com</a></p>
   `);
 }
 
 function buildAdminAlertEmail(fullName, email, firmName, barNumber, states, practiceAreas) {
-  const adminLink = `${BASE_URL}/AdminLawyerApplications`;
+  const adminLink = `${BASE_URL}/AdminLawyers`;
   return emailWrapper(`
     <div style="background:#dbeafe;border-radius:8px;padding:10px 16px;margin-bottom:20px;display:inline-block;">
       <span style="font-weight:700;color:#1e40af;font-size:12px;text-transform:uppercase;letter-spacing:0.06em;">⚖️ New Attorney Application</span>
@@ -88,17 +95,13 @@ Deno.serve(async (req) => {
       referrals, consent_terms, consent_referral
     } = body;
 
-    if (!email) {
-      return Response.json({ error: 'Email is required' }, { status: 400 });
-    }
-    if (!firm_name) {
-      return Response.json({ error: 'Firm name is required' }, { status: 400 });
-    }
+    if (!email) return Response.json({ error: 'Email is required' }, { status: 400 });
+    if (!firm_name) return Response.json({ error: 'Firm name is required' }, { status: 400 });
 
     const normalizedEmail = email.toLowerCase().trim();
     const resendKey = Deno.env.get('RESEND_API_KEY');
 
-    // Check for duplicate application
+    // ── 1. Check for already-approved application ──────────────────
     const existingApps = await base44.asServiceRole.entities.LawyerApplication.filter({ email: normalizedEmail });
     const existingApp = existingApps[0] || null;
 
@@ -110,6 +113,37 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ── 2. Check if a matching user exists (disabled = block) ───────
+    // We call upsert with create_if_missing=false first to check status
+    const checkResult = await base44.functions.invoke('upsertUserByEmail', {
+      email: normalizedEmail,
+      requested_status: 'pending',
+      entry_source: 'apply',
+      create_if_missing: false,
+      actor_email: normalizedEmail,
+      actor_role: 'applicant',
+      profile: {
+        full_name: full_name || '',
+        firm_name: firm_name || '',
+        phone: phone || '',
+        bar_number: bar_number || '',
+        bio: bio || '',
+        states_licensed: states_licensed || [],
+        practice_areas: practice_areas || [],
+        years_experience: years_experience ? parseInt(years_experience) : 0,
+        referral_agreement_accepted: !!consent_referral,
+        referral_agreement_accepted_at: consent_referral ? new Date().toISOString() : undefined,
+        consent_terms_at: consent_terms ? new Date().toISOString() : undefined,
+      }
+    });
+
+    if (checkResult.data?.blocked) {
+      return Response.json({
+        error: 'Your account has been disabled. Please contact support@taylormadelaw.com.'
+      }, { status: 403 });
+    }
+
+    // ── 3. Upsert LawyerApplication record ─────────────────────────
     const applicationData = {
       full_name: full_name || '',
       email: normalizedEmail,
@@ -129,18 +163,16 @@ Deno.serve(async (req) => {
 
     let application;
     if (existingApp) {
-      // Re-application: update existing record
       await base44.asServiceRole.entities.LawyerApplication.update(existingApp.id, applicationData);
       application = { ...existingApp, ...applicationData };
     } else {
       application = await base44.asServiceRole.entities.LawyerApplication.create(applicationData);
     }
 
-    // Send emails
+    // ── 4. Send emails ─────────────────────────────────────────────
     if (resendKey) {
       const firstName = (full_name || '').split(' ')[0] || 'there';
 
-      // Confirmation email to applicant
       await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
@@ -152,7 +184,6 @@ Deno.serve(async (req) => {
         })
       });
 
-      // Admin alert
       const allAdmins = (await base44.asServiceRole.entities.User.list()).filter(u => u.role === 'admin');
       for (const admin of allAdmins) {
         await fetch('https://api.resend.com/emails', {
@@ -165,6 +196,23 @@ Deno.serve(async (req) => {
             html: buildAdminAlertEmail(full_name, normalizedEmail, firm_name, bar_number, states_licensed, practice_areas)
           })
         });
+      }
+
+      // Send referral invite emails
+      if (referrals && referrals.length > 0) {
+        const validRefs = referrals.filter(r => r.email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r.email));
+        for (const ref of validRefs) {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: 'Taylor Made Law <noreply@taylormadelaw.com>',
+              to: [ref.email],
+              subject: `${full_name} Invites You to Join Taylor Made Law`,
+              html: `<p>Hi${ref.name ? ' ' + ref.name : ''},</p><p><strong>${full_name}</strong> thinks you'd be a great fit for the Taylor Made Law attorney network. <a href="${BASE_URL}/JoinNetwork">Apply here →</a></p>`
+            })
+          });
+        }
       }
     }
 
