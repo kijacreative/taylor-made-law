@@ -215,6 +215,43 @@ export default function AdminTeam() {
         </div>
       </main>
 
+      {/* Edit Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-xl font-bold text-gray-900">Edit Admin</h3>
+                <p className="text-sm text-gray-500 mt-0.5">{editingUser.email}</p>
+              </div>
+              <button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <TMLInput
+                label="Full Name"
+                value={editName}
+                onChange={e => setEditName(e.target.value)}
+                placeholder="Jane Smith"
+                required
+              />
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Email Address</label>
+                <p className="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2">{editEmail}</p>
+                <p className="text-xs text-gray-400 mt-1">Email cannot be changed here.</p>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <TMLButton variant="outline" onClick={() => setEditingUser(null)} className="flex-1">Cancel</TMLButton>
+              <TMLButton variant="primary" onClick={handleEditSave} className="flex-1" loading={saving}>
+                Save Changes
+              </TMLButton>
+            </div>
+          </motion.div>
+        </div>
+      )}
+
       {/* Invite Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
