@@ -301,7 +301,7 @@ Deno.serve(async (req) => {
     // ── 4. Admin alert ────────────────────────────────────────────────────────
 
     if (resendKey) {
-      const allAdmins = (await base44.asServiceRole.entities.User.list()).filter(u => u.role === 'admin');
+      const allAdmins = await base44.asServiceRole.entities.User.filter({ role: 'admin' }).catch(() => []);
       for (const admin of allAdmins) {
         await fetch('https://api.resend.com/emails', {
           method: 'POST',
