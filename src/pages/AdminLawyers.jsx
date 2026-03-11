@@ -67,6 +67,13 @@ export default function AdminLawyers() {
   const [saving, setSaving] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
   const [generatingReport, setGeneratingReport] = useState(false);
+  // Profiles state
+  const [profileTab, setProfileTab] = useState('pending');
+  const [profileSearch, setProfileSearch] = useState('');
+  const [approvingProfile, setApprovingProfile] = useState(null);
+  const [profileFreeTrialMonths, setProfileFreeTrialMonths] = useState(0);
+  const [profileActionLoading, setProfileActionLoading] = useState(false);
+
   const [viewingUser, setViewingUser] = useState(null);
   const [approvingUser, setApprovingUser] = useState(null);
   const [disablingUser, setDisablingUser] = useState(null);
