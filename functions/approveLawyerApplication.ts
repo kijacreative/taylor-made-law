@@ -198,8 +198,6 @@ Deno.serve(async (req) => {
     approvedUser = { ...approvedUser, ...userUpdates };
 
     // ── 3. Create / update LawyerProfile ──────────────────────────
-    const approvedUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-    const approvedUser = approvedUsers[0];
     if (approvedUser) {
       const existingProfiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id: approvedUser.id });
       const profileData = {
