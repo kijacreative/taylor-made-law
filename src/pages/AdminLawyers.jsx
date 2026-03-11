@@ -653,6 +653,7 @@ export default function AdminLawyers() {
                                 )}
                               </div>
                               <div className="flex flex-wrap gap-3 text-sm text-gray-500">
+                                {p.email && <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" />{p.email}</span>}
                                 {p.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" />{p.phone}</span>}
                                 {p.bar_number && <span className="flex items-center gap-1"><Scale className="w-3.5 h-3.5" />Bar: {p.bar_number}</span>}
                                 {p.years_experience > 0 && <span>{p.years_experience} yrs exp</span>}
