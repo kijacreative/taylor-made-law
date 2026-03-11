@@ -53,6 +53,39 @@ export default function AdminTeam() {
   const notify = (msg) => { setSuccess(msg); setTimeout(() => setSuccess(null), 4000); };
   const notifyError = (msg) => { setError(msg); setTimeout(() => setError(null), 5000); };
 
+  const openEdit = (u) => {
+    setEditingUser(u);
+    setEditName(u.full_name || '');
+    setEditEmail(u.email || '');
+  };
+
+  const handleEditSave = async () => {
+    if (!editName.trim()) { notifyError('Name is required.'); return; }
+    setSaving(true);
+    try {
+      await base44.entities.User.update(editingUser.id, { full_name: editName.trim() });
+      notify('Admin details updated.');
+      setEditingUser(null);
+      refetch();
+    } catch (err) {
+      notifyError(err.response?.data?.error || err.message || 'Failed to update.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSendReset = async (email) => {
+    setSendingReset(email);
+    try {
+      await base44.functions.invoke('sendPasswordReset', { email });
+      notify(`Password reset email sent to ${email}.`);
+    } catch (err) {
+      notifyError(err.response?.data?.error || err.message || 'Failed to send reset email.');
+    } finally {
+      setSendingReset(false);
+    }
+  };
+
   const handleInvite = async () => {
     if (!inviteEmail.trim()) { notifyError('Email is required.'); return; }
     setSaving(true);
