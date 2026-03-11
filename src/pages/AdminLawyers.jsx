@@ -49,7 +49,7 @@ export default function AdminLawyers() {
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Top-level section: 'applications' | 'attorneys'
+  // Top-level section: 'applications' | 'attorneys' | 'profiles'
   const [section, setSection] = useState('applications');
 
   // Applications state
