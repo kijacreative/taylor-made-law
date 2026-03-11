@@ -78,10 +78,31 @@ export default function CaseExchange() {
     </svg>
   );
 
+  const HouseSVG = (
+    <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Roof */}
+      <polyline points="10,50 50,10 90,50" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* Chimney */}
+      <rect x="65" y="18" width="10" height="20" rx="1" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+      {/* Walls */}
+      <rect x="18" y="50" width="64" height="38" rx="2" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* Door */}
+      <path d="M 43 88 L 43 68 Q 43 64 50 64 Q 57 64 57 68 L 57 88" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+      {/* Left Window */}
+      <rect x="24" y="58" width="14" height="14" rx="1.5" stroke="white" strokeWidth="2.5"/>
+      <line x1="31" y1="58" x2="31" y2="72" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="24" y1="65" x2="38" y2="65" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      {/* Right Window */}
+      <rect x="62" y="58" width="14" height="14" rx="1.5" stroke="white" strokeWidth="2.5"/>
+      <line x1="69" y1="58" x2="69" y2="72" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+      <line x1="62" y1="65" x2="76" y2="65" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+  );
+
   const categories = [
     { name: 'Criminal', icon: '⚖️', desc: 'Criminal Defense' },
     { name: 'Family', icon: FamilySVG, desc: 'Family Law', isSVG: true },
-    { name: 'Estate', icon: '📋', desc: 'Estate Planning' },
+    { name: 'Estate', icon: HouseSVG, desc: 'Estate Planning', isSVG: true },
     { name: 'Personal Injury', icon: '🏥', desc: 'Personal Injury' },
     { name: 'Mass Torts', icon: '⚖️', desc: 'Mass Tort Litigation' },
     { name: 'Class Actions', icon: '🏛️', desc: 'Class Actions' },
