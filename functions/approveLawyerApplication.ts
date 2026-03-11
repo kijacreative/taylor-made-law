@@ -155,41 +155,47 @@ Deno.serve(async (req) => {
     const existingUser = existingUsers[0] || null;
     const userAlreadyHasPassword = existingUser?.password_set === true;
 
-    // ── 2. Upsert user to 'approved' ───────────────────────────────
-    const upsertResult = await base44.functions.invoke('upsertUserByEmail', {
-      email: normalizedEmail,
-      requested_status: 'approved',
-      entry_source: 'apply',
-      create_if_missing: true,
-      actor_email: adminUser.email,
-      actor_role: 'admin',
-      profile: {
-        full_name: application.full_name || '',
-        firm_name: application.firm_name || '',
-        phone: application.phone || '',
-        bar_number: application.bar_number || '',
-        bio: application.bio || '',
-        states_licensed: application.states_licensed || [],
-        practice_areas: application.practice_areas || [],
-        years_experience: application.years_experience || 0,
-        referral_agreement_accepted: application.consent_referral || false,
-        referral_agreement_accepted_at: application.consent_referral ? now : undefined,
-        approved_at: now,
-        approved_by: adminUser.email,
-        free_trial_months: parseInt(free_trial_months) || 0,
-      }
-    });
+    // ── 2. Find or create the User record ─────────────────────────
+    let approvedUser = existingUser;
 
-    if (upsertResult.data?.blocked) {
+    if (!approvedUser) {
+      // New user — invite them via the platform (admin is authenticated here)
+      try {
+        await base44.users.inviteUser(normalizedEmail, 'user');
+      } catch (inviteErr) {
+        console.warn('inviteUser attempt:', inviteErr.message);
+      }
+      // Give the platform a moment to create the record
+      await new Promise(r => setTimeout(r, 2000));
+      const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+      approvedUser = newUsers[0] || null;
+      if (!approvedUser) {
+        return Response.json({ error: 'Failed to create user account. Please try again.' }, { status: 500 });
+      }
+    } else if (approvedUser.user_status === 'disabled' || approvedUser.user_status === 'cancelled') {
       return Response.json({
         error: 'User is disabled. Please reinstate before approving.',
         blocked: true
       }, { status: 409 });
     }
 
-    if (!upsertResult.data?.success) {
-      return Response.json({ error: 'Failed to upsert user to approved status' }, { status: 500 });
-    }
+    // Update user record to approved status
+    const userUpdates = {
+      user_status: 'approved',
+      full_name: application.full_name || approvedUser.full_name || '',
+      firm_name: application.firm_name || '',
+      phone: application.phone || '',
+      bar_number: application.bar_number || '',
+      bio: application.bio || '',
+      states_licensed: application.states_licensed || [],
+      practice_areas: application.practice_areas || [],
+      years_experience: application.years_experience || 0,
+      approved_at: now,
+      approved_by: adminUser.email,
+      free_trial_months: parseInt(free_trial_months) || 0,
+    };
+    await base44.asServiceRole.entities.User.update(approvedUser.id, userUpdates);
+    approvedUser = { ...approvedUser, ...userUpdates };
 
     // ── 3. Create / update LawyerProfile ──────────────────────────
     const approvedUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
