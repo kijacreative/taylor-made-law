@@ -130,7 +130,7 @@ Deno.serve(async (req) => {
       // Already approved — check if they have an active account
       const approvedUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
       const approvedUser = approvedUsers[0];
-      if (approvedUser?.password_set && approvedUser?.email_verified) {
+      if (approvedUser?.password_set) {
         return Response.json({ success: true, already_activated: true });
       }
     }
