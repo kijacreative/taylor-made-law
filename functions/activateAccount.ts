@@ -1,6 +1,16 @@
 /**
- * activateAccount — Validates activation token and registers the user's account.
- * Flow: approve → email with token → activate page → set password → register account → access portal
+ * activateAccount — Option C Unified Identity.
+ * Works for ALL flows: invite, apply+approve, apply-immediate.
+ * Does NOT require a LawyerApplication — just a valid ActivationToken.
+ *
+ * Flow:
+ *  1. Hash token → find ActivationToken record (not used, not expired)
+ *  2. Get user email from token
+ *  3. Try base44.auth.register(email, password) to create auth account
+ *  4. If "already exists" → user was created via inviteUser() → return use_forgot_password
+ *  5. If success → find/update User entity: email_verified=true, password_set=true
+ *  6. Copy profile fields from LawyerApplication if available and User fields are empty
+ *  7. Mark token used, audit log
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
@@ -13,17 +23,16 @@ Deno.serve(async (req) => {
     if (!token || !password) {
       return Response.json({ error: 'token and password are required' }, { status: 400 });
     }
-
     if (password.length < 8) {
       return Response.json({ error: 'Password must be at least 8 characters' }, { status: 400 });
     }
 
-    // Hash the token to look it up
+    // Hash token to look up
     const encoder = new TextEncoder();
     const hashBuffer = await crypto.subtle.digest('SHA-256', encoder.encode(token));
     const tokenHash = Array.from(new Uint8Array(hashBuffer)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-    // Find the activation token record
+    // Find activation token
     const tokens = await base44.asServiceRole.entities.ActivationToken.filter({
       token_hash: tokenHash,
       token_type: 'activation'
@@ -51,69 +60,118 @@ Deno.serve(async (req) => {
 
     const normalizedEmail = tokenRecord.user_email.toLowerCase().trim();
 
-    // Find the approved application to get full_name and profile data
-    const applications = await base44.asServiceRole.entities.LawyerApplication.filter({
-      email: normalizedEmail,
-      status: 'approved'
-    });
-    const application = applications[0] || null;
+    // Find existing User entity (may or may not exist)
+    const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+    const existingUser = existingUsers[0] || null;
 
-    if (!application) {
-      return Response.json({ error: 'Approved application not found. Please contact support.' }, { status: 404 });
+    // Get best available full_name
+    let fullName = existingUser?.full_name || '';
+    if (!fullName) {
+      const apps = await base44.asServiceRole.entities.LawyerApplication.filter({ email: normalizedEmail });
+      fullName = apps[0]?.full_name || '';
     }
 
-    const fullName = application.full_name || '';
+    // Mark token as used immediately (prevents replay)
+    await base44.asServiceRole.entities.ActivationToken.update(tokenRecord.id, {
+      used_at: new Date().toISOString()
+    });
 
-    // Register the account — creates their auth account with the chosen password
-    // If already registered, they can just log in normally
+    // Try to register the auth account
+    let registrationSuccess = false;
+    let usesForgotPassword = false;
     try {
       await base44.auth.register({
         email: normalizedEmail,
         password,
         full_name: fullName,
       });
+      registrationSuccess = true;
     } catch (regErr) {
-      // Already registered — that's okay, token was valid so just proceed
-      console.log('Register note:', regErr.message);
+      const errMsg = (regErr.message || regErr.response?.data?.message || '').toLowerCase();
+      if (errMsg.includes('already') || errMsg.includes('exists') || errMsg.includes('duplicate') || errMsg.includes('registered')) {
+        // User has an existing auth account (was created via inviteUser or registered before).
+        // They need to use Forgot Password to set their password.
+        usesForgotPassword = true;
+      } else {
+        console.error('register error:', regErr.message);
+        // Still mark email as verified since they opened the link
+        usesForgotPassword = true;
+      }
     }
 
-    // Mark token as used
-    await base44.asServiceRole.entities.ActivationToken.update(tokenRecord.id, {
-      used_at: new Date().toISOString()
-    });
-
-    // Mark application as user_created
-    await base44.asServiceRole.entities.LawyerApplication.update(application.id, {
-      user_created: true,
-    });
-
-    // Wait briefly for the User entity to be created by the register call
-    await new Promise(r => setTimeout(r, 800));
-
-    // Update the User entity with approved status and profile data from the application
-    const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-    if (existingUsers && existingUsers.length > 0) {
-      await base44.asServiceRole.entities.User.update(existingUsers[0].id, {
-        user_status: 'approved',
-        firm_name: application.firm_name || '',
-        phone: application.phone || '',
-        bar_number: application.bar_number || '',
-        states_licensed: application.states_licensed || [],
-        practice_areas: application.practice_areas || [],
-        years_experience: application.years_experience || 0,
-        bio: application.bio || '',
-        free_trial_months: application.free_trial_months || 0,
+    // If user already has auth account → verify email, send to forgot-password
+    if (usesForgotPassword) {
+      if (existingUser) {
+        await base44.asServiceRole.entities.User.update(existingUser.id, {
+          email_verified: true,
+          email_verified_at: new Date().toISOString(),
+        }).catch(() => {});
+      }
+      await base44.asServiceRole.entities.AuditLog.create({
+        entity_type: 'User',
+        entity_id: existingUser?.id || normalizedEmail,
+        action: 'activation_completed',
+        actor_email: normalizedEmail,
+        actor_role: 'user',
+        notes: 'Email verified via token. Auth account already exists — directed to forgot-password to set password.'
+      }).catch(() => {});
+      return Response.json({
+        success: false,
+        use_forgot_password: true,
+        message: 'Your email has been verified. Please use Forgot Password to set your password.',
       });
+    }
+
+    // Registration succeeded — wait briefly for User entity to sync
+    await new Promise(r => setTimeout(r, 900));
+
+    // Find the User entity (may be newly created by register())
+    const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+    const userEntity = newUsers[0] || null;
+
+    if (userEntity) {
+      const updateData = {
+        email_verified: true,
+        email_verified_at: new Date().toISOString(),
+        password_set: true,
+      };
+
+      // Copy profile fields from LawyerApplication if User is missing them
+      const applications = await base44.asServiceRole.entities.LawyerApplication.filter({ email: normalizedEmail });
+      // Prefer approved app, fallback to any
+      const app = applications.find(a => a.status === 'approved') || applications[0] || null;
+
+      if (app) {
+        if (!userEntity.firm_name && app.firm_name) updateData.firm_name = app.firm_name;
+        if (!userEntity.phone && app.phone) updateData.phone = app.phone;
+        if (!userEntity.bar_number && app.bar_number) updateData.bar_number = app.bar_number;
+        if (!userEntity.bio && app.bio) updateData.bio = app.bio;
+        if ((!userEntity.states_licensed?.length) && app.states_licensed?.length) {
+          updateData.states_licensed = app.states_licensed;
+        }
+        if ((!userEntity.practice_areas?.length) && app.practice_areas?.length) {
+          updateData.practice_areas = app.practice_areas;
+        }
+        if (!userEntity.years_experience && app.years_experience) {
+          updateData.years_experience = app.years_experience;
+        }
+        // Mark application user_created
+        await base44.asServiceRole.entities.LawyerApplication.update(app.id, {
+          user_created: true,
+        }).catch(() => {});
+      }
+
+      await base44.asServiceRole.entities.User.update(userEntity.id, updateData);
     }
 
     await base44.asServiceRole.entities.AuditLog.create({
       entity_type: 'User',
-      entity_id: normalizedEmail,
+      entity_id: userEntity?.id || normalizedEmail,
       action: 'activation_completed',
       actor_email: normalizedEmail,
       actor_role: 'user',
       notes: 'Account activated and password set successfully.'
-    });
+    }).catch(() => {});
 
     return Response.json({
       success: true,
@@ -122,14 +180,6 @@ Deno.serve(async (req) => {
 
   } catch (error) {
     console.error('activateAccount error:', error);
-    // If register fails because user already exists, treat as success (they can just log in)
-    if (error.message && error.message.toLowerCase().includes('already')) {
-      return Response.json({
-        success: true,
-        already_exists: true,
-        message: 'Account already exists. Please log in.',
-      });
-    }
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
