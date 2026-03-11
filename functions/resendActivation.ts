@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
       const lawyerUser = users[0];
       if (!lawyerUser) return Response.json({ success: true, message: 'If an account exists, an activation email has been sent.' });
       if (lawyerUser.user_status === 'disabled') return Response.json({ error: 'Account is disabled.' }, { status: 403 });
-      if (lawyerUser.password_set && lawyerUser.email_verified) return Response.json({ error: 'Account is already activated.' }, { status: 400 });
+      if (lawyerUser.password_set) return Response.json({ error: 'Account is already activated.' }, { status: 400 });
       targetEmail = lawyerUser.email.toLowerCase().trim();
       targetName = lawyerUser.full_name;
       targetUserId = lawyerUser.id;
@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
       const lawyerUser = users[0];
       if (!lawyerUser) return Response.json({ success: true, message: 'If an account exists, an activation email has been sent.' });
       if (lawyerUser.user_status === 'disabled') return Response.json({ error: 'Account is disabled.' }, { status: 403 });
-      if (lawyerUser.password_set && lawyerUser.email_verified) return Response.json({ error: 'Account is already activated. Please log in.' }, { status: 400 });
+      if (lawyerUser.password_set) return Response.json({ error: 'Account is already activated. Please log in.' }, { status: 400 });
       targetEmail = lawyerUser.email.toLowerCase().trim();
       targetName = lawyerUser.full_name;
       targetUserId = lawyerUser.id;
