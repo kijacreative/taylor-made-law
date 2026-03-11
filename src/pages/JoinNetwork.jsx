@@ -432,9 +432,9 @@ export default function JoinNetwork() {
                         />
                         <span className="text-sm text-gray-700">
                           I accept the{' '}
-                          <a href="https://taylormadelaw.com/terms" target="_blank" rel="noopener noreferrer" className="text-[#3a164d] hover:underline">Terms & Conditions</a>
+                          <Link to={createPageUrl('TermsAndPrivacy')} target="_blank" className="text-[#3a164d] hover:underline">Terms & Conditions</Link>
                           {' '}and{' '}
-                          <a href="https://taylormadelaw.com/privacy" target="_blank" rel="noopener noreferrer" className="text-[#3a164d] hover:underline">Privacy Policy</a>
+                          <Link to={createPageUrl('TermsAndPrivacy')} target="_blank" className="text-[#3a164d] hover:underline">Privacy Policy</Link>
                         </span>
                       </label>
                       {errors.consent_terms && <p className="text-red-600 text-xs">{errors.consent_terms}</p>}
@@ -447,7 +447,7 @@ export default function JoinNetwork() {
                         />
                         <span className="text-sm text-gray-700">
                           I accept the{' '}
-                          <a href="https://taylormadelaw.com/referral-agreement" target="_blank" rel="noopener noreferrer" className="text-[#3a164d] hover:underline">Referral Agreement</a>
+                          <Link to={createPageUrl('ReferralAgreement')} target="_blank" className="text-[#3a164d] hover:underline">Referral Agreement</Link>
                           {' '}with Taylor Made Law
                         </span>
                       </label>
