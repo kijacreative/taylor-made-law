@@ -40,23 +40,17 @@ function emailWrapper(content) {
 </html>`;
 }
 
-function buildActivationEmail(firstName, activationUrl) {
+function buildApplicationReceivedEmail(firstName) {
   return emailWrapper(`
-    <h1 style="margin:0 0 8px;color:#111827;font-size:26px;font-weight:700;">Activate Your Taylor Made Law Account</h1>
-    <p style="margin:0 0 28px;color:#6b7280;font-size:15px;">Your application has been received. Activate your account to get started.</p>
+    <h1 style="margin:0 0 8px;color:#111827;font-size:26px;font-weight:700;">Application Received!</h1>
+    <p style="margin:0 0 28px;color:#6b7280;font-size:15px;">We've received your application to the Taylor Made Law Network.</p>
     <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${firstName},</p>
-    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Thank you for applying to the <strong>Taylor Made Law Network</strong>. Click below to verify your email and set your password — your application will be reviewed by our team within 2–3 business days.</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
-      <tr><td align="center">
-        <a href="${activationUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Activate My Account →</a>
-      </td></tr>
-    </table>
-    <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;">This link expires in 7 days.</p>
-    <p style="margin:0;color:#9ca3af;font-size:11px;word-break:break-all;">Or copy: ${activationUrl}</p>
+    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Thank you for applying to the <strong>Taylor Made Law Network</strong>. You will receive a separate email shortly with a link to set up your account password.</p>
     <div style="background:#f5f0fa;border-radius:10px;padding:16px 18px;margin:24px 0 0;">
       <p style="margin:0 0 6px;color:#3a164d;font-weight:600;font-size:14px;">What happens next?</p>
       <ul style="margin:0;padding-left:18px;color:#4b5563;font-size:14px;line-height:1.8;">
-        <li>Set your password to access your pending dashboard</li>
+        <li>Check your inbox for an account setup email</li>
+        <li>Click the link to set your password and access your dashboard</li>
         <li>Our team reviews your application (2–3 business days)</li>
         <li>You'll receive a separate email when approved for full access</li>
       </ul>
