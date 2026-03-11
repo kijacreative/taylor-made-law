@@ -224,18 +224,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    // ── 3. Send email: activation or login based on password_set ─────────────
+    // ── 3. Send email: login (already activated) or approval+activation link ──
 
     let emailSent = false;
     const isActivated = lawyerUser?.password_set;
-
-    // Always mark email_verified = true to bypass platform verification gate
-    if (lawyerUser) {
-      await base44.asServiceRole.entities.User.update(lawyerUser.id, {
-        email_verified: true,
-        email_verified_at: new Date().toISOString(),
-      }).catch(() => {});
-    }
 
     if (isActivated) {
       // Already has password — send "You're approved, log in" email
@@ -255,13 +247,8 @@ Deno.serve(async (req) => {
         emailSent = res.ok;
       }
     } else {
-      // No password yet — use platform invite to send password setup email (creates verified account)
-      await base44.users.inviteUser(normalizedEmail, 'user').catch((e) => {
-        console.log('inviteUser on approve (may already exist):', e?.message);
-      });
-
-      // Send approved activation email via platform invite link
-      const activationUrl = `${BASE_URL}/LawyerLogin`;
+      // Not yet activated — send approval email pointing them to set their password
+      const activationUrl = `${BASE_URL}/ForgotPassword`;
       const html = buildApprovedActivateEmail(firstName, activationUrl, free_trial_months);
       if (resendKey) {
         const res = await fetch('https://api.resend.com/emails', {
