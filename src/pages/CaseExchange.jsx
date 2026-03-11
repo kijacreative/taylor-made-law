@@ -103,7 +103,7 @@ export default function CaseExchange() {
     { name: 'Criminal', icon: '⚖️', desc: 'Criminal Defense' },
     { name: 'Family', icon: FamilySVG, desc: 'Family Law', isSVG: true },
     { name: 'Estate', icon: HouseSVG, desc: 'Estate Planning', isSVG: true },
-    { name: 'Personal Injury', icon: '🏥', desc: 'Personal Injury' },
+    { name: 'Personal Injury', icon: InjurySVG, desc: 'Personal Injury', isSVG: true },
     { name: 'Mass Torts', icon: '⚖️', desc: 'Mass Tort Litigation' },
     { name: 'Class Actions', icon: '🏛️', desc: 'Class Actions' },
   ];
