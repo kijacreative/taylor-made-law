@@ -192,7 +192,6 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.User.update(userEntity.id, updates);
       userEntity = { ...userEntity, ...updates };
     } else {
-      // Try direct create first
       try {
         // Use inviteUser to create the auth account (User.create doesn't create auth accounts)
         await base44.users.inviteUser(normalizedEmail, 'user').catch((e) => {
@@ -215,6 +214,8 @@ Deno.serve(async (req) => {
             practice_areas: practice_areas || [],
           });
         }
+      } catch (createErr) {
+        console.log('User create/invite failed:', createErr.message);
       }
     }
 
