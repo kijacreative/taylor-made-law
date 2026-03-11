@@ -99,6 +99,17 @@ export default function CaseExchange() {
     </svg>
   );
 
+  const GavelSVG = (
+    <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      {/* Gavel head */}
+      <rect x="52" y="10" width="36" height="18" rx="4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" transform="rotate(45 52 10)"/>
+      {/* Gavel handle */}
+      <line x1="38" y1="52" x2="10" y2="80" stroke="white" strokeWidth="5" strokeLinecap="round"/>
+      {/* Sound block */}
+      <rect x="15" y="82" width="70" height="10" rx="4" stroke="white" strokeWidth="2.5"/>
+    </svg>
+  );
+
   const ClassActionSVG = (
     <svg width="72" height="72" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
       {/* Outer circle */}
@@ -172,7 +183,7 @@ export default function CaseExchange() {
   );
 
   const categories = [
-    { name: 'Criminal', icon: '⚖️', desc: 'Criminal Defense' },
+    { name: 'Criminal', icon: GavelSVG, desc: 'Criminal Defense', isSVG: true },
     { name: 'Family', icon: FamilySVG, desc: 'Family Law', isSVG: true },
     { name: 'Estate', icon: HouseSVG, desc: 'Estate Planning', isSVG: true },
     { name: 'Personal Injury', icon: InjurySVG, desc: 'Personal Injury', isSVG: true },
