@@ -23,6 +23,10 @@ export default function AdminTeam() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editName, setEditName] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [sendingReset, setSendingReset] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
