@@ -172,11 +172,11 @@ export default function CaseExchange() {
   );
 
   const categories = [
-    { name: 'Criminal', icon: KeySVG, desc: 'Criminal Defense', isSVG: true },
+    { name: 'Criminal', icon: '⚖️', desc: 'Criminal Defense' },
     { name: 'Family', icon: FamilySVG, desc: 'Family Law', isSVG: true },
     { name: 'Estate', icon: HouseSVG, desc: 'Estate Planning', isSVG: true },
     { name: 'Personal Injury', icon: InjurySVG, desc: 'Personal Injury', isSVG: true },
-    { name: 'Mass Torts', icon: '⚖️', desc: 'Mass Tort Litigation' },
+    { name: 'Mass Torts', icon: KeySVG, desc: 'Mass Tort Litigation', isSVG: true },
     { name: 'Class Actions', icon: ClassActionSVG, desc: 'Class Actions', isSVG: true },
   ];
 
