@@ -140,13 +140,9 @@ export default function JoinNetwork() {
       });
 
       if (res.data?.success) {
-        // Redirect to dashboard or login
-        if (res.data?.user_id) {
-          navigate(createPageUrl('LawyerDashboard'));
-        } else {
-          setSubmittedEmail(formData.email.toLowerCase().trim());
-          setSubmitted(true);
-        }
+        setSubmittedEmail(formData.email.toLowerCase().trim());
+        setSubmitted(true);
+        if (false) {
       } else {
         setErrors({ submit: res.data?.error || 'Submission failed. Please try again.' });
       }
