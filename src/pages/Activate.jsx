@@ -150,146 +150,31 @@ export default function Activate() {
     }
   };
 
-  const handleVerifyDigit = (index, value) => {
-    const digit = value.replace(/\D/g, '').slice(-1);
-    const newCode = [...verifyCode];
-    newCode[index] = digit;
-    setVerifyCode(newCode);
-    setVerifyError('');
-    if (digit && index < 5) verifyRefs.current[index + 1]?.focus();
-    if (digit && index === 5 && newCode.every(d => d !== '')) {
-      handleVerifySubmit(newCode.join(''));
-    }
-  };
-
-  const handleVerifyKeyDown = (index, e) => {
-    if (e.key === 'Backspace' && !verifyCode[index] && index > 0) verifyRefs.current[index - 1]?.focus();
-  };
-
-  const handleVerifyPaste = (e) => {
-    const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
-    if (pasted.length === 6) {
-      setVerifyCode(pasted.split(''));
-      handleVerifySubmit(pasted);
-    }
-  };
-
-  const handleVerifySubmit = async (codeStr) => {
-    const code = codeStr || verifyCode.join('');
-    if (code.length !== 6) { setVerifyError('Please enter all 6 digits'); return; }
-    setVerifying(true);
-    setVerifyError('');
-    try {
-      // Verify the OTP with Base44 platform
-      await base44.auth.verifyOtp(verifiedEmail, code);
-      // Now login with the password they already set
-      await base44.auth.loginViaEmailPassword(verifiedEmail, pendingPassword);
-      navigate(createPageUrl('LawyerDashboard'), { replace: true });
-    } catch (err) {
-      const msg = (err?.response?.data?.message || err?.message || '').toLowerCase();
-      if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('wrong') || msg.includes('mismatch')) {
-        setVerifyError('Invalid code. Please check your email and try again.');
-        setVerifyCode(['', '', '', '', '', '']);
-        setTimeout(() => verifyRefs.current[0]?.focus(), 50);
-      } else if (msg.includes('expired')) {
-        setVerifyError('Code has expired. Please request a new one below.');
-        setVerifyCode(['', '', '', '', '', '']);
-        setTimeout(() => verifyRefs.current[0]?.focus(), 50);
-      } else {
-        setVerifyError(err?.response?.data?.message || err?.message || 'Verification failed. Please try again.');
-        setVerifyCode(['', '', '', '', '', '']);
-        setTimeout(() => verifyRefs.current[0]?.focus(), 50);
-      }
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  const handleResendVerifyCode = async () => {
-    setVerifyError('');
-    try {
-      await base44.auth.resendOtp(verifiedEmail);
-      setVerifyError('');
-      // Show brief confirmation
-      setVerifyCode(['', '', '', '', '', '']);
-      setTimeout(() => verifyRefs.current[0]?.focus(), 50);
-    } catch (err) {
-      setVerifyError('Failed to resend code. Please contact support@taylormadelaw.com');
-    }
-  };
-
   if (needsVerification) {
-    const codeStr = verifyCode.join('');
     return (
       <div className="min-h-screen bg-[#faf8f5]">
         <PublicNav />
-        <div className="flex items-center justify-center py-16 px-4 pt-28">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
-            <div className="text-center mb-8">
-              <img
-                src="https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png"
-                alt="Taylor Made Law"
-                className="h-14 mx-auto mb-6"
-              />
-              <h1 className="text-3xl font-bold text-gray-900">Verify Your Email</h1>
-              <p className="text-gray-500 mt-2">
-                Almost there! Enter the 6-digit code sent to{' '}
-                <strong className="text-gray-700">{verifiedEmail}</strong>
+        <div className="flex items-center justify-center py-24 px-4">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full">
+            <div className="bg-white rounded-2xl shadow-xl text-center p-10">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#3a164d]/10 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-[#3a164d]" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">One More Step — Check Your Email</h2>
+              <p className="text-gray-600 mb-2">
+                Your account is set up! We need to confirm your email address before you can log in.
               </p>
-            </div>
-
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              {verifyError && (
-                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg mb-5">
-                  <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
-                  <p className="text-sm text-red-800">{verifyError}</p>
-                </div>
-              )}
-
-              <div className="flex gap-3 justify-center mb-6" onPaste={handleVerifyPaste}>
-                {verifyCode.map((digit, i) => (
-                  <input
-                    key={i}
-                    ref={el => verifyRefs.current[i] = el}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={e => handleVerifyDigit(i, e.target.value)}
-                    onKeyDown={e => handleVerifyKeyDown(i, e)}
-                    className={`w-12 h-14 text-center text-2xl font-bold rounded-xl border-2 transition-all focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 
-                      ${digit ? 'border-[#3a164d] bg-[#f5f0fa] text-[#3a164d]' : 'border-gray-200 bg-gray-50 text-gray-900'}
-                      ${verifyError ? 'border-red-300 bg-red-50' : ''}
-                    `}
-                  />
-                ))}
+              <p className="text-gray-600 mb-6">
+                We sent a verification link to{' '}
+                <strong>{verifiedEmail || 'your email'}</strong>.
+                {' '}Click the link in that email to complete sign-in.
+              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800 text-left mb-6">
+                <strong>Tip:</strong> Check your spam or junk folder if you don't see it within a few minutes. The subject line will say "Confirm your email".
               </div>
-
-              <TMLButton
-                variant="primary"
-                className="w-full"
-                loading={verifying}
-                disabled={codeStr.length !== 6 || verifying}
-                onClick={() => handleVerifySubmit()}
-              >
-                {verifying ? 'Verifying...' : 'Verify & Continue'}
-              </TMLButton>
-
-              <div className="flex items-center justify-between mt-5">
-                <p className="text-sm text-gray-500">
-                  Didn't get a code? Check spam.
-                </p>
-                <button
-                  type="button"
-                  onClick={handleResendVerifyCode}
-                  className="text-sm text-[#3a164d] hover:text-[#5a2a6d] font-medium flex items-center gap-1"
-                >
-                  Resend code
-                </button>
-              </div>
-              <p className="text-center text-sm text-gray-400 mt-3">
-                Need help?{' '}
-                <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">Contact Support</a>
+              <p className="text-sm text-gray-500">
+                Still having trouble?{' '}
+                <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline font-medium">Contact Support</a>
               </p>
             </div>
           </motion.div>
