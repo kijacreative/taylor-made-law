@@ -105,14 +105,21 @@ export default function Activate() {
       });
 
       if (response.data?.success) {
-        // Auto-login immediately so the user never hits a platform email-verification screen
+        // Try auto-login immediately
         try {
           await base44.auth.loginViaEmailPassword(response.data.email, formData.password);
           navigate(createPageUrl('LawyerDashboard'), { replace: true });
-        } catch {
-          // Login failed for some reason — fall back to login page with success banner
-          setSuccess(true);
-          setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true }), 2000);
+        } catch (loginErr) {
+          const loginMsg = (loginErr?.response?.data?.message || loginErr?.message || '').toLowerCase();
+          if (loginMsg.includes('verify') || loginMsg.includes('verification') || loginMsg.includes('confirm') || loginMsg.includes('not confirmed')) {
+            // Base44 sent a verification email — show TML-branded screen telling user to check email
+            setVerifiedEmail(response.data.email || emailParam || '');
+            setNeedsVerification(true);
+          } else {
+            // Unknown login error — send to login page with success banner
+            setSuccess(true);
+            setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true }), 2000);
+          }
         }
         return;
       } else if (response.data?.expired) {
