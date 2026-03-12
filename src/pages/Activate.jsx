@@ -16,6 +16,11 @@ export default function Activate() {
   const [success, setSuccess] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
   const [verifiedEmail, setVerifiedEmail] = useState('');
+  const [pendingPassword, setPendingPassword] = useState('');
+  const [verifyCode, setVerifyCode] = useState(['', '', '', '', '', '']);
+  const [verifyError, setVerifyError] = useState('');
+  const [verifying, setVerifying] = useState(false);
+  const verifyRefs = React.useRef([]);
   const [error, setError] = useState('');
   const [expiredError, setExpiredError] = useState(false);
   const [expiredEmail, setExpiredEmail] = useState('');
