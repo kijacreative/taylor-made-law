@@ -246,8 +246,29 @@ Deno.serve(async (req) => {
         emailSent = res.ok;
       }
     } else {
-      // Not yet activated — send approval email pointing them to set their password
-      const activationUrl = `${BASE_URL}/ForgotPassword`;
+      // Not yet activated — generate activation token and send to /Activate
+      const { rawToken, tokenHash } = await generateTokenPair();
+      const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+      const tokenRecord = await base44.asServiceRole.entities.ActivationToken.create({
+        user_id: lawyerUser?.id || '',
+        user_email: normalizedEmail,
+        token_hash: tokenHash,
+        token_type: 'activation',
+        expires_at: expiresAt,
+        created_by_admin: adminUser.email
+      });
+
+      await base44.asServiceRole.entities.AuditLog.create({
+        entity_type: 'ActivationToken',
+        entity_id: tokenRecord.id,
+        action: 'activation_token_created',
+        actor_email: adminUser.email,
+        actor_role: 'admin',
+        notes: `Approval activation token created for ${normalizedEmail}`
+      });
+
+      const activationUrl = `${BASE_URL}/Activate?token=${rawToken}`;
       const html = buildApprovedActivateEmail(firstName, activationUrl, free_trial_months);
       if (resendKey) {
         const res = await fetch('https://api.resend.com/emails', {
@@ -256,7 +277,7 @@ Deno.serve(async (req) => {
           body: JSON.stringify({
             from: 'Taylor Made Law <noreply@taylormadelaw.com>',
             to: [normalizedEmail],
-            subject: "You're Approved — Set Up Your Taylor Made Law Account",
+            subject: "You're Approved — Activate Your Taylor Made Law Account",
             html
           })
         });
