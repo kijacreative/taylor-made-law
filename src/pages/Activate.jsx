@@ -14,6 +14,8 @@ export default function Activate() {
   const navigate = useNavigate();
   const [activating, setActivating] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [verifiedEmail, setVerifiedEmail] = useState('');
   const [error, setError] = useState('');
   const [expiredError, setExpiredError] = useState(false);
   const [expiredEmail, setExpiredEmail] = useState('');
