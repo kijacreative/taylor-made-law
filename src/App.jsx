@@ -6,6 +6,8 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import VerifyEmail from './pages/VerifyEmail';
+import SetPassword from './pages/SetPassword';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -58,6 +60,8 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/VerifyEmail" element={<LayoutWrapper currentPageName="VerifyEmail"><VerifyEmail /></LayoutWrapper>} />
+      <Route path="/SetPassword" element={<LayoutWrapper currentPageName="SetPassword"><SetPassword /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
