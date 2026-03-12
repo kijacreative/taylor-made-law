@@ -187,6 +187,7 @@ Deno.serve(async (req) => {
 
     return Response.json({
       success: true,
+      email: normalizedEmail,
       message: 'Account activated! You can now log in.',
     });
 
