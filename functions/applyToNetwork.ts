@@ -185,20 +185,16 @@ Deno.serve(async (req) => {
 
     // ── 3. Admin alert ────────────────────────────────────────────────────────
     if (resendKey) {
-      const allAdmins = await base44.asServiceRole.entities.User.list().catch(() => []);
-      const adminUsers = allAdmins.filter(u => u.role === 'admin');
-      for (const admin of adminUsers) {
-        await fetch('https://api.resend.com/emails', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            from: 'Taylor Made Law Alerts <noreply@taylormadelaw.com>',
-            to: [admin.email],
-            subject: `New Attorney Application — ${full_name || normalizedEmail}`,
-            html: buildAdminAlertEmail(full_name, normalizedEmail, firm_name, bar_number, states_licensed, practice_areas)
-          })
-        }).catch(() => {});
-      }
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'Taylor Made Law Alerts <noreply@taylormadelaw.com>',
+          to: ['admin@taylormadelaw.com'],
+          subject: `New Attorney Application — ${full_name || normalizedEmail}`,
+          html: buildAdminAlertEmail(full_name, normalizedEmail, firm_name, bar_number, states_licensed, practice_areas)
+        })
+      }).catch(() => {});
     }
 
     return Response.json({
