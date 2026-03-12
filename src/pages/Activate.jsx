@@ -144,6 +144,40 @@ export default function Activate() {
     }
   };
 
+  if (needsVerification) {
+    return (
+      <div className="min-h-screen bg-[#faf8f5]">
+        <PublicNav />
+        <div className="flex items-center justify-center py-24 px-4">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full">
+            <div className="bg-white rounded-2xl shadow-xl text-center p-10">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#3a164d]/10 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-[#3a164d]" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">One More Step — Check Your Email</h2>
+              <p className="text-gray-600 mb-2">
+                Your account is set up! We need to confirm your email address before you can log in.
+              </p>
+              <p className="text-gray-600 mb-6">
+                We sent a verification link to{' '}
+                <strong>{verifiedEmail || 'your email'}</strong>.
+                {' '}Click the link in that email to complete sign-in.
+              </p>
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800 text-left mb-6">
+                <strong>Tip:</strong> Check your spam or junk folder if you don't see it within a few minutes. The subject line will say "Confirm your email".
+              </div>
+              <p className="text-sm text-gray-500">
+                Still having trouble?{' '}
+                <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline font-medium">Contact Support</a>
+              </p>
+            </div>
+          </motion.div>
+        </div>
+        <PublicFooter />
+      </div>
+    );
+  }
+
   if (resetEmailSent) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
