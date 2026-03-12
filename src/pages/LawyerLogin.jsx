@@ -88,8 +88,8 @@ export default function LawyerLogin() {
       if (msg.includes('disabled') || msg.includes('blocked')) {
         setDisabledBlock(true);
       } else if (msg.includes('verify') || msg.includes('verification') || msg.includes('confirmed') || msg.includes('not confirmed')) {
-        // Base44 requires email verification — guide user to check their inbox for the confirmation link.
-        setError('Please verify your email first. Check your inbox (and spam folder) for an email with subject "Confirm your email" and click the link inside.');
+        // Account not yet fully activated — guide them to check for the TML approval email.
+        setError('Your account is not yet active. If you applied recently, please wait for your approval email (sent within 24–48 hours). If you were approved, check your email for the activation link. Need help? Contact support@taylormadelaw.com');
       } else if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('password') || msg.includes('credentials') || msg.includes('not found') || msg.includes('wrong')) {
         setError('Invalid email or password. Please try again.');
       } else {
