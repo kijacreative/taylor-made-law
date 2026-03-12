@@ -1,6 +1,6 @@
 /**
- * activateAccount — Validates an ActivationToken, registers the user auth account.
- * Does NOT call User.filter() — just uses auth.register() and updates LawyerApplication.
+ * activateAccount — Validates an ActivationToken, registers the user auth account,
+ * and attempts to mark the email as verified on the User entity so login works immediately.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
@@ -73,7 +73,6 @@ Deno.serve(async (req) => {
       if (errMsg.includes('already') || errMsg.includes('exists') || errMsg.includes('duplicate') || errMsg.includes('registered')) {
         alreadyHasAccount = true;
       } else {
-        // Unknown registration error — return it
         return Response.json({ error: regErr.message || 'Registration failed' }, { status: 500 });
       }
     }
@@ -94,7 +93,24 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Mark LawyerApplication as user_created and carry approval status
+    // After register, wait briefly then try to mark email as verified on User entity
+    // This prevents Base44 from blocking login with "not confirmed" error
+    await new Promise(r => setTimeout(r, 800));
+    try {
+      const users = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+      if (users[0]) {
+        await base44.asServiceRole.entities.User.update(users[0].id, {
+          email_verified: true,
+          password_set: true,
+          user_status: users[0].user_status || 'pending',
+        });
+      }
+    } catch (verifyErr) {
+      // Non-fatal — log and continue
+      console.log('Could not auto-verify email on User entity:', verifyErr.message);
+    }
+
+    // Mark LawyerApplication as user_created
     const app = apps.find(a => a.status === 'approved') || apps[0] || null;
     if (app) {
       await base44.asServiceRole.entities.LawyerApplication.update(app.id, {
