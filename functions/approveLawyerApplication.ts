@@ -165,38 +165,12 @@ Deno.serve(async (req) => {
       });
       lawyerUser = { ...lawyerUser, user_status: 'approved' };
     } else {
-      // No user entity yet — invite them (creates auth account; activateAccount will set user_status on first login)
-      await base44.users.inviteUser(normalizedEmail, 'user').catch((e) => {
-        console.log('inviteUser on approve:', e?.message);
-      });
-
-      // Give the platform a moment to create the user entity, then try once
-      await new Promise(r => setTimeout(r, 2000));
-      const found = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-      lawyerUser = found[0] || null;
-
-      if (lawyerUser) {
-        await base44.asServiceRole.entities.User.update(lawyerUser.id, {
-          user_status: 'approved',
-          email_verified: true,
-          email_verified_at: new Date().toISOString(),
-          full_name: application.full_name || '',
-          firm_name: application.firm_name || '',
-          phone: application.phone || '',
-          bar_number: application.bar_number || '',
-          bio: application.bio || '',
-          states_licensed: application.states_licensed || [],
-          practice_areas: application.practice_areas || [],
-          years_experience: application.years_experience || 0,
-          approved_at: new Date().toISOString(),
-          approved_by: adminUser.email,
-          ...trialUpdateData,
-        });
-        lawyerUser = { ...lawyerUser, user_status: 'approved', password_set: false };
-      } else {
-        // User entity not yet visible — the activateAccount function will set user_status on first login
-        console.log('User entity not found after invite — activateAccount will pick up approved status');
-      }
+      // No user entity yet — do NOT call inviteUser(). That creates a Base44 auth account
+      // which requires platform-level email verification and breaks our TML activation flow.
+      // activateAccount will call base44.auth.register() when the lawyer uses the activation link,
+      // creating a fresh auth account. It will then copy profile data from LawyerApplication
+      // and set user_status='approved' (since the application is already approved).
+      lawyerUser = null;
     }
 
     // Also upsert LawyerProfile for backward compatibility
