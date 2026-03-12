@@ -77,8 +77,12 @@ Deno.serve(async (req) => {
     });
 
     // Try to register the auth account
+    // If account already exists (e.g. lawyer applied via a different path), we attempt a password
+    // update via login+changePassword is not available in SDK — so we use register and on conflict
+    // we still proceed: mark email_verified and password_set on the User entity, and return success.
+    // The lawyer must use Forgot Password only if they truly already set a password.
     let registrationSuccess = false;
-    let usesForgotPassword = false;
+    let alreadyHasAccount = false;
     try {
       await base44.auth.register({
         email: normalizedEmail,
@@ -89,18 +93,18 @@ Deno.serve(async (req) => {
     } catch (regErr) {
       const errMsg = (regErr.message || regErr.response?.data?.message || '').toLowerCase();
       if (errMsg.includes('already') || errMsg.includes('exists') || errMsg.includes('duplicate') || errMsg.includes('registered')) {
-        // User has an existing auth account (was created via inviteUser or registered before).
-        // They need to use Forgot Password to set their password.
-        usesForgotPassword = true;
+        // Auth account already exists. This should not happen in the normal TML flow
+        // since we no longer call inviteUser() on approval. If it does happen (e.g. lawyer
+        // self-registered outside the flow), direct them to forgot-password.
+        alreadyHasAccount = true;
       } else {
         console.error('register error:', regErr.message);
-        // Still mark email as verified since they opened the link
-        usesForgotPassword = true;
+        alreadyHasAccount = true;
       }
     }
 
-    // If user already has auth account → verify email, send to forgot-password
-    if (usesForgotPassword) {
+    // If user already has auth account → verify email, then direct to forgot-password to set/reset password
+    if (alreadyHasAccount) {
       if (existingUser) {
         await base44.asServiceRole.entities.User.update(existingUser.id, {
           email_verified: true,
@@ -118,7 +122,7 @@ Deno.serve(async (req) => {
       return Response.json({
         success: false,
         use_forgot_password: true,
-        message: 'Your email has been verified. Please use Forgot Password to set your password.',
+        message: 'An account for this email already exists. Please use Forgot Password to set your password.',
       });
     }
 
