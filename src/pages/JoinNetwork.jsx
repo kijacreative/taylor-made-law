@@ -104,7 +104,7 @@ export default function JoinNetwork() {
       });
 
       if (res.data?.success) {
-        if (res.data?.already_activated) {
+        if (res.data?.already_approved) {
           setAlreadyActivated(true);
         } else {
           setSubmittedEmail(formData.email.toLowerCase().trim());
@@ -120,7 +120,7 @@ export default function JoinNetwork() {
     }
   };
 
-  // Success state — check email
+  // Success state
   if (submitted) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
@@ -129,24 +129,19 @@ export default function JoinNetwork() {
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full">
             <div className="bg-white rounded-2xl shadow-xl text-center p-10">
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
-                <Mail className="w-8 h-8 text-emerald-600" />
+                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Received!</h2>
-              <p className="text-gray-600 mb-2">
-                We've sent an activation link to <strong>{submittedEmail}</strong>.
+              <h2 className="text-2xl font-bold text-gray-900 mb-3">Application Received</h2>
+              <p className="text-gray-700 mb-3">
+                Thank you for applying to join the Taylor Made Law Network.
               </p>
               <p className="text-gray-600 mb-6">
-                Click the link in that email to verify your email and set your password. Our team will review your application within 2–3 business days.
+                You will receive an approval email in the next <strong>24–48 hours</strong> to set your password and activate your account.
               </p>
               <p className="text-sm text-gray-500">
-                Can't find it? Check your spam folder or{' '}
+                If you have any questions in the meantime, please{' '}
                 <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">contact support</a>.
               </p>
-              <div className="mt-6">
-                <Link to={createPageUrl('LawyerLogin')} className="text-[#3a164d] text-sm font-semibold hover:underline">
-                  Already activated? Sign in →
-                </Link>
-              </div>
             </div>
           </motion.div>
         </div>
@@ -155,7 +150,7 @@ export default function JoinNetwork() {
     );
   }
 
-  // Already activated — tell them to log in
+  // Already approved — tell them to check email
   if (alreadyActivated) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
@@ -166,9 +161,9 @@ export default function JoinNetwork() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-blue-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Account Already Exists</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Application Already on File</h2>
               <p className="text-gray-600 mb-6">
-                An account already exists for this email. Your application has been updated. Please log in to check your status.
+                An application for this email address already exists. If you've been approved, check your email for an activation link. Otherwise, our team will contact you within 24–48 hours.
               </p>
               <Link to={createPageUrl('LawyerLogin')}>
                 <TMLButton variant="primary" className="w-full">Sign In →</TMLButton>
@@ -288,7 +283,7 @@ export default function JoinNetwork() {
                     </div>
                     <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-100 rounded-xl text-sm text-blue-800">
                       <Mail className="w-5 h-5 shrink-0 text-blue-500 mt-0.5" />
-                      <p>You'll receive an activation email to set your password after submitting your application.</p>
+                      <p>Your application will be reviewed within 24–48 hours. You'll receive an approval email with instructions to set your password.</p>
                     </div>
                   </div>
                 )}
