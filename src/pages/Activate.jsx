@@ -117,11 +117,12 @@ export default function Activate() {
         } catch (loginErr) {
           const loginMsg = (loginErr?.response?.data?.message || loginErr?.message || '').toLowerCase();
           if (loginMsg.includes('verify') || loginMsg.includes('verification') || loginMsg.includes('confirm') || loginMsg.includes('not confirmed')) {
-            // Base44 sent a verification email — show TML-branded screen telling user to check email
+            // Base44 requires email verification — show inline OTP entry so user can enter the code
             setVerifiedEmail(response.data.email || emailParam || '');
+            setPendingPassword(formData.password);
             setNeedsVerification(true);
+            setTimeout(() => verifyRefs.current[0]?.focus(), 200);
           } else {
-            // Unknown login error — send to login page with success banner
             setSuccess(true);
             setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true }), 2000);
           }
