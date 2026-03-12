@@ -87,6 +87,10 @@ export default function LawyerLogin() {
       const msg = (err.response?.data?.error || err.response?.data?.message || err.message || '').toLowerCase();
       if (msg.includes('disabled') || msg.includes('blocked')) {
         setDisabledBlock(true);
+      } else if (msg.includes('verify') || msg.includes('verification') || msg.includes('confirmed') || msg.includes('not confirmed')) {
+        // Base44 platform email verification prompt — should not appear in TML flow,
+        // but if it does (edge case), show a helpful message instead of the raw platform error.
+        setError('There was an issue with your account. Please contact support@taylormadelaw.com or use Forgot Password.');
       } else if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('password') || msg.includes('credentials') || msg.includes('not found') || msg.includes('wrong')) {
         setError('Invalid email or password. Please try again.');
       } else {
