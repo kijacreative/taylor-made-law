@@ -22,7 +22,9 @@ export default function VerifyEmail() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    if (email) sendOtp();
+    // Only auto-send OTP if we have both email AND token (came from a valid approval link)
+    // If no token, this page was reached incorrectly
+    if (email && token) sendOtp();
   }, []);
 
   const sendOtp = async () => {
@@ -63,7 +65,7 @@ export default function VerifyEmail() {
     }
   };
 
-  if (!email) {
+  if (!email || !token) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
         <PublicNav />
