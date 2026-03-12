@@ -103,8 +103,16 @@ export default function Activate() {
       });
 
       if (response.data?.success) {
-        setSuccess(true);
-        setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true }), 2000);
+        // Auto-login immediately so the user never hits a platform email-verification screen
+        try {
+          await base44.auth.loginViaEmailPassword(response.data.email, formData.password);
+          navigate(createPageUrl('LawyerDashboard'), { replace: true });
+        } catch {
+          // Login failed for some reason — fall back to login page with success banner
+          setSuccess(true);
+          setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true }), 2000);
+        }
+        return;
       } else if (response.data?.expired) {
         setExpiredError(true);
         setExpiredEmail(response.data?.user_email || '');
