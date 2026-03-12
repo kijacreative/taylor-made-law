@@ -275,9 +275,21 @@ export default function Activate() {
                 {verifying ? 'Verifying...' : 'Verify & Continue'}
               </TMLButton>
 
-              <p className="text-center text-sm text-gray-500 mt-5">
-                Didn't get a code? Check your spam folder. Still having trouble?{' '}
-                <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline font-medium">Contact Support</a>
+              <div className="flex items-center justify-between mt-5">
+                <p className="text-sm text-gray-500">
+                  Didn't get a code? Check spam.
+                </p>
+                <button
+                  type="button"
+                  onClick={handleResendVerifyCode}
+                  className="text-sm text-[#3a164d] hover:text-[#5a2a6d] font-medium flex items-center gap-1"
+                >
+                  Resend code
+                </button>
+              </div>
+              <p className="text-center text-sm text-gray-400 mt-3">
+                Need help?{' '}
+                <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">Contact Support</a>
               </p>
             </div>
           </motion.div>
