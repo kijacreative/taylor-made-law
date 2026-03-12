@@ -17,10 +17,7 @@ export default function Activate() {
   const [needsVerification, setNeedsVerification] = useState(false);
   const [verifiedEmail, setVerifiedEmail] = useState('');
   const [pendingPassword, setPendingPassword] = useState('');
-  const [verifyCode, setVerifyCode] = useState(['', '', '', '', '', '']);
-  const [verifyError, setVerifyError] = useState('');
-  const [verifying, setVerifying] = useState(false);
-  const verifyRefs = useRef([]);
+
   const [error, setError] = useState('');
   const [expiredError, setExpiredError] = useState(false);
   const [expiredEmail, setExpiredEmail] = useState('');
