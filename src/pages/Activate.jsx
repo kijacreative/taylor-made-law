@@ -180,28 +180,41 @@ export default function Activate() {
     setVerifying(true);
     setVerifyError('');
     try {
-      // Use base44 platform verification
-      await base44.auth.verifyEmail(verifiedEmail, code);
-      // Now login
+      // Verify the OTP with Base44 platform
+      await base44.auth.verifyOtp(verifiedEmail, code);
+      // Now login with the password they already set
       await base44.auth.loginViaEmailPassword(verifiedEmail, pendingPassword);
       navigate(createPageUrl('LawyerDashboard'), { replace: true });
     } catch (err) {
       const msg = (err?.response?.data?.message || err?.message || '').toLowerCase();
       if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('wrong') || msg.includes('mismatch')) {
         setVerifyError('Invalid code. Please check your email and try again.');
+        setVerifyCode(['', '', '', '', '', '']);
+        setTimeout(() => verifyRefs.current[0]?.focus(), 50);
       } else if (msg.includes('expired')) {
-        setVerifyError('Code has expired. Please request a new one.');
+        setVerifyError('Code has expired. Please request a new one below.');
+        setVerifyCode(['', '', '', '', '', '']);
+        setTimeout(() => verifyRefs.current[0]?.focus(), 50);
       } else {
-        // verifyEmail may not exist in SDK — fall back to login attempt directly
-        try {
-          await base44.auth.loginViaEmailPassword(verifiedEmail, pendingPassword);
-          navigate(createPageUrl('LawyerDashboard'), { replace: true });
-        } catch {
-          setVerifyError('Verification failed. Please try logging in from the login page.');
-        }
+        setVerifyError(err?.response?.data?.message || err?.message || 'Verification failed. Please try again.');
+        setVerifyCode(['', '', '', '', '', '']);
+        setTimeout(() => verifyRefs.current[0]?.focus(), 50);
       }
     } finally {
       setVerifying(false);
+    }
+  };
+
+  const handleResendVerifyCode = async () => {
+    setVerifyError('');
+    try {
+      await base44.auth.resendOtp(verifiedEmail);
+      setVerifyError('');
+      // Show brief confirmation
+      setVerifyCode(['', '', '', '', '', '']);
+      setTimeout(() => verifyRefs.current[0]?.focus(), 50);
+    } catch (err) {
+      setVerifyError('Failed to resend code. Please contact support@taylormadelaw.com');
     }
   };
 
