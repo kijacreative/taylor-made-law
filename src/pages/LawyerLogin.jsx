@@ -88,7 +88,21 @@ export default function LawyerLogin() {
       if (msg.includes('disabled') || msg.includes('blocked')) {
         setDisabledBlock(true);
       } else if (msg.includes('verify') || msg.includes('verification') || msg.includes('confirmed') || msg.includes('not confirmed')) {
-        setError('Your account setup is not yet complete. Please click the activation link in your approval email to verify your email and set your password. Check your spam folder if you don\'t see it. Need help? Contact support@taylormadelaw.com');
+        // Base44 hasn't marked email verified yet — wait 2s and retry once automatically
+        await new Promise(r => setTimeout(r, 2000));
+        try {
+          await base44.auth.loginViaEmailPassword(email.toLowerCase().trim(), password);
+          const userData2 = await base44.auth.me();
+          if (userData2.role === 'admin') {
+            await base44.auth.logout();
+            setError('This portal is for attorneys only. Admins must use the admin portal.');
+            return;
+          }
+          navigate(createPageUrl('LawyerDashboard'), { replace: true });
+          return;
+        } catch {
+          setError('Your account setup is not yet complete. Please click the activation link in your approval email to verify your email and set your password. Check your spam folder if you don\'t see it. Need help? Contact support@taylormadelaw.com');
+        }
       } else if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('password') || msg.includes('credentials') || msg.includes('not found') || msg.includes('wrong')) {
         setError('Invalid email or password. Please try again.');
       } else {

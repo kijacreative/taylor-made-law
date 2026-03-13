@@ -100,12 +100,22 @@ export default function SetPassword() {
       });
 
       if (response.data?.success) {
-        // Try auto-login
-        try {
-          await base44.auth.loginViaEmailPassword(response.data.email || email, formData.password);
+        // Try auto-login — retry up to 3 times (Base44 may need a moment to process email_verified)
+        const loginEmail = response.data.email || email;
+        let loginSuccess = false;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
+          try {
+            await base44.auth.loginViaEmailPassword(loginEmail, formData.password);
+            loginSuccess = true;
+            break;
+          } catch {
+            // retry
+          }
+        }
+        if (loginSuccess) {
           navigate(createPageUrl('LawyerDashboard'), { replace: true });
-        } catch {
-          // Auto-login failed — redirect to login with success flag
+        } else {
           setSuccess(true);
           setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true }), 2500);
         }
