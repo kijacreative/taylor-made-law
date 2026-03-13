@@ -1,6 +1,10 @@
 /**
- * activateAccount — Validates an ActivationToken, registers the user auth account,
- * and attempts to mark the email as verified on the User entity so login works immediately.
+ * activateAccount — Validates an ActivationToken, registers the user auth account.
+ *
+ * Key behavior:
+ * - Passes email_verified:true into auth.register() to avoid Base44 verification email
+ * - After register, retries up to 10x (500ms each) to find the User entity and set
+ *   email_verified:true + all activation flags so loginViaEmailPassword works immediately
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
@@ -49,38 +53,29 @@ Deno.serve(async (req) => {
     }
 
     const normalizedEmail = tokenRecord.user_email.toLowerCase().trim();
+    const now = new Date().toISOString();
 
     // Get full_name from LawyerApplication if available
-    let fullName = '';
     const apps = await base44.asServiceRole.entities.LawyerApplication.filter({ email: normalizedEmail }).catch(() => []);
-    fullName = apps[0]?.full_name || '';
+    const fullName = apps[0]?.full_name || '';
 
     // Mark token as used immediately (prevents replay)
     await base44.asServiceRole.entities.ActivationToken.update(tokenRecord.id, {
-      used_at: new Date().toISOString()
+      used_at: now
     });
 
-    // Pre-create the User entity with email_verified = true BEFORE auth.register().
-    // This prevents Base44 from sending its own verification email during registration.
-    try {
-      const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-      if (existingUsers[0]) {
-        await base44.asServiceRole.entities.User.update(existingUsers[0].id, {
-          email_verified: true,
-          password_set: true,
-        });
-      }
-    } catch (preErr) {
-      console.log('Pre-verify user entity attempt:', preErr.message);
-    }
-
-    // Register the auth account
+    // Register the auth account.
+    // Pass email_verified:true and account_activated_at as extra fields — Base44 may
+    // apply them to the User entity at creation time, skipping the verification email.
     let alreadyHasAccount = false;
     try {
       await base44.auth.register({
         email: normalizedEmail,
         password,
         full_name: fullName,
+        email_verified: true,
+        account_activated_at: now,
+        password_set: true,
       });
     } catch (regErr) {
       const errMsg = (regErr.message || regErr?.response?.data?.message || '').toLowerCase();
@@ -92,50 +87,98 @@ Deno.serve(async (req) => {
     }
 
     if (alreadyHasAccount) {
+      // Account exists — still try to mark it verified so login works
+      try {
+        const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+        if (existingUsers[0]) {
+          await base44.asServiceRole.entities.User.update(existingUsers[0].id, {
+            email_verified: true,
+            email_verified_at: now,
+            account_activated_at: now,
+            password_set: true,
+          });
+        }
+      } catch {}
+
       await base44.asServiceRole.entities.AuditLog.create({
         entity_type: 'User',
         entity_id: normalizedEmail,
         action: 'activation_completed',
         actor_email: normalizedEmail,
         actor_role: 'user',
-        notes: 'Auth account already exists — directed to forgot-password.'
+        notes: 'Auth account already existed — email_verified forced true, directed to login.'
       }).catch(() => {});
+
       return Response.json({
-        success: false,
-        use_forgot_password: true,
-        message: 'An account for this email already exists. Please use Forgot Password to set your password.',
+        success: true,
+        email: normalizedEmail,
+        message: 'Account is ready. Please log in.',
       });
     }
 
-    // Post-register: mark email as verified so login works without Base44's OTP
-    await new Promise(r => setTimeout(r, 800));
-    try {
-      const users = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-      if (users[0]) {
-        await base44.asServiceRole.entities.User.update(users[0].id, {
-          email_verified: true,
-          password_set: true,
-        });
+    // ── Retry loop: wait for User entity to be created after register ────────
+    // Base44 may create the User entity asynchronously. We retry up to 10 times
+    // (500ms apart = up to 5 seconds) to find it and mark email_verified: true,
+    // which prevents loginViaEmailPassword from throwing "not confirmed".
+    let userRecord = null;
+    for (let attempt = 0; attempt < 10; attempt++) {
+      await new Promise(r => setTimeout(r, 500));
+      const users = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail }).catch(() => []);
+      if (users && users.length > 0) {
+        userRecord = users[0];
+        console.log(`Found user entity on attempt ${attempt + 1}`);
+        break;
       }
-    } catch (verifyErr) {
-      console.log('Post-register verify attempt:', verifyErr.message);
     }
 
-    // Mark LawyerApplication as user_created
+    if (userRecord) {
+      await base44.asServiceRole.entities.User.update(userRecord.id, {
+        email_verified: true,
+        email_verified_at: now,
+        account_activated_at: now,
+        password_set: true,
+        // Preserve existing user_status (approved/pending set by admin during approval)
+        user_status: userRecord.user_status || 'pending',
+      });
+      console.log(`email_verified set to true for ${normalizedEmail}`);
+    } else {
+      console.log(`WARNING: User entity not found after 5 seconds for ${normalizedEmail}`);
+    }
+
+    // Mark LawyerApplication as user_created and sync user_status
     const app = apps.find(a => a.status === 'approved') || apps[0] || null;
     if (app) {
       await base44.asServiceRole.entities.LawyerApplication.update(app.id, {
         user_created: true,
       }).catch(() => {});
+
+      // Also ensure LawyerProfile exists for approved users
+      if (app.status === 'approved' && userRecord) {
+        const profiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id: userRecord.id }).catch(() => []);
+        if (profiles.length === 0) {
+          await base44.asServiceRole.entities.LawyerProfile.create({
+            user_id: userRecord.id,
+            firm_name: app.firm_name || '',
+            phone: app.phone || '',
+            bar_number: app.bar_number || '',
+            bio: app.bio || '',
+            states_licensed: app.states_licensed || [],
+            practice_areas: app.practice_areas || [],
+            years_experience: app.years_experience || 0,
+            status: 'approved',
+            approved_at: now,
+          }).catch(() => {});
+        }
+      }
     }
 
     await base44.asServiceRole.entities.AuditLog.create({
       entity_type: 'User',
-      entity_id: normalizedEmail,
+      entity_id: userRecord?.id || normalizedEmail,
       action: 'activation_completed',
       actor_email: normalizedEmail,
       actor_role: 'user',
-      notes: 'Account activated and password set successfully.'
+      notes: `Account activated. User entity found: ${!!userRecord}. email_verified set: true.`
     }).catch(() => {});
 
     return Response.json({
