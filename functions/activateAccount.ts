@@ -1,6 +1,6 @@
 /**
  * activateAccount — Validates an ActivationToken, registers the user auth account,
- * and aggressively marks email_verified so auto-login works without Base44 OTP.
+ * and attempts to mark the email as verified on the User entity so login works immediately.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
@@ -93,30 +93,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Aggressively retry to mark email_verified on the User entity.
-    // This suppresses Base44's "not confirmed" login block so auto-login works.
-    let verifiedSuccessfully = false;
-    for (let attempt = 0; attempt < 8; attempt++) {
-      await new Promise(r => setTimeout(r, 800));
-      try {
-        const users = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
-        if (users[0]) {
-          await base44.asServiceRole.entities.User.update(users[0].id, {
-            email_verified: true,
-            password_set: true,
-            user_status: users[0].user_status || 'pending',
-          });
-          verifiedSuccessfully = true;
-          console.log(`email_verified set on attempt ${attempt + 1}`);
-          break;
-        }
-      } catch (verifyErr) {
-        console.log(`Attempt ${attempt + 1} failed:`, verifyErr.message);
+    // After register, wait briefly then try to mark email as verified on User entity
+    // This prevents Base44 from blocking login with "not confirmed" error
+    await new Promise(r => setTimeout(r, 800));
+    try {
+      const users = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+      if (users[0]) {
+        await base44.asServiceRole.entities.User.update(users[0].id, {
+          email_verified: true,
+          password_set: true,
+          user_status: users[0].user_status || 'pending',
+        });
       }
-    }
-
-    if (!verifiedSuccessfully) {
-      console.log('Warning: Could not auto-verify email on User entity after 8 attempts.');
+    } catch (verifyErr) {
+      // Non-fatal — log and continue
+      console.log('Could not auto-verify email on User entity:', verifyErr.message);
     }
 
     // Mark LawyerApplication as user_created
@@ -133,13 +124,12 @@ Deno.serve(async (req) => {
       action: 'activation_completed',
       actor_email: normalizedEmail,
       actor_role: 'user',
-      notes: `Account activated and password set. email_verified: ${verifiedSuccessfully}`
+      notes: 'Account activated and password set successfully.'
     }).catch(() => {});
 
     return Response.json({
       success: true,
       email: normalizedEmail,
-      email_verified: verifiedSuccessfully,
       message: 'Account activated! You can now log in.',
     });
 

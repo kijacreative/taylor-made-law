@@ -88,8 +88,8 @@ export default function LawyerLogin() {
       if (msg.includes('disabled') || msg.includes('blocked')) {
         setDisabledBlock(true);
       } else if (msg.includes('verify') || msg.includes('verification') || msg.includes('confirmed') || msg.includes('not confirmed')) {
-        // Email not yet confirmed by platform — show clear message, do NOT redirect to VerifyEmail
-        setError('Your account was just created. Please check your inbox for an automated confirmation email and click the link, then try signing in again.');
+        // Base44 requires email verification — redirect to TML verify page
+        navigate(`/VerifyEmail?email=${encodeURIComponent(email.toLowerCase().trim())}`);
       } else if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('password') || msg.includes('credentials') || msg.includes('not found') || msg.includes('wrong')) {
         setError('Invalid email or password. Please try again.');
       } else {

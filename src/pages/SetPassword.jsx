@@ -100,14 +100,14 @@ export default function SetPassword() {
       });
 
       if (response.data?.success) {
-        // Try auto-login — should work if email_verified was set successfully
+        // Try auto-login
         try {
           await base44.auth.loginViaEmailPassword(response.data.email || email, formData.password);
           navigate(createPageUrl('LawyerDashboard'), { replace: true });
         } catch {
-          // Auto-login failed — show success state and let user go to login manually.
-          // Do NOT redirect through LawyerLogin as that triggers a broken VerifyEmail redirect.
+          // Auto-login failed — redirect to login with success flag
           setSuccess(true);
+          setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true }), 2500);
         }
         return;
       } else if (response.data?.use_forgot_password) {
@@ -144,13 +144,8 @@ export default function SetPassword() {
                 <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Account Activated!</h2>
-              <p className="text-gray-600 mb-4">Your password has been set. Click below to sign in to your dashboard.</p>
-              <button
-                onClick={() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true })}
-                className="w-full bg-[#3a164d] text-white py-3 px-6 rounded-full font-semibold hover:bg-[#2a1038] transition-colors"
-              >
-                Sign In to Dashboard →
-              </button>
+              <p className="text-gray-600 mb-4">Your password has been set. Redirecting you to sign in...</p>
+              <Loader2 className="w-6 h-6 animate-spin text-[#3a164d] mx-auto" />
             </div>
           </motion.div>
         </div>

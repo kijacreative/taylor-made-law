@@ -57,7 +57,7 @@ function buildApprovedActivateEmail(firstName, activationUrl, freeTrialMonths) {
     ${trialBanner}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
       <tr><td align="center">
-        <a href="${activationUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Set Password &amp; Activate Account →</a>
+        <a href="${activationUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Verify Email &amp; Activate Account →</a>
       </td></tr>
     </table>
     <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;text-align:center;">This link expires in 7 days.</p>
@@ -242,7 +242,7 @@ Deno.serve(async (req) => {
         notes: `Approval activation token created for ${normalizedEmail}`
       });
 
-      const activationUrl = `${BASE_URL}/SetPassword?token=${rawToken}&email=${encodeURIComponent(normalizedEmail)}`;
+      const activationUrl = `${BASE_URL}/VerifyEmail?email=${encodeURIComponent(normalizedEmail)}&token=${rawToken}`;
       const html = buildApprovedActivateEmail(firstName, activationUrl, free_trial_months);
       if (resendKey) {
         const res = await fetch('https://api.resend.com/emails', {
