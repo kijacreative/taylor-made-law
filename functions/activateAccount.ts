@@ -60,7 +60,21 @@ Deno.serve(async (req) => {
       used_at: new Date().toISOString()
     });
 
-    // Try to register the auth account
+    // Pre-create the User entity with email_verified = true BEFORE auth.register().
+    // This prevents Base44 from sending its own verification email during registration.
+    try {
+      const existingUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
+      if (existingUsers[0]) {
+        await base44.asServiceRole.entities.User.update(existingUsers[0].id, {
+          email_verified: true,
+          password_set: true,
+        });
+      }
+    } catch (preErr) {
+      console.log('Pre-verify user entity attempt:', preErr.message);
+    }
+
+    // Register the auth account
     let alreadyHasAccount = false;
     try {
       await base44.auth.register({
@@ -93,8 +107,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // After register, wait briefly then try to mark email as verified on User entity
-    // This prevents Base44 from blocking login with "not confirmed" error
+    // Post-register: mark email as verified so login works without Base44's OTP
     await new Promise(r => setTimeout(r, 800));
     try {
       const users = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail });
@@ -102,12 +115,10 @@ Deno.serve(async (req) => {
         await base44.asServiceRole.entities.User.update(users[0].id, {
           email_verified: true,
           password_set: true,
-          user_status: users[0].user_status || 'pending',
         });
       }
     } catch (verifyErr) {
-      // Non-fatal — log and continue
-      console.log('Could not auto-verify email on User entity:', verifyErr.message);
+      console.log('Post-register verify attempt:', verifyErr.message);
     }
 
     // Mark LawyerApplication as user_created
