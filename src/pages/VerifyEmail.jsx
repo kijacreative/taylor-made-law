@@ -133,9 +133,9 @@ export default function VerifyEmail() {
                   <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl flex items-start gap-3">
                     <Mail className="w-5 h-5 text-blue-500 mt-0.5 shrink-0" />
                     <div>
-                      <p className="text-sm font-semibold text-blue-800">Verification code sent!</p>
+                      <p className="text-sm font-semibold text-blue-800">Verification code sent by Taylor Made Law!</p>
                       <p className="text-sm text-blue-700">
-                        We sent a 6-digit code to <strong>{email}</strong>. Check your inbox and spam folder.
+                        We sent a 6-digit code to <strong>{email}</strong>. Use <strong>only the code from the Taylor Made Law email</strong>. If you receive any other system emails, ignore them.
                       </p>
                     </div>
                   </div>
@@ -157,7 +157,7 @@ export default function VerifyEmail() {
                   />
 
                   <TMLInput
-                    label="Verification Code"
+                    label="Taylor Made Law Verification Code"
                     type="text"
                     inputMode="numeric"
                     maxLength={6}
@@ -166,7 +166,7 @@ export default function VerifyEmail() {
                     onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     placeholder="Enter 6-digit code"
                     autoFocus
-                    helperText="Enter the 6-digit code from your Taylor Made Law email"
+                    helperText="Use the code from the Taylor Made Law email only — ignore any other emails"
                   />
 
                   <TMLButton type="submit" variant="primary" className="w-full" loading={loading}>
