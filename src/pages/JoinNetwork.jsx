@@ -136,7 +136,7 @@ export default function JoinNetwork() {
                 Thank you for applying to join the Taylor Made Law Network.
               </p>
               <p className="text-gray-600 mb-6">
-                You will receive an approval email in the next <strong>24–48 hours</strong> to set your password and activate your account.
+                Our team will review your application and verify your credentials. If approved, you will receive an activation email within the next <strong>24–48 hours</strong> with instructions to verify your email, create your password, and access the lawyer dashboard.
               </p>
               <p className="text-sm text-gray-500">
                 If you have any questions in the meantime, please{' '}
