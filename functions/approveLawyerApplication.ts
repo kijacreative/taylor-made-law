@@ -238,8 +238,8 @@ Deno.serve(async (req) => {
       });
 
       // Approval email links to /SetPassword (Step 1: set password → triggers Base44 verification code email)
-      // After setting password, user is redirected to /VerifyEmail (Step 2: enter Base44 code)
-      const activationUrl = `${BASE_URL}/SetPassword?email=${encodeURIComponent(normalizedEmail)}&token=${rawToken}`;
+      // Email is NOT passed in the URL — it is resolved server-side from the token on the SetPassword page.
+      const activationUrl = `${BASE_URL}/SetPassword?token=${rawToken}`;
       const html = buildApprovedActivateEmail(firstName, activationUrl, free_trial_months);
 
       if (resendKey) {
