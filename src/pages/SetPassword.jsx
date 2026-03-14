@@ -1,3 +1,12 @@
+/**
+ * SetPassword — Step 1 of lawyer activation.
+ * URL: /SetPassword?email=...&token=...
+ *
+ * User sets their password here. On submit, calls registerActivation backend function
+ * which validates the ActivationToken and creates the Base44 auth account.
+ * Base44 automatically sends a verification code email.
+ * On success, user is redirected to /VerifyEmail to enter the code.
+ */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -16,13 +25,9 @@ export default function SetPassword() {
   const token = urlParams.get('token') || '';
   const email = urlParams.get('email') || '';
 
-  const [activating, setActivating] = useState(false);
-  const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [expiredError, setExpiredError] = useState(false);
-  const [expiredEmail, setExpiredEmail] = useState('');
-  const [resending, setResending] = useState(false);
-  const [resendSuccess, setResendSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [formData, setFormData] = useState({
@@ -32,7 +37,7 @@ export default function SetPassword() {
     acceptPrivacy: false,
   });
 
-  if (!token) {
+  if (!token || !email) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
         <PublicNav />
@@ -51,17 +56,28 @@ export default function SetPassword() {
     );
   }
 
-  const handleResendActivation = async () => {
-    setResending(true);
-    try {
-      await base44.functions.invoke('resendActivation', { email: expiredEmail });
-      setResendSuccess(true);
-    } catch {
-      setError('Failed to resend. Please contact support@taylormadelaw.com');
-    } finally {
-      setResending(false);
-    }
-  };
+  if (expiredError) {
+    return (
+      <div className="min-h-screen bg-[#faf8f5]">
+        <PublicNav />
+        <div className="flex items-center justify-center py-24 px-4">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full">
+            <div className="bg-white rounded-2xl shadow-xl p-10 text-center">
+              <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Link Expired</h2>
+              <p className="text-gray-600 mb-6">
+                This activation link has expired. Please contact support to request a new activation email.
+              </p>
+              <a href="mailto:support@taylormadelaw.com" className="inline-block bg-[#3a164d] text-white px-6 py-3 rounded-full font-semibold text-sm hover:bg-[#2a1038] transition-colors">
+                Contact Support
+              </a>
+            </div>
+          </motion.div>
+        </div>
+        <PublicFooter />
+      </div>
+    );
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -92,41 +108,22 @@ export default function SetPassword() {
       return;
     }
 
-    setActivating(true);
+    setLoading(true);
     try {
-      const response = await base44.functions.invoke('activateAccount', {
+      const response = await base44.functions.invoke('registerActivation', {
         token,
+        email,
         password: formData.password,
       });
 
       if (response.data?.success) {
-        // Try auto-login — retry up to 3 times (Base44 may need a moment to process email_verified)
-        const loginEmail = response.data.email || email;
-        let loginSuccess = false;
-        for (let attempt = 0; attempt < 3; attempt++) {
-          if (attempt > 0) await new Promise(r => setTimeout(r, 1500));
-          try {
-            await base44.auth.loginViaEmailPassword(loginEmail, formData.password);
-            loginSuccess = true;
-            break;
-          } catch {
-            // retry
-          }
-        }
-        if (loginSuccess) {
-          navigate(createPageUrl('LawyerDashboard'), { replace: true });
-        } else {
-          setSuccess(true);
-          setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true }), 2500);
-        }
-        return;
-      } else if (response.data?.use_forgot_password) {
-        setError('An account for this email already exists. Please use Forgot Password to set or reset your password.');
+        // Registration succeeded — Base44 sent a verification code email.
+        // Redirect to VerifyEmail page so user can enter the code.
+        navigate(`/VerifyEmail?email=${encodeURIComponent(response.data.email || email)}&password=${encodeURIComponent(formData.password)}`);
       } else if (response.data?.expired) {
         setExpiredError(true);
-        setExpiredEmail(response.data?.user_email || email);
       } else if (response.data?.already_used) {
-        setError('This activation link has already been used. Please log in or contact support.');
+        setError('This activation link has already been used. If you already set a password, please log in. Otherwise contact support.');
       } else {
         setError(response.data?.error || 'Activation failed. Please try again or contact support.');
       }
@@ -134,70 +131,13 @@ export default function SetPassword() {
       const data = err.response?.data;
       if (data?.expired) {
         setExpiredError(true);
-        setExpiredEmail(data?.user_email || email);
       } else {
         setError(data?.error || err.message || 'Failed to activate. Please try again.');
       }
     } finally {
-      setActivating(false);
+      setLoading(false);
     }
   };
-
-  if (success) {
-    return (
-      <div className="min-h-screen bg-[#faf8f5]">
-        <PublicNav />
-        <div className="flex items-center justify-center py-24 px-4">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full">
-            <div className="bg-white rounded-2xl shadow-xl text-center p-10">
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
-                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
-              </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Account Activated!</h2>
-              <p className="text-gray-600 mb-4">Your password has been set. Redirecting you to sign in...</p>
-              <Loader2 className="w-6 h-6 animate-spin text-[#3a164d] mx-auto" />
-            </div>
-          </motion.div>
-        </div>
-        <PublicFooter />
-      </div>
-    );
-  }
-
-  if (expiredError) {
-    return (
-      <div className="min-h-screen bg-[#faf8f5]">
-        <PublicNav />
-        <div className="flex items-center justify-center py-24 px-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full">
-            <div className="bg-white rounded-2xl shadow-xl p-10 text-center">
-              <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Link Expired</h2>
-              <p className="text-gray-600 mb-6">
-                This activation link has expired. Request a new one and we'll send it to{' '}
-                {expiredEmail ? <strong>{expiredEmail}</strong> : 'your email'}.
-              </p>
-              {resendSuccess ? (
-                <div className="flex items-center justify-center gap-2 text-emerald-600 font-medium">
-                  <CheckCircle2 className="w-5 h-5" />
-                  Activation email sent! Check your inbox.
-                </div>
-              ) : (
-                <TMLButton variant="primary" loading={resending} onClick={handleResendActivation} className="w-full">
-                  <Mail className="w-4 h-4 mr-2" />
-                  Resend Activation Email
-                </TMLButton>
-              )}
-              <p className="text-sm text-gray-500 mt-4">
-                Need help? <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">Contact Support</a>
-              </p>
-            </div>
-          </motion.div>
-        </div>
-        <PublicFooter />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#faf8f5]">
@@ -211,7 +151,20 @@ export default function SetPassword() {
               className="h-14 mx-auto mb-6"
             />
             <h1 className="text-3xl font-bold text-gray-900">Create Your Password</h1>
-            <p className="text-gray-500 mt-2">Final step — set a secure password for your attorney portal</p>
+            <p className="text-gray-500 mt-2">Set a secure password for your attorney portal</p>
+          </div>
+
+          {/* Step indicator */}
+          <div className="flex items-center justify-center gap-3 mb-8">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-[#3a164d] text-white text-xs font-bold flex items-center justify-center">1</div>
+              <span className="text-sm font-medium text-[#3a164d]">Set Password</span>
+            </div>
+            <div className="w-8 h-px bg-gray-300" />
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-gray-200 text-gray-500 text-xs font-bold flex items-center justify-center">2</div>
+              <span className="text-sm text-gray-400">Verify Email</span>
+            </div>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -223,14 +176,12 @@ export default function SetPassword() {
                 </div>
               )}
 
-              {email && (
-                <TMLInput
-                  label="Email Address"
-                  type="email"
-                  value={email}
-                  disabled
-                />
-              )}
+              <TMLInput
+                label="Email Address"
+                type="email"
+                value={email}
+                disabled
+              />
 
               <div className="relative">
                 <TMLInput
@@ -239,7 +190,7 @@ export default function SetPassword() {
                   required
                   value={formData.password}
                   onChange={e => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Min 8 characters, include letters & numbers"
+                  placeholder="Min 8 characters with letters & numbers"
                   helperText="At least 8 characters with a mix of letters and numbers"
                 />
                 <button
@@ -295,8 +246,13 @@ export default function SetPassword() {
                 </label>
               </div>
 
-              <TMLButton type="submit" variant="primary" className="w-full mt-2" loading={activating}>
-                Activate My Account
+              <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-2">
+                <Mail className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-blue-700">After setting your password, we'll send a verification code to <strong>{email}</strong> to confirm your account.</p>
+              </div>
+
+              <TMLButton type="submit" variant="primary" className="w-full mt-2" loading={loading}>
+                Set Password & Continue
               </TMLButton>
             </form>
           </div>
