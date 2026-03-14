@@ -56,7 +56,7 @@ export default function VerifyEmail() {
       await base44.auth.resendOtp(email);
       setResentMsg('A new code has been sent to ' + email);
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to resend. Please try again.');
+      setError(parseBase44Error(err) || 'Failed to resend. Please try again.');
     } finally {
       setResending(false);
     }
