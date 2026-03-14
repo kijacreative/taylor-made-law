@@ -48,20 +48,6 @@ export default function VerifyEmail() {
     );
   }
 
-  const handleResend = async () => {
-    setResending(true);
-    setError('');
-    setResentMsg('');
-    try {
-      await base44.auth.resendOtp(email);
-      setResentMsg('A new code has been sent to ' + email);
-    } catch (err) {
-      setError(parseBase44Error(err) || 'Failed to resend. Please try again.');
-    } finally {
-      setResending(false);
-    }
-  };
-
   // Parse Base44Error into a human-readable string
   const parseBase44Error = (err) => {
     // err.data.detail is an array of FastAPI validation objects: { type, loc, msg, input }
