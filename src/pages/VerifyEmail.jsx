@@ -52,13 +52,10 @@ export default function VerifyEmail() {
   const parseBase44Error = (err) => {
     // err.data.detail is an array of FastAPI validation objects: { type, loc, msg, input }
     if (Array.isArray(err?.data?.detail) && err.data.detail.length > 0) {
-      const msgs = err.data.detail.map(e => {
-        const field = e.loc?.[e.loc.length - 1];
-        if (field === 'email') return 'Your email is missing from the verification request. Please return to the approval email and try again.';
-        if (field === 'otp_code') return 'Please enter your verification code.';
-        return e.msg || 'Validation error.';
-      });
-      return msgs[0]; // Show first specific message
+      const fields = err.data.detail.map(e => e.loc?.[e.loc.length - 1]);
+      if (fields.includes('email')) return 'Your email is missing from the verification request. Please return to the approval email and try again.';
+      if (fields.includes('otp_code')) return 'Please enter your verification code.';
+      return err.data.detail[0]?.msg || 'Validation error.';
     }
     // Fallback chain — never use err.message when it's the raw array-coercion "[object Object]"
     const raw = err?.data?.error || err?.data?.message || '';
