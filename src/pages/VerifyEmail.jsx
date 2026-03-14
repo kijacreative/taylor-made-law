@@ -1,13 +1,12 @@
 /**
  * VerifyEmail — Step 2 of lawyer activation.
- * URL: /VerifyEmail?email=...&password=...
+ * URL: /VerifyEmail?token=...&email=...&password=...
  *
- * After the user sets their password (SetPassword page), Base44 sends a verification
- * code email. This page lets the user enter that Base44 code.
- * Uses base44.auth.verifyOtp(email, code) — the official Base44 SDK method.
- * On success, auto-logs the user in and redirects to the dashboard.
+ * On load, resolves the correct email from the activation token (server-side lookup).
+ * Falls back to the email URL param if no token is present.
+ * Then lets the user enter the Base44 OTP code to verify their email.
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
@@ -21,8 +20,13 @@ import TMLInput from '@/components/ui/TMLInput';
 export default function VerifyEmail() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
-  const email = urlParams.get('email') || '';
+  const tokenParam = urlParams.get('token') || '';
+  const emailParam = urlParams.get('email') || '';
   const password = urlParams.get('password') || '';
+
+  const [resolvedEmail, setResolvedEmail] = useState(emailParam);
+  const [tokenLoading, setTokenLoading] = useState(!!tokenParam);
+  const [tokenError, setTokenError] = useState('');
 
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -31,33 +35,41 @@ export default function VerifyEmail() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
 
-  if (!email) {
-    return (
-      <div className="min-h-screen bg-[#faf8f5]">
-        <PublicNav />
-        <div className="flex items-center justify-center py-24 px-4">
-          <div className="bg-white rounded-2xl shadow-xl p-10 max-w-md w-full text-center">
-            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-gray-900 mb-2">Invalid Link</h2>
-            <p className="text-gray-600 mb-4">Please use the activation link from your approval email.</p>
-            <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline text-sm">Contact Support</a>
-          </div>
-        </div>
-        <PublicFooter />
-      </div>
-    );
-  }
+  // On mount: if we have a token, resolve the email from it server-side
+  useEffect(() => {
+    if (!tokenParam) {
+      // No token — fall back to URL email param
+      setTokenLoading(false);
+      return;
+    }
+    (async () => {
+      try {
+        console.log('VerifyEmail: resolving email from token', tokenParam.slice(0, 8) + '...');
+        const res = await base44.functions.invoke('resolveVerifyEmail', { token: tokenParam });
+        const email = res.data?.email;
+        console.log('VerifyEmail: resolved email =', email);
+        if (email) {
+          setResolvedEmail(email);
+        } else {
+          setTokenError('This activation link is invalid or expired. Please use the latest approval email or contact support.');
+        }
+      } catch (err) {
+        console.error('VerifyEmail: token lookup failed', err);
+        setTokenError('This activation link is invalid or expired. Please use the latest approval email or contact support.');
+      } finally {
+        setTokenLoading(false);
+      }
+    })();
+  }, [tokenParam]);
 
   // Parse Base44Error into a human-readable string
   const parseBase44Error = (err) => {
-    // err.data.detail is an array of FastAPI validation objects: { type, loc, msg, input }
     if (Array.isArray(err?.data?.detail) && err.data.detail.length > 0) {
       const fields = err.data.detail.map(e => e.loc?.[e.loc.length - 1]);
-      if (fields.includes('email')) return 'Your email is missing from the verification request. Please return to the approval email and try again.';
+      if (fields.includes('email')) return 'Your email could not be resolved. Please use the link in your approval email or contact support.';
       if (fields.includes('otp_code')) return 'Please enter your verification code.';
       return err.data.detail[0]?.msg || 'Validation error.';
     }
-    // Fallback chain — never use err.message when it's the raw array-coercion "[object Object]"
     const raw = err?.data?.error || err?.data?.message || '';
     if (raw) return raw;
     const msg = (typeof err?.message === 'string' && !err.message.includes('[object Object]')) ? err.message.toLowerCase() : '';
@@ -76,25 +88,33 @@ export default function VerifyEmail() {
       setError('Please enter the 6-digit code.');
       return;
     }
+    if (!resolvedEmail) {
+      setError('Your email could not be resolved. Please use the link in your approval email or contact support.');
+      return;
+    }
     setLoading(true);
     setError('');
+    console.log('VERIFY PAYLOAD:', {
+      email: resolvedEmail,
+      otp_code: code,
+      otp_code_type: typeof code,
+      otp_code_length: code ? String(code).length : 0
+    });
     try {
-      // Send { email, otp_code } — the backend requires both fields by these exact names
-      console.log("VERIFY PAYLOAD:", { email, otp_code: code, otp_code_type: typeof code, otp_code_length: code ? String(code).length : 0 });
-      await base44.auth.verifyOtp(email, code);
+      await base44.auth.verifyOtp(resolvedEmail, code);
 
       // Finalize activation: mark user_status=approved, LawyerApplication=active
-      await base44.functions.invoke('finalizeActivation', { email }).catch(() => {});
+      await base44.functions.invoke('finalizeActivation', { email: resolvedEmail }).catch(() => {});
 
-      // Now log in with the password (set in previous step)
+      // Auto-login with password if available
       if (password) {
         try {
-          await base44.auth.loginViaEmailPassword(email, password);
+          await base44.auth.loginViaEmailPassword(resolvedEmail, password);
           setSuccess(true);
           setTimeout(() => navigate(createPageUrl('LawyerDashboard'), { replace: true }), 1500);
           return;
         } catch {
-          // Login failed — still show success and redirect to login page
+          // Login failed — redirect to login page
         }
       }
 
@@ -102,8 +122,8 @@ export default function VerifyEmail() {
       setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true }), 1500);
 
     } catch (err) {
-      console.log("VERIFY ERROR (name):", err?.name, "| status:", err?.status);
-      console.log("VERIFY ERROR data.detail:", JSON.stringify(err?.data?.detail));
+      console.log('VERIFY ERROR (name):', err?.name, '| status:', err?.status);
+      console.log('VERIFY ERROR data.detail:', JSON.stringify(err?.data?.detail));
       setError(parseBase44Error(err));
     } finally {
       setLoading(false);
@@ -115,14 +135,66 @@ export default function VerifyEmail() {
     setError('');
     setResentMsg('');
     try {
-      await base44.auth.resendOtp(email);
-      setResentMsg('A new code has been sent to ' + email);
+      await base44.auth.resendOtp(resolvedEmail);
+      setResentMsg('A new code has been sent to ' + resolvedEmail);
     } catch (err) {
       setError(parseBase44Error(err) || 'Failed to resend. Please try again.');
     } finally {
       setResending(false);
     }
   };
+
+  // Loading state while token is being resolved
+  if (tokenLoading) {
+    return (
+      <div className="min-h-screen bg-[#faf8f5]">
+        <PublicNav />
+        <div className="flex items-center justify-center py-24 px-4">
+          <div className="text-center">
+            <Loader2 className="w-10 h-10 animate-spin text-[#3a164d] mx-auto mb-4" />
+            <p className="text-gray-500">Loading your verification page...</p>
+          </div>
+        </div>
+        <PublicFooter />
+      </div>
+    );
+  }
+
+  // Invalid/expired token and no fallback email
+  if (tokenError && !resolvedEmail) {
+    return (
+      <div className="min-h-screen bg-[#faf8f5]">
+        <PublicNav />
+        <div className="flex items-center justify-center py-24 px-4">
+          <div className="bg-white rounded-2xl shadow-xl p-10 max-w-md w-full text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Invalid or Expired Link</h2>
+            <p className="text-gray-600 mb-4">{tokenError}</p>
+            <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline text-sm">Contact Support</a>
+          </div>
+        </div>
+        <PublicFooter />
+      </div>
+    );
+  }
+
+  // No token and no email param
+  if (!tokenParam && !emailParam) {
+    return (
+      <div className="min-h-screen bg-[#faf8f5]">
+        <PublicNav />
+        <div className="flex items-center justify-center py-24 px-4">
+          <div className="bg-white rounded-2xl shadow-xl p-10 max-w-md w-full text-center">
+            <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-gray-900 mb-2">Invalid Link</h2>
+            <p className="text-gray-600 mb-4">Please use the activation link from your approval email.</p>
+            <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline text-sm">Contact Support</a>
+          </div>
+        </div>
+        <PublicFooter />
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -183,7 +255,7 @@ export default function VerifyEmail() {
               </div>
               <h1 className="text-2xl font-bold text-gray-900">Verify Your Email</h1>
               <p className="text-gray-500 mt-2 text-sm">
-                Enter the verification code sent to <strong>{email}</strong>
+                Enter the verification code sent to <strong>{resolvedEmail}</strong>
               </p>
             </div>
 

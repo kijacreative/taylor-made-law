@@ -119,7 +119,7 @@ export default function SetPassword() {
       if (response.data?.success) {
         // Registration succeeded — Base44 sent a verification code email.
         // Redirect to VerifyEmail page so user can enter the code.
-        navigate(`/VerifyEmail?email=${encodeURIComponent(response.data.email || email)}&password=${encodeURIComponent(formData.password)}`);
+        navigate(`/VerifyEmail?email=${encodeURIComponent(response.data.email || email)}&token=${encodeURIComponent(token)}&password=${encodeURIComponent(formData.password)}`);
       } else if (response.data?.expired) {
         setExpiredError(true);
       } else if (response.data?.already_used) {
