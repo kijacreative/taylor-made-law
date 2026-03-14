@@ -72,7 +72,14 @@ export default function VerifyEmail() {
     setError('');
     try {
       // Use Base44's official OTP verification — this marks the email as verified in Base44
-      await base44.auth.verifyOtp(email, code);
+      const verifyResult = await base44.auth.verifyOtp(email, code);
+
+      console.log("VERIFY RESPONSE:", verifyResult);
+      console.log("VERIFY RESPONSE TYPE:", typeof verifyResult);
+      console.log("VERIFY RESPONSE KEYS:", verifyResult ? Object.keys(verifyResult) : 'null/undefined');
+      if (Array.isArray(verifyResult)) {
+        console.log("VERIFY RESPONSE IS ARRAY:", verifyResult.map(e => Object.keys(e || {})));
+      }
 
       // Finalize activation: mark user_status=approved, LawyerApplication=active
       await base44.functions.invoke('finalizeActivation', { email }).catch(() => {});
@@ -93,6 +100,22 @@ export default function VerifyEmail() {
       setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true }), 1500);
 
     } catch (err) {
+      console.log("VERIFY ERROR:", err);
+      console.log("VERIFY ERROR TYPE:", typeof err);
+      console.log("VERIFY ERROR KEYS:", Object.keys(err || {}));
+      console.log("VERIFY ERROR MESSAGE:", err?.message);
+      console.log("VERIFY ERROR RESPONSE:", err?.response);
+      console.log("VERIFY ERROR RESPONSE DATA:", err?.response?.data);
+      console.log("VERIFY ERROR RESPONSE STATUS:", err?.response?.status);
+      if (Array.isArray(err)) {
+        console.log("ERROR IS ARRAY:", err.map(e => Object.keys(e || {})));
+        console.log("ERROR ARRAY CONTENTS:", JSON.stringify(err));
+      }
+      if (Array.isArray(err?.response?.data)) {
+        console.log("RESPONSE DATA IS ARRAY:", JSON.stringify(err.response.data));
+      }
+      console.log("FULL ERROR JSON:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
+
       const msg = (err.response?.data?.message || err.message || '').toLowerCase();
       if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('wrong')) {
         setError('Invalid code. Please check your email and try again.');
