@@ -62,6 +62,31 @@ export default function VerifyEmail() {
     }
   };
 
+  // Parse Base44Error into a human-readable string
+  const parseBase44Error = (err) => {
+    // err.data.detail is an array of FastAPI validation objects: { type, loc, msg, input }
+    if (Array.isArray(err?.data?.detail) && err.data.detail.length > 0) {
+      const msgs = err.data.detail.map(e => {
+        const field = e.loc?.[e.loc.length - 1];
+        if (field === 'email') return 'Your email is missing from the verification request. Please return to the approval email and try again.';
+        if (field === 'otp_code') return 'Please enter your verification code.';
+        return e.msg || 'Validation error.';
+      });
+      return msgs[0]; // Show first specific message
+    }
+    // Fallback chain — never use err.message when it's the raw array-coercion "[object Object]"
+    const raw = err?.data?.error || err?.data?.message || '';
+    if (raw) return raw;
+    const msg = (typeof err?.message === 'string' && !err.message.includes('[object Object]')) ? err.message.toLowerCase() : '';
+    if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('wrong')) {
+      return 'The verification code is invalid. Please try again.';
+    }
+    if (msg.includes('expired')) {
+      return 'This verification code has expired. Please request a new one.';
+    }
+    return "We couldn't verify your code. Please try again.";
+  };
+
   const handleVerify = async (e) => {
     e.preventDefault();
     if (!code || code.length !== 6) {
@@ -71,15 +96,9 @@ export default function VerifyEmail() {
     setLoading(true);
     setError('');
     try {
-      // Use Base44's official OTP verification — this marks the email as verified in Base44
-      const verifyResult = await base44.auth.verifyOtp(email, code);
-
-      console.log("VERIFY RESPONSE:", verifyResult);
-      console.log("VERIFY RESPONSE TYPE:", typeof verifyResult);
-      console.log("VERIFY RESPONSE KEYS:", verifyResult ? Object.keys(verifyResult) : 'null/undefined');
-      if (Array.isArray(verifyResult)) {
-        console.log("VERIFY RESPONSE IS ARRAY:", verifyResult.map(e => Object.keys(e || {})));
-      }
+      // Send { email, otp_code } — the backend requires both fields by these exact names
+      console.log("VERIFY PAYLOAD:", { email, otp_code: code });
+      await base44.auth.verifyOtp({ email, otp_code: code });
 
       // Finalize activation: mark user_status=approved, LawyerApplication=active
       await base44.functions.invoke('finalizeActivation', { email }).catch(() => {});
@@ -100,30 +119,9 @@ export default function VerifyEmail() {
       setTimeout(() => navigate(createPageUrl('LawyerLogin') + '?activated=1', { replace: true }), 1500);
 
     } catch (err) {
-      console.log("VERIFY ERROR:", err);
-      console.log("VERIFY ERROR TYPE:", typeof err);
-      console.log("VERIFY ERROR KEYS:", Object.keys(err || {}));
-      console.log("VERIFY ERROR MESSAGE:", err?.message);
-      console.log("VERIFY ERROR RESPONSE:", err?.response);
-      console.log("VERIFY ERROR RESPONSE DATA:", err?.response?.data);
-      console.log("VERIFY ERROR RESPONSE STATUS:", err?.response?.status);
-      if (Array.isArray(err)) {
-        console.log("ERROR IS ARRAY:", err.map(e => Object.keys(e || {})));
-        console.log("ERROR ARRAY CONTENTS:", JSON.stringify(err));
-      }
-      if (Array.isArray(err?.response?.data)) {
-        console.log("RESPONSE DATA IS ARRAY:", JSON.stringify(err.response.data));
-      }
-      console.log("FULL ERROR JSON:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
-
-      const msg = (err.response?.data?.message || err.message || '').toLowerCase();
-      if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('wrong')) {
-        setError('Invalid code. Please check your email and try again.');
-      } else if (msg.includes('expired')) {
-        setError('This code has expired. Click "Resend Code" to get a new one.');
-      } else {
-        setError(err.response?.data?.message || err.message || 'Verification failed. Please try again.');
-      }
+      console.log("VERIFY ERROR (name):", err?.name, "| status:", err?.status);
+      console.log("VERIFY ERROR data.detail:", JSON.stringify(err?.data?.detail));
+      setError(parseBase44Error(err));
     } finally {
       setLoading(false);
     }
