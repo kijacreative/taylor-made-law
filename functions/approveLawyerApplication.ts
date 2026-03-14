@@ -1,9 +1,11 @@
 /**
- * approveLawyerApplication — Admin-only. Option C Unified Identity.
- * 1. Marks LawyerApplication.status = 'approved'
+ * approveLawyerApplication — Admin-only.
+ * 1. Marks LawyerApplication.status = 'approved_pending_activation'
  * 2. Upserts User entity with user_status='approved' + profile data
- * 3. If user already activated (password_set): sends "You're Approved, Log In" email
- * 4. If not activated: creates new ActivationToken + sends "Approved, Activate" email
+ * 3. Creates an ActivationToken (single-use, 7-day link)
+ * 4. Sends ONE branded TML approval email with link to /VerifyEmail?email=...&token=...
+ *    (The ActivationToken is the ONLY security gate — no custom TML OTP codes)
+ * 5. If user already activated (password_set): sends "You're Approved, Log In" email
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
@@ -53,15 +55,15 @@ function buildApprovedActivateEmail(firstName, activationUrl, freeTrialMonths) {
     <h1 style="margin:0 0 8px;text-align:center;color:#111827;font-size:26px;font-weight:700;">You're Approved!</h1>
     <p style="margin:0 0 28px;text-align:center;color:#6b7280;font-size:15px;">Welcome to the Taylor Made Law Network</p>
     <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${firstName},</p>
-    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Your application to join the <strong>Taylor Made Law Network</strong> has been <strong>approved</strong>. Click below to verify your email and set your password to access the attorney portal.</p>
+    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Your application to join the <strong>Taylor Made Law Network</strong> has been <strong>approved</strong>.</p>
+    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">To activate your account, click the button below. You will be asked to enter the verification code sent to your email and then create your password. Once complete, you'll be able to log in and finish setting up your lawyer profile.</p>
     ${trialBanner}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
       <tr><td align="center">
-        <a href="${activationUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Verify Email &amp; Activate Account →</a>
+        <a href="${activationUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Activate Your Account →</a>
       </td></tr>
     </table>
-    <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;text-align:center;">This link expires in 7 days.</p>
-    <p style="margin:0;color:#9ca3af;font-size:11px;text-align:center;word-break:break-all;">Or copy: ${activationUrl}</p>
+    <p style="margin:0 0 8px;color:#9ca3af;font-size:13px;text-align:center;">This link expires in 7 days. If it expires, contact support to request a new one.</p>
   `);
 }
 
@@ -118,21 +120,20 @@ Deno.serve(async (req) => {
     }
     const application = apps[0];
 
-    if (application.status !== 'pending') {
-      return Response.json({ error: 'Application is not in pending status' }, { status: 400 });
+    if (!['pending', 'approved'].includes(application.status)) {
+      return Response.json({ error: 'Application is not in a pending status' }, { status: 400 });
     }
 
     const normalizedEmail = application.email.toLowerCase().trim();
     const resendKey = Deno.env.get('RESEND_API_KEY');
     const firstName = (application.full_name || '').split(' ')[0] || 'there';
 
-    // ── 1. Mark application as approved ──────────────────────────────────────
+    // ── 1. Mark application as approved_pending_activation ───────────────────
 
     await base44.asServiceRole.entities.LawyerApplication.update(application_id, {
-      status: 'approved',
+      status: 'approved_pending_activation',
       reviewed_by: adminUser.email,
       reviewed_at: new Date().toISOString(),
-      activation_token_used: false,
     });
 
     // ── 2. Upsert User entity with user_status=approved ───────────────────────
@@ -164,13 +165,6 @@ Deno.serve(async (req) => {
         ...trialUpdateData,
       });
       lawyerUser = { ...lawyerUser, user_status: 'approved' };
-    } else {
-      // No user entity yet — do NOT call inviteUser(). That creates a Base44 auth account
-      // which requires platform-level email verification and breaks our TML activation flow.
-      // activateAccount will call base44.auth.register() when the lawyer uses the activation link,
-      // creating a fresh auth account. It will then copy profile data from LawyerApplication
-      // and set user_status='approved' (since the application is already approved).
-      lawyerUser = null;
     }
 
     // Also upsert LawyerProfile for backward compatibility
@@ -220,7 +214,8 @@ Deno.serve(async (req) => {
         emailSent = res.ok;
       }
     } else {
-      // Not yet activated — generate activation token and send to /Activate
+      // Not yet activated — generate activation token, link goes to /VerifyEmail
+      // The ActivationToken is the ONLY security gate. No custom OTP codes are generated.
       const { rawToken, tokenHash } = await generateTokenPair();
       const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
 
@@ -242,8 +237,10 @@ Deno.serve(async (req) => {
         notes: `Approval activation token created for ${normalizedEmail}`
       });
 
+      // Link goes to /VerifyEmail — the verify page will pass the token through to /SetPassword
       const activationUrl = `${BASE_URL}/VerifyEmail?email=${encodeURIComponent(normalizedEmail)}&token=${rawToken}`;
       const html = buildApprovedActivateEmail(firstName, activationUrl, free_trial_months);
+
       if (resendKey) {
         const res = await fetch('https://api.resend.com/emails', {
           method: 'POST',
