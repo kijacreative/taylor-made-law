@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
       }).catch(() => {});
 
       // Also ensure LawyerProfile exists for approved users
-      if (app.status === 'approved' && userRecord) {
+      if (['approved', 'approved_pending_activation'].includes(app.status) && userRecord) {
         const profiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id: userRecord.id }).catch(() => []);
         if (profiles.length === 0) {
           await base44.asServiceRole.entities.LawyerProfile.create({
