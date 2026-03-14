@@ -83,8 +83,8 @@ export default function VerifyEmail() {
     setError('');
     try {
       // Send { email, otp_code } — the backend requires both fields by these exact names
-      console.log("VERIFY PAYLOAD:", { email, otp_code: code });
-      await base44.auth.verifyOtp({ email, otp_code: code });
+      console.log("VERIFY PAYLOAD:", { email, otp_code: code, otp_code_type: typeof code, otp_code_length: code ? String(code).length : 0 });
+      await base44.auth.verifyOtp(email, code);
 
       // Finalize activation: mark user_status=approved, LawyerApplication=active
       await base44.functions.invoke('finalizeActivation', { email }).catch(() => {});
