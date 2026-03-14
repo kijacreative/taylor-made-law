@@ -71,8 +71,11 @@ export default function VerifyEmail() {
     setLoading(true);
     setError('');
     try {
-      // Use Base44's official OTP verification — this marks the email as verified
+      // Use Base44's official OTP verification — this marks the email as verified in Base44
       await base44.auth.verifyOtp(email, code);
+
+      // Finalize activation: mark user_status=approved, LawyerApplication=active
+      await base44.functions.invoke('finalizeActivation', { email }).catch(() => {});
 
       // Now log in with the password (set in previous step)
       if (password) {
