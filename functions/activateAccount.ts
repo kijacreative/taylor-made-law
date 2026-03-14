@@ -145,11 +145,12 @@ Deno.serve(async (req) => {
       console.log(`WARNING: User entity not found after 5 seconds for ${normalizedEmail}`);
     }
 
-    // Mark LawyerApplication as user_created and sync user_status
-    const app = apps.find(a => a.status === 'approved') || apps[0] || null;
+    // Mark LawyerApplication as active and user_created
+    const app = apps.find(a => ['approved', 'approved_pending_activation'].includes(a.status)) || apps[0] || null;
     if (app) {
       await base44.asServiceRole.entities.LawyerApplication.update(app.id, {
         user_created: true,
+        status: 'active',
       }).catch(() => {});
 
       // Also ensure LawyerProfile exists for approved users
