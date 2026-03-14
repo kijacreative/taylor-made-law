@@ -114,9 +114,17 @@ export default function LawyerDashboard() {
     );
   }
 
+  // Onboarding gate — redirect to onboarding if not yet complete (new flow)
+  const isNewFlowUser = user?.user_status === 'active_pending_review' || user?.user_status === 'active';
+  const onboardingComplete = !!user?.profile_completed_at;
+  if (isNewFlowUser && !onboardingComplete) {
+    navigate(createPageUrl('LawyerOnboarding'), { replace: true });
+    return null;
+  }
+
   // Use unified user_status on the user record, fall back to lawyerProfile for legacy
-  const isPending = user?.user_status === 'pending' || user?.user_status === 'invited' || (!user?.user_status && (!lawyerProfile || lawyerProfile.status === 'pending'));
-  const isApproved = user?.user_status === 'approved' || (!user?.user_status && lawyerProfile?.status === 'approved');
+  const isPending = user?.user_status === 'pending' || user?.user_status === 'invited' || user?.user_status === 'active_pending_review' || (!user?.user_status && (!lawyerProfile || lawyerProfile.status === 'pending'));
+  const isApproved = user?.user_status === 'approved' || user?.user_status === 'active' || (!user?.user_status && lawyerProfile?.status === 'approved');
   const needsReferralAgreement = isApproved && !lawyerProfile?.referral_agreement_accepted;
 
   return (

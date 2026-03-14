@@ -101,7 +101,7 @@ export default function LawyerLogin() {
           navigate(createPageUrl('LawyerDashboard'), { replace: true });
           return;
         } catch {
-          setError('Your account setup is not yet complete. Please click the activation link in your approval email to verify your email and set your password. Check your spam folder if you don\'t see it. Need help? Contact support@taylormadelaw.com');
+          setError('Please verify your email before logging in. Check your inbox (and spam folder) for a verification code email from Taylor Made Law. Need help? Contact support@taylormadelaw.com');
         }
       } else if (msg.includes('invalid') || msg.includes('incorrect') || msg.includes('password') || msg.includes('credentials') || msg.includes('not found') || msg.includes('wrong')) {
         setError('Invalid email or password. Please try again.');
