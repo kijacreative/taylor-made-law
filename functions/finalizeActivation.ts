@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
         email_verified: true,
         email_verified_at: now,
         password_set: true,
-        user_status: userRecord.user_status === 'approved' ? 'approved' : (userRecord.user_status || 'approved'),
+        user_status: 'approved',  // Always promote to approved on activation
       });
     }
 
