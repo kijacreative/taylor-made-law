@@ -12,7 +12,7 @@ import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2, AlertCircle, Loader2, ArrowRight, ArrowLeft,
-  FileText, CreditCard, User
+  FileText, CreditCard, User, Upload, X
 } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLInput from '@/components/ui/TMLInput';

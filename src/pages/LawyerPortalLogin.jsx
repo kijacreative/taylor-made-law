@@ -62,10 +62,10 @@ export default function LawyerPortalLogin() {
       navigate('/AdminDashboard', { replace: true });
       return;
     }
-    if (!user.onboarding_complete) {
-      navigate('/LawyerOnboarding', { replace: true });
+    if (!user.profile_completed_at) {
+      navigate('/app/onboarding', { replace: true });
     } else {
-      navigate('/LawyerDashboard', { replace: true });
+      navigate('/app/dashboard', { replace: true });
     }
   };
 
