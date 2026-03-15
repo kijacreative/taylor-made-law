@@ -46,20 +46,19 @@ export default function LawyerOnboarding() {
     const init = async () => {
       try {
         const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('LawyerLogin')); return; }
+        if (!isAuth) { navigate('/login'); return; }
         const userData = await base44.auth.me();
         if (userData.user_status === 'disabled') {
           await base44.auth.logout();
-          navigate(createPageUrl('LawyerLogin') + '?disabled=1');
+          navigate('/login');
           return;
         }
         if (userData.role === 'admin') {
-          navigate(createPageUrl('AdminDashboard'));
+          navigate('/AdminDashboard');
           return;
         }
         if (userData.profile_completed_at) {
-          // Already completed — go to dashboard
-          navigate(createPageUrl('LawyerDashboard'));
+          navigate('/app/dashboard');
           return;
         }
         // Pre-fill from existing user data
@@ -70,7 +69,7 @@ export default function LawyerOnboarding() {
         });
         setUser(userData);
       } catch (e) {
-        navigate(createPageUrl('Home'));
+        navigate('/login');
       } finally {
         setLoading(false);
       }
@@ -132,7 +131,7 @@ export default function LawyerOnboarding() {
         notes: 'Onboarding completed: profile, referral agreement, billing demo',
       }).catch(() => {});
 
-      navigate(createPageUrl('LawyerDashboard'));
+      navigate('/app/dashboard');
     } catch (err) {
       setError(err.message || 'Failed to save. Please try again.');
     } finally {
