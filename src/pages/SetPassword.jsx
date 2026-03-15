@@ -1,185 +1,70 @@
 /**
- * SetPassword — Step 1 of lawyer activation.
- * URL: /SetPassword?token=...
+ * SetPassword — Set password after email verification.
+ * Route: /set-password (and /SetPassword for legacy links)
  *
- * On load, resolves the correct email server-side from the activation token.
- * Does NOT depend on the email URL param.
- * User sets their password here. On submit, calls registerActivation which validates
- * the ActivationToken and creates the Base44 auth account.
- * Base44 automatically sends a verification code email.
- * On success, user is redirected to /VerifyEmail to enter the code.
+ * User arrives here after verifyOtp succeeds (session is active).
+ * Calls base44.auth.setPassword(password) then redirects to /login.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Mail } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
 import PublicFooter from '@/components/layout/PublicFooter';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLInput from '@/components/ui/TMLInput';
-import { Checkbox } from '@/components/ui/checkbox';
 
 export default function SetPassword() {
   const navigate = useNavigate();
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token') || '';
-
-  // Email is resolved server-side from the token — not from URL params
-  const [resolvedEmail, setResolvedEmail] = useState('');
-  const [tokenLoading, setTokenLoading] = useState(!!token);
-  const [tokenError, setTokenError] = useState('');
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [formData, setFormData] = useState({
-    password: '',
-    confirmPassword: '',
-    acceptTerms: false,
-    acceptPrivacy: false,
-  });
-
-  // Resolve email from token on mount
-  useEffect(() => {
-    if (!token) {
-      setTokenLoading(false);
-      return;
-    }
-    (async () => {
-      try {
-        console.log('SetPassword: resolving email from token', token.slice(0, 8) + '...');
-        const res = await base44.functions.invoke('resolveVerifyEmail', { token });
-        const email = res.data?.email;
-        console.log('SetPassword: resolved email =', email);
-        if (email) {
-          setResolvedEmail(email);
-        } else {
-          setTokenError('This password setup link is invalid or has expired. Please use the latest approval email or contact support.');
-        }
-      } catch (err) {
-        console.error('SetPassword: token lookup failed', err);
-        setTokenError('This password setup link is invalid or has expired. Please use the latest approval email or contact support.');
-      } finally {
-        setTokenLoading(false);
-      }
-    })();
-  }, [token]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    if (formData.password.length < 8) {
-      setError('Password must be at least 8 characters');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters.');
       return;
     }
-    if (!/[0-9]/.test(formData.password)) {
-      setError('Password must include at least one number');
-      return;
-    }
-    if (!/[a-zA-Z]/.test(formData.password)) {
-      setError('Password must include at least one letter');
-      return;
-    }
-    if (formData.password !== formData.confirmPassword) {
-      setError('Passwords do not match');
-      return;
-    }
-    if (!formData.acceptTerms) {
-      setError('You must accept the Terms & Conditions');
-      return;
-    }
-    if (!formData.acceptPrivacy) {
-      setError('You must accept the Privacy Policy');
+    if (password !== confirm) {
+      setError('Passwords do not match.');
       return;
     }
 
     setLoading(true);
     try {
-      console.log('SetPassword: submitting registration for', resolvedEmail);
-      const response = await base44.functions.invoke('registerActivation', {
-        token,
-        email: resolvedEmail,
-        password: formData.password,
-      });
-
-      if (response.data?.success) {
-        console.log('SetPassword: registration succeeded, redirecting to VerifyEmail');
-        // Registration succeeded — Base44 sent a verification code email.
-        // Redirect to VerifyEmail page using token only (no email or password in URL).
-        navigate(`/VerifyEmail?token=${encodeURIComponent(token)}`);
-      } else if (response.data?.expired) {
-        setTokenError('This activation link has expired. Please contact support to request a new activation email.');
-      } else if (response.data?.already_used) {
-        setError('This activation link has already been used. If you already set a password, please log in. Otherwise contact support.');
-      } else {
-        setError(response.data?.error || 'Activation failed. Please try again or contact support.');
-      }
+      await base44.auth.setPassword(password);
+      setSuccess(true);
+      setTimeout(() => navigate('/login?activated=1', { replace: true }), 1500);
     } catch (err) {
-      const data = err.response?.data;
-      if (data?.expired) {
-        setTokenError('This activation link has expired. Please contact support to request a new activation email.');
-      } else {
-        setError(data?.error || err.message || 'Failed to activate. Please try again.');
-      }
+      const raw = err?.data?.error || err?.data?.message || err?.message || '';
+      const msg = typeof raw === 'string' && !raw.includes('[object') ? raw : '';
+      setError(msg || 'Failed to set password. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Loading while token is being resolved
-  if (tokenLoading) {
+  if (success) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
         <PublicNav />
-        <div className="flex items-center justify-center py-24 px-4">
-          <div className="text-center">
-            <Loader2 className="w-10 h-10 animate-spin text-[#3a164d] mx-auto mb-4" />
-            <p className="text-gray-500">Loading your activation page...</p>
-          </div>
-        </div>
-        <PublicFooter />
-      </div>
-    );
-  }
-
-  // No token provided
-  if (!token) {
-    return (
-      <div className="min-h-screen bg-[#faf8f5]">
-        <PublicNav />
-        <div className="flex items-center justify-center py-24 px-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full text-center">
-            <div className="bg-white rounded-2xl shadow-xl p-10">
-              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-gray-900 mb-2">Invalid Activation Link</h2>
-              <p className="text-gray-600 mb-6">This password setup link is invalid or has expired. Please use the latest approval email or contact support.</p>
-              <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline text-sm">Contact Support</a>
-            </div>
-          </motion.div>
-        </div>
-        <PublicFooter />
-      </div>
-    );
-  }
-
-  // Token invalid or expired
-  if (tokenError) {
-    return (
-      <div className="min-h-screen bg-[#faf8f5]">
-        <PublicNav />
-        <div className="flex items-center justify-center py-24 px-4">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-md w-full">
-            <div className="bg-white rounded-2xl shadow-xl p-10 text-center">
-              <AlertCircle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Link Invalid or Expired</h2>
-              <p className="text-gray-600 mb-6">{tokenError}</p>
-              <a href="mailto:support@taylormadelaw.com" className="inline-block bg-[#3a164d] text-white px-6 py-3 rounded-full font-semibold text-sm hover:bg-[#2a1038] transition-colors">
-                Contact Support
-              </a>
+        <div className="flex items-center justify-center min-h-screen px-4 pt-20">
+          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md w-full">
+            <div className="bg-white rounded-2xl shadow-xl text-center p-10">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
+                <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Password Set!</h2>
+              <p className="text-gray-600 mb-4">Redirecting you to sign in...</p>
+              <Loader2 className="w-6 h-6 animate-spin text-[#3a164d] mx-auto" />
             </div>
           </motion.div>
         </div>
@@ -191,8 +76,13 @@ export default function SetPassword() {
   return (
     <div className="min-h-screen bg-[#faf8f5]">
       <PublicNav />
-      <div className="flex items-center justify-center py-16 px-4 pt-28">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+      <div className="flex items-center justify-center min-h-screen px-4 pt-20">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md"
+        >
           <div className="text-center mb-8">
             <img
               src="https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png"
@@ -200,20 +90,7 @@ export default function SetPassword() {
               className="h-14 mx-auto mb-6"
             />
             <h1 className="text-3xl font-bold text-gray-900">Create Your Password</h1>
-            <p className="text-gray-500 mt-2">Set a secure password for your attorney portal</p>
-          </div>
-
-          {/* Step indicator */}
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-[#3a164d] text-white text-xs font-bold flex items-center justify-center">1</div>
-              <span className="text-sm font-medium text-[#3a164d]">Set Password</span>
-            </div>
-            <div className="w-8 h-px bg-gray-300" />
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-full bg-gray-200 text-gray-500 text-xs font-bold flex items-center justify-center">2</div>
-              <span className="text-sm text-gray-400">Verify Email</span>
-            </div>
+            <p className="text-gray-500 mt-2">Set a secure password for your attorney portal account.</p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -225,28 +102,18 @@ export default function SetPassword() {
                 </div>
               )}
 
-              <TMLInput
-                label="Email Address"
-                type="email"
-                value={resolvedEmail}
-                disabled
-              />
-
               <div className="relative">
                 <TMLInput
                   label="Create Password"
                   type={showPassword ? 'text' : 'password'}
                   required
-                  value={formData.password}
-                  onChange={e => setFormData({ ...formData, password: e.target.value })}
-                  placeholder="Min 8 characters with letters & numbers"
-                  helperText="At least 8 characters with a mix of letters and numbers"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="Minimum 8 characters"
+                  helperText="At least 8 characters"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
-                >
+                <button type="button" onClick={() => setShowPassword(v => !v)}
+                  className="absolute right-3 top-9 text-gray-400 hover:text-gray-600">
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
@@ -256,59 +123,27 @@ export default function SetPassword() {
                   label="Confirm Password"
                   type={showConfirm ? 'text' : 'password'}
                   required
-                  value={formData.confirmPassword}
-                  onChange={e => setFormData({ ...formData, confirmPassword: e.target.value })}
-                  placeholder="Confirm your password"
+                  value={confirm}
+                  onChange={e => setConfirm(e.target.value)}
+                  placeholder="Re-enter your password"
                 />
-                <button
-                  type="button"
-                  onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-3 top-9 text-gray-400 hover:text-gray-600"
-                >
+                <button type="button" onClick={() => setShowConfirm(v => !v)}
+                  className="absolute right-3 top-9 text-gray-400 hover:text-gray-600">
                   {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
 
-              <div className="space-y-3 pt-2">
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <Checkbox
-                    checked={formData.acceptTerms}
-                    onCheckedChange={v => setFormData({ ...formData, acceptTerms: v })}
-                    className="mt-0.5"
-                  />
-                  <span className="text-sm text-gray-700">
-                    I accept the{' '}
-                    <a href="https://taylormadelaw.com/terms" target="_blank" rel="noopener noreferrer" className="text-[#3a164d] hover:underline">Terms & Conditions</a>
-                  </span>
-                </label>
-
-                <label className="flex items-start gap-3 cursor-pointer">
-                  <Checkbox
-                    checked={formData.acceptPrivacy}
-                    onCheckedChange={v => setFormData({ ...formData, acceptPrivacy: v })}
-                    className="mt-0.5"
-                  />
-                  <span className="text-sm text-gray-700">
-                    I accept the{' '}
-                    <a href="https://taylormadelaw.com/privacy" target="_blank" rel="noopener noreferrer" className="text-[#3a164d] hover:underline">Privacy Policy</a>
-                  </span>
-                </label>
-              </div>
-
-              <div className="p-3 bg-blue-50 border border-blue-100 rounded-lg flex items-start gap-2">
-                <Mail className="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
-                <p className="text-xs text-blue-700">After setting your password, we'll send a verification code to <strong>{resolvedEmail}</strong> to confirm your account.</p>
-              </div>
-
-              <TMLButton type="submit" variant="primary" className="w-full mt-2" loading={loading}>
+              <TMLButton type="submit" variant="primary" className="w-full" loading={loading}>
                 Set Password & Continue
               </TMLButton>
             </form>
           </div>
 
-          <p className="text-center text-sm text-gray-600 mt-6">
+          <p className="text-center text-sm text-gray-500 mt-6">
             Need help?{' '}
-            <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">Contact Support</a>
+            <a href="mailto:support@taylormadelaw.com" className="text-[#3a164d] hover:underline">
+              support@taylormadelaw.com
+            </a>
           </p>
         </motion.div>
       </div>
