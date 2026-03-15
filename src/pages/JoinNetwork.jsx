@@ -109,7 +109,6 @@ export default function JoinNetwork() {
         phone: formData.phone,
         firm_name: formData.firm_name,
         bar_number: formData.bar_number,
-        password: formData.password,
         years_experience: Number(formData.years_experience) || 0,
         states_licensed: formData.states_licensed,
         practice_areas: formData.practice_areas,
