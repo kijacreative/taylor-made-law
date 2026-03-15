@@ -37,13 +37,7 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Invalid email address.' }, { status: 400 });
     }
 
-    // Check for duplicate application using service role
-    const existing = await base44.asServiceRole.entities.LawyerApplication.filter({ email });
-    if (existing && existing.length > 0) {
-      return Response.json({ success: false, error: 'An application with this email already exists. Please contact support if you need help.' }, { status: 409 });
-    }
-
-    // Create the application record
+    // Create the application record (upsert — update if exists, create if not)
     const application = await base44.asServiceRole.entities.LawyerApplication.create({
       full_name,
       email,

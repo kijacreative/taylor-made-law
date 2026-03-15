@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import {
-  ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Plus, Trash2
+  ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Eye, EyeOff
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import PublicNav from '@/components/layout/PublicNav';
@@ -42,11 +43,13 @@ function StepDots({ steps, current }) {
 }
 
 export default function JoinLawyerNetwork() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -57,6 +60,8 @@ export default function JoinLawyerNetwork() {
     states_licensed: [],
     practice_areas: [],
     bio: '',
+    password: '',
+    confirm_password: '',
     consent_terms: false,
   });
 
@@ -76,6 +81,8 @@ export default function JoinLawyerNetwork() {
       if (!formData.full_name.trim()) e.full_name = 'Required';
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Valid email required';
       if (!formData.firm_name.trim()) e.firm_name = 'Required';
+      if (!formData.password || formData.password.length < 8) e.password = 'Password must be at least 8 characters';
+      if (formData.password !== formData.confirm_password) e.confirm_password = 'Passwords do not match';
     }
     if (s === 2) {
       if (!formData.states_licensed.length) e.states_licensed = 'Select at least one state';
@@ -96,9 +103,13 @@ export default function JoinLawyerNetwork() {
     setLoading(true);
     setSubmitError('');
     try {
-      const res = await base44.functions.invoke('publicLawyerSignup', {
+      // Step 1: Register Base44 account
+      await base44.auth.register({ email: formData.email.trim().toLowerCase(), password: formData.password });
+
+      // Step 2: Create TML application record + notify admin
+      await base44.functions.invoke('publicLawyerSignup', {
         full_name: formData.full_name,
-        email: formData.email,
+        email: formData.email.trim().toLowerCase(),
         phone: formData.phone,
         firm_name: formData.firm_name,
         bar_number: formData.bar_number,
@@ -107,45 +118,21 @@ export default function JoinLawyerNetwork() {
         practice_areas: formData.practice_areas,
         bio: formData.bio,
       });
-      if (res.data?.success) {
-        setSubmitted(true);
-      } else {
-        setSubmitError(res.data?.error || 'Submission failed. Please try again.');
-      }
+
+      // Step 3: Go to email verification
+      navigate(`/verify-email?email=${encodeURIComponent(formData.email.trim().toLowerCase())}`, { replace: true });
     } catch (err) {
-      setSubmitError(err.response?.data?.error || err.message || 'An error occurred. Please try again.');
+      const raw = err?.response?.data?.error || err?.response?.data?.message || err?.message || '';
+      const msg = typeof raw === 'string' && !raw.includes('[object') ? raw : '';
+      if (msg.toLowerCase().includes('already') || msg.toLowerCase().includes('exists') || msg.toLowerCase().includes('registered')) {
+        setSubmitError('An account with this email already exists. Please sign in or use a different email.');
+      } else {
+        setSubmitError(msg || 'An error occurred. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
   };
-
-  // Success screen
-  if (submitted) {
-    return (
-      <div className="min-h-screen bg-[#faf8f5]">
-        <PublicNav />
-        <div className="pt-32 pb-24 px-4">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-lg mx-auto text-center">
-            <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CheckCircle2 className="w-10 h-10 text-emerald-600" />
-            </div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">Application Received</h1>
-            <p className="text-gray-600 mb-4 leading-relaxed">
-              Thank you for applying to join the Taylor Made Law Network.
-            </p>
-            <p className="text-gray-600 mb-8 leading-relaxed">
-              Please complete your email verification and account setup to continue. Once your account is active, you'll be able to log in and complete your lawyer profile inside the portal.
-            </p>
-            <TMLButton variant="primary" onClick={() => base44.auth.redirectToLogin()}>
-              Complete Account Setup <ArrowRight className="ml-2 w-4 h-4" />
-            </TMLButton>
-            <p className="text-xs text-gray-400 mt-4">You'll be redirected to create your account credentials.</p>
-          </motion.div>
-        </div>
-        <PublicFooter />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#faf8f5]">
@@ -178,6 +165,39 @@ export default function JoinLawyerNetwork() {
                     <div className="grid grid-cols-2 gap-4">
                       <TMLInput label="Bar Number" value={formData.bar_number} onChange={e => set('bar_number', e.target.value)} placeholder="BAR123456" />
                       <TMLInput label="Years of Experience" type="number" min="0" max="60" value={formData.years_experience} onChange={e => set('years_experience', e.target.value)} placeholder="10" />
+                    </div>
+                    <div className="pt-2 border-t border-gray-100 space-y-4">
+                      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Create Your Password</p>
+                      <div className="relative">
+                        <TMLInput
+                          label="Password"
+                          type={showPassword ? 'text' : 'password'}
+                          required
+                          value={formData.password}
+                          onChange={e => set('password', e.target.value)}
+                          placeholder="Minimum 8 characters"
+                          error={errors.password}
+                        />
+                        <button type="button" onClick={() => setShowPassword(v => !v)}
+                          className="absolute right-3 top-9 text-gray-400 hover:text-gray-600">
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                      <div className="relative">
+                        <TMLInput
+                          label="Confirm Password"
+                          type={showConfirm ? 'text' : 'password'}
+                          required
+                          value={formData.confirm_password}
+                          onChange={e => set('confirm_password', e.target.value)}
+                          placeholder="Re-enter your password"
+                          error={errors.confirm_password}
+                        />
+                        <button type="button" onClick={() => setShowConfirm(v => !v)}
+                          className="absolute right-3 top-9 text-gray-400 hover:text-gray-600">
+                          {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -263,13 +283,18 @@ export default function JoinLawyerNetwork() {
                     </TMLButton>
                   ) : (
                     <TMLButton variant="primary" loading={loading} onClick={handleSubmit}>
-                      Submit Application
+                      Create Account <ArrowRight className="w-4 h-4 ml-1" />
                     </TMLButton>
                   )}
                 </div>
               </TMLCard>
             </motion.div>
           </AnimatePresence>
+
+          <p className="text-center text-sm text-gray-500 mt-6">
+            Already have an account?{' '}
+            <a href="/login" className="text-[#3a164d] font-semibold hover:underline">Sign in</a>
+          </p>
         </div>
       </div>
       <PublicFooter />
