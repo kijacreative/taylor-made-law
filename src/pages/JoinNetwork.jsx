@@ -30,17 +30,12 @@ export default function JoinNetwork() {
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
     phone: '',
     firm_name: '',
     bar_number: '',
-    password: '',
-    confirm_password: '',
     years_experience: '',
     states_licensed: [],
     practice_areas: [],
