@@ -263,34 +263,6 @@ export default function JoinNetwork() {
                     <TMLInput label="Phone Number" type="tel" required value={formData.phone} onChange={e => updateField('phone', e.target.value)} placeholder="(555) 555-5555" error={errors.phone} />
                     <TMLInput label="Law Firm Name" required value={formData.firm_name} onChange={e => updateField('firm_name', e.target.value)} placeholder="Smith & Associates" error={errors.firm_name} />
                     <TMLInput label="Bar Number" required value={formData.bar_number} onChange={e => updateField('bar_number', e.target.value)} placeholder="BAR123456" error={errors.bar_number} />
-                    <div className="relative">
-                      <TMLInput
-                        label="Password"
-                        type={showPassword ? 'text' : 'password'}
-                        required
-                        value={formData.password}
-                        onChange={e => updateField('password', e.target.value)}
-                        placeholder="Min. 8 characters"
-                        error={errors.password}
-                      />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-9 text-gray-400 hover:text-gray-600">
-                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                    <div className="relative">
-                      <TMLInput
-                        label="Confirm Password"
-                        type={showConfirmPassword ? 'text' : 'password'}
-                        required
-                        value={formData.confirm_password}
-                        onChange={e => updateField('confirm_password', e.target.value)}
-                        placeholder="Re-enter password"
-                        error={errors.confirm_password}
-                      />
-                      <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-9 text-gray-400 hover:text-gray-600">
-                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
                   </div>
                 )}
 
