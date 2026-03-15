@@ -6,14 +6,13 @@ import {
   Users, 
   FileText,
   Scale,
-  Settings, 
   LogOut,
   ChevronLeft,
   Inbox,
-  BarChart3,
   BookOpen,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  ClipboardList
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -54,7 +53,14 @@ const AdminSidebar = ({ user }) => {
       label: 'Attorney Management', 
       icon: Users, 
       path: 'AdminLawyers',
-      active: currentPath.includes('/AdminLawyers') || currentPath.includes('/AdminLawyerApplications') || currentPath.includes('/AdminNetworkReview')
+      active: currentPath.includes('/AdminLawyers') || currentPath.includes('/AdminNetworkReview')
+    },
+    {
+      label: 'Applications',
+      icon: ClipboardList,
+      path: null,
+      href: '/admin/applications',
+      active: currentPath.includes('/admin/applications'),
     },
     { 
       label: 'Blog & Resources', 
@@ -143,8 +149,8 @@ const AdminSidebar = ({ user }) => {
       <nav className="p-4 space-y-2">
         {menuItems.map((item) => (
           <Link
-            key={item.path}
-            to={createPageUrl(item.path)}
+            key={item.path || item.href}
+            to={item.href || createPageUrl(item.path)}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
               item.active
                 ? 'bg-[#3a164d] text-white shadow-lg shadow-[#3a164d]/20'

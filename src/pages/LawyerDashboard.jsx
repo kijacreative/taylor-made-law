@@ -32,7 +32,7 @@ export default function LawyerDashboard() {
     const userData = await base44.auth.me();
     if (userData.user_status === 'disabled') {
       await base44.auth.logout();
-      navigate(createPageUrl('LawyerLogin') + '?disabled=1');
+      navigate('/login');
       return;
     }
     setUser(userData);
@@ -44,18 +44,18 @@ export default function LawyerDashboard() {
       try {
         const isAuth = await base44.auth.isAuthenticated();
         if (!isAuth) {
-          navigate(createPageUrl('LawyerLogin'));
+          navigate('/login');
           return;
         }
         const userData = await refreshUser();
         if (!userData) return;
         
         if (userData.role === 'admin') {
-          navigate(createPageUrl('AdminDashboard'));
+          navigate('/AdminDashboard');
           return;
         }
       } catch (e) {
-        navigate(createPageUrl('Home'));
+        navigate('/login');
       } finally {
         setLoading(false);
       }
@@ -114,17 +114,16 @@ export default function LawyerDashboard() {
     );
   }
 
-  // Onboarding gate — redirect to onboarding if not yet complete (new flow)
-  const isNewFlowUser = user?.user_status === 'active_pending_review' || user?.user_status === 'active';
+  // Onboarding gate — if profile not complete, send to onboarding
   const onboardingComplete = !!user?.profile_completed_at;
-  if (isNewFlowUser && !onboardingComplete) {
-    navigate(createPageUrl('LawyerOnboarding'), { replace: true });
+  if (!onboardingComplete) {
+    navigate('/app/onboarding', { replace: true });
     return null;
   }
 
-  // Use unified user_status on the user record, fall back to lawyerProfile for legacy
-  const isPending = user?.user_status === 'pending' || user?.user_status === 'invited' || user?.user_status === 'active_pending_review' || (!user?.user_status && (!lawyerProfile || lawyerProfile.status === 'pending'));
-  const isApproved = user?.user_status === 'approved' || user?.user_status === 'active' || (!user?.user_status && lawyerProfile?.status === 'approved');
+  // Use unified user_status on the user record
+  const isPending = user?.user_status === 'active_pending_review' || user?.user_status === 'pending' || user?.user_status === 'invited' || (!user?.user_status && (!lawyerProfile || lawyerProfile.status === 'pending'));
+  const isApproved = user?.user_status === 'active' || user?.user_status === 'approved' || (!user?.user_status && lawyerProfile?.status === 'approved');
   const needsReferralAgreement = isApproved && !lawyerProfile?.referral_agreement_accepted;
 
   return (
