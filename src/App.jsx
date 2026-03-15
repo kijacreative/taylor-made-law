@@ -11,6 +11,7 @@ import SetPassword from './pages/SetPassword';
 import LawyerOnboarding from './pages/LawyerOnboarding';
 import JoinNetwork from './pages/JoinNetwork.jsx';
 import AdminNetworkReview from './pages/AdminNetworkReview.jsx';
+import JoinLawyerNetwork from './pages/JoinLawyerNetwork.jsx';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
       <Route path="/LawyerOnboarding" element={<LayoutWrapper currentPageName="LawyerOnboarding"><LawyerOnboarding /></LayoutWrapper>} />
       <Route path="/JoinNetwork" element={<LayoutWrapper currentPageName="JoinNetwork"><JoinNetwork /></LayoutWrapper>} />
       <Route path="/AdminNetworkReview" element={<LayoutWrapper currentPageName="AdminNetworkReview"><AdminNetworkReview /></LayoutWrapper>} />
+      <Route path="/join-lawyer-network" element={<LayoutWrapper currentPageName="JoinLawyerNetwork"><JoinLawyerNetwork /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
