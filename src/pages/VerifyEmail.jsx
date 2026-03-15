@@ -74,7 +74,7 @@ export default function VerifyEmail() {
     try {
       await base44.auth.verifyOtp(email.trim(), code.trim());
       setSuccess(true);
-      setTimeout(() => navigate('/set-password', { replace: true }), 1200);
+      setTimeout(() => navigate('/login?activated=1', { replace: true }), 1200);
     } catch (err) {
       setError(parseError(err));
     } finally {
@@ -111,7 +111,7 @@ export default function VerifyEmail() {
                 <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h2>
-              <p className="text-gray-600 mb-4">Redirecting you to set your password...</p>
+              <p className="text-gray-600 mb-4">Redirecting you to sign in...</p>
               <Loader2 className="w-6 h-6 animate-spin text-[#3a164d] mx-auto" />
             </div>
           </motion.div>

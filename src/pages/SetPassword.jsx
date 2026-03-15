@@ -1,9 +1,10 @@
 /**
- * SetPassword — Set password after email verification.
+ * SetPassword — Password reset via Base44 reset token.
  * Route: /set-password (and /SetPassword for legacy links)
  *
- * User arrives here after verifyOtp succeeds (session is active).
- * Calls base44.auth.setPassword(password) then redirects to /login.
+ * Expects ?token=<resetToken> in the URL.
+ * Calls base44.auth.resetPassword({ resetToken, newPassword })
+ * then redirects to /login.
  */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +18,9 @@ import TMLInput from '@/components/ui/TMLInput';
 
 export default function SetPassword() {
   const navigate = useNavigate();
+  const urlParams = new URLSearchParams(window.location.search);
+  const resetToken = urlParams.get('token') || '';
+
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -37,20 +41,47 @@ export default function SetPassword() {
       setError('Passwords do not match.');
       return;
     }
+    if (!resetToken) {
+      setError('Missing reset token. Please use the link from your email.');
+      return;
+    }
 
     setLoading(true);
     try {
-      await base44.auth.setPassword(password);
+      await base44.auth.resetPassword({ resetToken, newPassword: password });
       setSuccess(true);
-      setTimeout(() => navigate('/login?activated=1', { replace: true }), 1500);
+      setTimeout(() => navigate('/login', { replace: true }), 1800);
     } catch (err) {
-      const raw = err?.data?.error || err?.data?.message || err?.message || '';
+      const raw = err?.response?.data?.error || err?.response?.data?.message || err?.message || '';
       const msg = typeof raw === 'string' && !raw.includes('[object') ? raw : '';
-      setError(msg || 'Failed to set password. Please try again.');
+      setError(msg || 'Failed to reset password. The link may have expired — please request a new one.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (!resetToken) {
+    return (
+      <div className="min-h-screen bg-[#faf8f5]">
+        <PublicNav />
+        <div className="flex items-center justify-center min-h-screen px-4 pt-20">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
+            <div className="bg-white rounded-2xl shadow-xl text-center p-10">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-amber-100 flex items-center justify-center">
+                <AlertCircle className="w-8 h-8 text-amber-600" />
+              </div>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Invalid Link</h2>
+              <p className="text-gray-600 mb-6">This password reset link is invalid or missing a token. Please use the link from your email, or request a new one.</p>
+              <TMLButton variant="primary" onClick={() => navigate('/ForgotPassword')}>
+                Request New Link
+              </TMLButton>
+            </div>
+          </motion.div>
+        </div>
+        <PublicFooter />
+      </div>
+    );
+  }
 
   if (success) {
     return (
@@ -62,7 +93,7 @@ export default function SetPassword() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Password Set!</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Password Updated!</h2>
               <p className="text-gray-600 mb-4">Redirecting you to sign in...</p>
               <Loader2 className="w-6 h-6 animate-spin text-[#3a164d] mx-auto" />
             </div>
@@ -89,8 +120,8 @@ export default function SetPassword() {
               alt="Taylor Made Law"
               className="h-14 mx-auto mb-6"
             />
-            <h1 className="text-3xl font-bold text-gray-900">Create Your Password</h1>
-            <p className="text-gray-500 mt-2">Set a secure password for your attorney portal account.</p>
+            <h1 className="text-3xl font-bold text-gray-900">Reset Your Password</h1>
+            <p className="text-gray-500 mt-2">Enter a new secure password for your attorney portal account.</p>
           </div>
 
           <div className="bg-white rounded-2xl shadow-xl p-8">
@@ -104,7 +135,7 @@ export default function SetPassword() {
 
               <div className="relative">
                 <TMLInput
-                  label="Create Password"
+                  label="New Password"
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={password}
@@ -134,7 +165,7 @@ export default function SetPassword() {
               </div>
 
               <TMLButton type="submit" variant="primary" className="w-full" loading={loading}>
-                Set Password & Continue
+                Set New Password
               </TMLButton>
             </form>
           </div>
