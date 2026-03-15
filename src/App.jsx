@@ -3,7 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import NavigationTracker from '@/lib/NavigationTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import VerifyEmail from './pages/VerifyEmail';
@@ -75,6 +75,7 @@ const AuthenticatedApp = () => {
       <Route path="/AdminNetworkReview" element={<LayoutWrapper currentPageName="AdminNetworkReview"><AdminNetworkReview /></LayoutWrapper>} />
       <Route path="/join-lawyer-network" element={<LayoutWrapper currentPageName="JoinLawyerNetwork"><JoinLawyerNetwork /></LayoutWrapper>} />
       <Route path="/app/onboarding" element={<LayoutWrapper currentPageName="LawyerOnboarding"><LawyerOnboarding /></LayoutWrapper>} />
+      <Route path="/app/dashboard" element={<Navigate to="/LawyerDashboard" replace />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
