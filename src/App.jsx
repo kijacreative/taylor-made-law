@@ -9,6 +9,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import VerifyEmail from './pages/VerifyEmail';
 import SetPassword from './pages/SetPassword';
 import LawyerOnboarding from './pages/LawyerOnboarding';
+import JoinNetwork from './pages/JoinNetwork';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 const { Pages, Layout, mainPage } = pagesConfig;
