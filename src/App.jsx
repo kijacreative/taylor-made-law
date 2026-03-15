@@ -10,6 +10,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import SetPassword from './pages/SetPassword';
 import LawyerOnboarding from './pages/LawyerOnboarding';
 import JoinNetwork from './pages/JoinNetwork.jsx';
+import AdminNetworkReview from './pages/AdminNetworkReview.jsx';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 const { Pages, Layout, mainPage } = pagesConfig;
