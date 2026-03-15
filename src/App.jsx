@@ -12,6 +12,7 @@ import LawyerOnboarding from './pages/LawyerOnboarding';
 import JoinNetwork from './pages/JoinNetwork.jsx';
 import AdminNetworkReview from './pages/AdminNetworkReview.jsx';
 import JoinLawyerNetwork from './pages/JoinLawyerNetwork.jsx';
+import LawyerPortalLogin from './pages/LawyerPortalLogin.jsx';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 const { Pages, Layout, mainPage } = pagesConfig;
@@ -67,6 +68,8 @@ const AuthenticatedApp = () => {
       <Route path="/VerifyEmail" element={<LayoutWrapper currentPageName="VerifyEmail"><VerifyEmail /></LayoutWrapper>} />
       <Route path="/verify-email" element={<LayoutWrapper currentPageName="VerifyEmail"><VerifyEmail /></LayoutWrapper>} />
       <Route path="/SetPassword" element={<LayoutWrapper currentPageName="SetPassword"><SetPassword /></LayoutWrapper>} />
+      <Route path="/set-password" element={<LayoutWrapper currentPageName="SetPassword"><SetPassword /></LayoutWrapper>} />
+      <Route path="/login" element={<LayoutWrapper currentPageName="LawyerPortalLogin"><LawyerPortalLogin /></LayoutWrapper>} />
       <Route path="/LawyerOnboarding" element={<LayoutWrapper currentPageName="LawyerOnboarding"><LawyerOnboarding /></LayoutWrapper>} />
       <Route path="/JoinNetwork" element={<LayoutWrapper currentPageName="JoinNetwork"><JoinNetwork /></LayoutWrapper>} />
       <Route path="/AdminNetworkReview" element={<LayoutWrapper currentPageName="AdminNetworkReview"><AdminNetworkReview /></LayoutWrapper>} />
