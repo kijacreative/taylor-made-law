@@ -13,6 +13,7 @@ import JoinNetwork from './pages/JoinNetwork.jsx';
 import AdminNetworkReview from './pages/AdminNetworkReview.jsx';
 import JoinLawyerNetwork from './pages/JoinLawyerNetwork.jsx';
 import LawyerPortalLogin from './pages/LawyerPortalLogin.jsx';
+import AdminApplications from './pages/AdminApplications.jsx';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 
 const { Pages, Layout, mainPage } = pagesConfig;
