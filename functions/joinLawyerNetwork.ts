@@ -92,7 +92,7 @@ Deno.serve(async (req) => {
 
     // Invite user via Base44 — sends a welcome/setup email automatically
     try {
-      await base44.asServiceRole.users.inviteUser(normalizedEmail, 'user');
+      await base44.users.inviteUser(normalizedEmail, 'user');
       console.log('joinLawyerNetwork: invited user', normalizedEmail);
     } catch (regErr) {
       const errMsg = (regErr.message || '').toLowerCase();
