@@ -34,6 +34,8 @@ export default function LawyerOnboarding() {
   const [error, setError] = useState('');
 
   const [profile, setProfile] = useState({ bio: '', website: '', office_address: '' });
+  const [headshotUrl, setHeadshotUrl] = useState('');
+  const [headshotUploading, setHeadshotUploading] = useState(false);
   const [referralAccepted, setReferralAccepted] = useState(false);
   const [billing, setBilling] = useState({
     account_holder: '',
@@ -67,6 +69,7 @@ export default function LawyerOnboarding() {
           website: userData.website || '',
           office_address: userData.office_address || '',
         });
+        setHeadshotUrl(userData.profile_photo_url || '');
         setUser(userData);
       } catch (e) {
         navigate('/login');
@@ -88,6 +91,7 @@ export default function LawyerOnboarding() {
         bio: profile.bio,
         website: profile.website,
         office_address: profile.office_address,
+        profile_photo_url: headshotUrl || undefined,
         referral_agreement_accepted: true,
         referral_agreement_accepted_at: now,
         billing_demo_plan: 'trial_6mo_then_49',
@@ -107,6 +111,7 @@ export default function LawyerOnboarding() {
         firm_name: user.firm_name || '',
         phone: user.phone || '',
         bar_number: user.bar_number || '',
+        profile_photo_url: headshotUrl || undefined,
         bio: profile.bio || '',
         states_licensed: user.states_licensed || [],
         practice_areas: user.practice_areas || [],
