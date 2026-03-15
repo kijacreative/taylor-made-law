@@ -90,25 +90,25 @@ Deno.serve(async (req) => {
 
     console.log('joinLawyerNetwork: created LawyerApplication', appRecord.id, 'for', normalizedEmail);
 
-    // Register Base44 auth account — Base44 sends OTP verification email automatically
+    // Invite user via Base44 — sends a welcome/setup email automatically
     try {
-      await base44.auth.register({ email: normalizedEmail, password, full_name });
-      console.log('joinLawyerNetwork: registered user', normalizedEmail);
+      await base44.asServiceRole.users.inviteUser(normalizedEmail, 'user');
+      console.log('joinLawyerNetwork: invited user', normalizedEmail);
     } catch (regErr) {
       const errMsg = (regErr.message || '').toLowerCase();
       if (errMsg.includes('already') || errMsg.includes('exists') || errMsg.includes('duplicate') || errMsg.includes('registered')) {
-        console.log('joinLawyerNetwork: user already registered', normalizedEmail);
+        console.log('joinLawyerNetwork: user already exists', normalizedEmail);
         // Still proceed — user may be retrying
       } else {
         // Rollback application on registration failure
         await base44.asServiceRole.entities.LawyerApplication.delete(appRecord.id).catch(() => {});
-        console.error('joinLawyerNetwork: registration failed', regErr.message);
-        return Response.json({ error: 'Registration failed. Please try again.' }, { status: 500 });
+        console.error('joinLawyerNetwork: invite failed', regErr.message);
+        return Response.json({ error: `Registration failed: ${regErr.message}` }, { status: 500 });
       }
     }
 
     // Sync profile data to User entity (wait for async creation)
-    await new Promise(r => setTimeout(r, 800));
+    await new Promise(r => setTimeout(r, 1200));
     const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail }).catch(() => []);
     if (newUsers.length > 0) {
       await base44.asServiceRole.entities.User.update(newUsers[0].id, {
@@ -123,6 +123,8 @@ Deno.serve(async (req) => {
         bio: bio || '',
       }).catch(err => console.warn('joinLawyerNetwork: user entity update warning:', err.message));
       console.log('joinLawyerNetwork: synced profile to User entity', newUsers[0].id);
+    } else {
+      console.warn('joinLawyerNetwork: user not found after invite — profile sync skipped');
     }
 
     // Send admin notification
