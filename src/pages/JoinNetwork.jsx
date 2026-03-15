@@ -256,8 +256,8 @@ export default function JoinNetwork() {
 
                 {step === 1 && (
                   <div className="space-y-5">
-                    <h2 className="text-xl font-bold text-gray-900 mb-1">Account Setup</h2>
-                    <p className="text-gray-500 text-sm mb-4">Create your login credentials and tell us about your firm.</p>
+                    <h2 className="text-xl font-bold text-gray-900 mb-1">Your Information</h2>
+                    <p className="text-gray-500 text-sm mb-4">Tell us about yourself and your firm. Once approved, you'll receive an email to set up your account.</p>
                     <TMLInput label="Full Name" required value={formData.full_name} onChange={e => updateField('full_name', e.target.value)} placeholder="Jane Smith" error={errors.full_name} />
                     <TMLInput label="Email Address" type="email" required value={formData.email} onChange={e => updateField('email', e.target.value)} placeholder="jane@smithlaw.com" error={errors.email} />
                     <TMLInput label="Phone Number" type="tel" required value={formData.phone} onChange={e => updateField('phone', e.target.value)} placeholder="(555) 555-5555" error={errors.phone} />
