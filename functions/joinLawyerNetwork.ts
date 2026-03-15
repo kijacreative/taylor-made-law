@@ -41,14 +41,11 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { full_name, email, phone, firm_name, bar_number, states_licensed, practice_areas, years_experience, bio, password } = body;
+    const { full_name, email, phone, firm_name, bar_number, states_licensed, practice_areas, years_experience, bio } = body;
 
     // Validate required fields
-    if (!full_name || !email || !phone || !firm_name || !bar_number || !password) {
+    if (!full_name || !email || !phone || !firm_name || !bar_number) {
       return Response.json({ error: 'All required fields must be filled.' }, { status: 400 });
-    }
-    if (password.length < 8) {
-      return Response.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
     }
     if (!states_licensed?.length) {
       return Response.json({ error: 'Please select at least one state.' }, { status: 400 });
