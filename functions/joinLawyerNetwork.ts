@@ -90,42 +90,32 @@ Deno.serve(async (req) => {
 
     console.log('joinLawyerNetwork: created LawyerApplication', appRecord.id, 'for', normalizedEmail);
 
-    // Invite user via Base44 — sends a welcome/setup email automatically
-    try {
-      await base44.users.inviteUser(normalizedEmail, 'user');
-      console.log('joinLawyerNetwork: invited user', normalizedEmail);
-    } catch (regErr) {
-      const errMsg = (regErr.message || '').toLowerCase();
-      if (errMsg.includes('already') || errMsg.includes('exists') || errMsg.includes('duplicate') || errMsg.includes('registered')) {
-        console.log('joinLawyerNetwork: user already exists', normalizedEmail);
-        // Still proceed — user may be retrying
-      } else {
-        // Rollback application on registration failure
-        await base44.asServiceRole.entities.LawyerApplication.delete(appRecord.id).catch(() => {});
-        console.error('joinLawyerNetwork: invite failed', regErr.message);
-        return Response.json({ error: `Registration failed: ${regErr.message}` }, { status: 500 });
-      }
+    // Send confirmation email to the applicant
+    if (resendKey) {
+      const applicantHtml = emailWrapper(`
+        <h2 style="margin:0 0 8px;color:#111827;font-size:22px;font-weight:700;">Application Received, ${firstName}!</h2>
+        <p style="margin:0 0 20px;color:#6b7280;font-size:15px;">Thank you for applying to join the Taylor Made Law Attorney Network. We've received your application and our team is reviewing it.</p>
+        <div style="background:#f5f0fa;border-radius:12px;padding:20px;margin:0 0 24px;">
+          <p style="margin:0 0 6px;color:#3a164d;font-size:14px;font-weight:600;">What happens next:</p>
+          <p style="margin:4px 0;color:#374151;font-size:14px;">1. Our team will review your application (usually within 1 business day)</p>
+          <p style="margin:4px 0;color:#374151;font-size:14px;">2. You'll receive an email with a link to set up your account</p>
+          <p style="margin:4px 0;color:#374151;font-size:14px;">3. Once your account is active, you can start browsing cases immediately</p>
+        </div>
+        <p style="margin:0;color:#6b7280;font-size:14px;">Questions? Reply to this email or contact <a href="mailto:support@taylormadelaw.com" style="color:#3a164d;">support@taylormadelaw.com</a></p>
+      `);
+      await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          from: 'Taylor Made Law <noreply@taylormadelaw.com>',
+          to: [normalizedEmail],
+          subject: 'Your Application to Taylor Made Law — We\'ll Be in Touch!',
+          html: applicantHtml
+        })
+      }).catch(e => console.warn('Applicant confirmation email failed:', e.message));
     }
 
-    // Sync profile data to User entity (wait for async creation)
-    await new Promise(r => setTimeout(r, 1200));
-    const newUsers = await base44.asServiceRole.entities.User.filter({ email: normalizedEmail }).catch(() => []);
-    if (newUsers.length > 0) {
-      await base44.asServiceRole.entities.User.update(newUsers[0].id, {
-        user_status: 'active_pending_review',
-        review_status: 'pending',
-        firm_name,
-        phone,
-        bar_number,
-        states_licensed: states_licensed || [],
-        practice_areas: practice_areas || [],
-        years_experience: years_experience || 0,
-        bio: bio || '',
-      }).catch(err => console.warn('joinLawyerNetwork: user entity update warning:', err.message));
-      console.log('joinLawyerNetwork: synced profile to User entity', newUsers[0].id);
-    } else {
-      console.warn('joinLawyerNetwork: user not found after invite — profile sync skipped');
-    }
+    console.log('joinLawyerNetwork: application submitted for', normalizedEmail, '— awaiting admin review/invite');
 
     // Send admin notification
     if (resendKey) {
