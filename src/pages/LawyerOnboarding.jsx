@@ -216,6 +216,51 @@ export default function LawyerOnboarding() {
                     <h2 className="text-xl font-bold text-gray-900 mb-1">Professional Profile</h2>
                     <p className="text-gray-500 text-sm">Tell us about your legal background. This will appear on your public profile.</p>
                   </div>
+
+                  {/* Headshot upload */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Profile Photo (optional)</label>
+                    <div className="flex items-center gap-4">
+                      {headshotUrl ? (
+                        <div className="relative">
+                          <img src={headshotUrl} alt="Headshot" className="w-20 h-20 rounded-full object-cover border-2 border-[#3a164d]/20" />
+                          <button type="button" onClick={() => setHeadshotUrl('')}
+                            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600">
+                            <X className="w-3 h-3" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="w-20 h-20 rounded-full bg-gray-100 border-2 border-dashed border-gray-300 flex items-center justify-center text-gray-400">
+                          <User className="w-8 h-8" />
+                        </div>
+                      )}
+                      <label className="cursor-pointer">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={async (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            setHeadshotUploading(true);
+                            try {
+                              const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                              setHeadshotUrl(file_url);
+                            } catch {
+                              // silently fail — headshot is optional
+                            } finally {
+                              setHeadshotUploading(false);
+                            }
+                          }}
+                        />
+                        <div className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg text-sm text-gray-600 hover:border-[#3a164d] hover:text-[#3a164d] transition-colors">
+                          {headshotUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                          {headshotUploading ? 'Uploading...' : headshotUrl ? 'Change Photo' : 'Upload Photo'}
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+
                   <TMLTextarea
                     label="Professional Bio"
                     required
