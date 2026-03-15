@@ -156,32 +156,22 @@ export default function JoinNetwork() {
             <div className="w-24 h-24 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-8">
               <CheckCircle2 className="w-12 h-12 text-emerald-600" />
             </div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to the Network!</h1>
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">Application Received!</h1>
             <p className="text-xl text-gray-600 mb-4">
-              Your account has been created, <strong>{formData.full_name}</strong>.
+              Thank you, <strong>{formData.full_name}</strong>. We've received your application.
             </p>
             <p className="text-gray-600 mb-6">
-              Check your email to verify your address, then sign in to complete your onboarding.
+              A confirmation has been sent to <strong>{formData.email}</strong>. Our team will review your application and send you account setup instructions shortly.
             </p>
-            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-6 flex items-start gap-3 text-left">
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-              <p className="text-sm text-emerald-800">
-                <strong>Check your inbox at {formData.email}</strong> — click the verification link from Taylor Made Law to activate your account.
-              </p>
-            </div>
             <div className="bg-[#f5f0fa] rounded-xl p-6 mb-8 text-left">
               <p className="font-semibold text-[#3a164d] mb-3">What happens next:</p>
               <ul className="space-y-2 text-gray-700 text-sm">
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Verify your email via the link we just sent</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Sign in and complete your onboarding profile</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Browse and accept case referrals immediately</li>
-                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Admin will review your application in the background</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Our team reviews your application (usually within 1 business day)</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> You'll receive an email invite to set up your account</li>
+                <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-[#3a164d]" /> Complete your profile and start browsing cases</li>
               </ul>
             </div>
             <div className="flex gap-4 justify-center">
-              <Link to="/LawyerLogin">
-                <TMLButton variant="primary">Sign In Now</TMLButton>
-              </Link>
               <a href="mailto:support@taylormadelaw.com">
                 <TMLButton variant="secondary">Contact Support</TMLButton>
               </a>
