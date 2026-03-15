@@ -76,8 +76,6 @@ export default function JoinNetwork() {
       if (!formData.phone || formData.phone.replace(/\D/g, '').length < 10) e.phone = 'Valid phone number is required';
       if (!formData.firm_name.trim()) e.firm_name = 'Firm name is required';
       if (!formData.bar_number.trim()) e.bar_number = 'Bar number is required';
-      if (!formData.password || formData.password.length < 8) e.password = 'Password must be at least 8 characters';
-      if (formData.password !== formData.confirm_password) e.confirm_password = 'Passwords do not match';
     }
     if (s === 2) {
       if (!formData.states_licensed.length) e.states_licensed = 'Select at least one state';
