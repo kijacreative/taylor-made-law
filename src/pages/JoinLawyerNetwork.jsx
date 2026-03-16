@@ -120,7 +120,8 @@ export default function JoinLawyerNetwork() {
       });
 
       // Step 3: Go to email verification
-      navigate(`/verify-email?email=${encodeURIComponent(formData.email.trim().toLowerCase())}`, { replace: true });
+      // Success — navigate to verify email with confirmation context
+      navigate(`/verify-email?email=${encodeURIComponent(formData.email.trim().toLowerCase())}&new=1`, { replace: true });
     } catch (err) {
       const raw = err?.response?.data?.error || err?.response?.data?.message || err?.message || '';
       const msg = typeof raw === 'string' && !raw.includes('[object') ? raw : '';

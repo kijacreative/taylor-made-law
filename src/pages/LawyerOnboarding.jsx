@@ -176,8 +176,9 @@ export default function LawyerOnboarding() {
       <div className="max-w-2xl mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-10">
-          <h1 className="text-3xl font-bold text-gray-900">Welcome to the Network</h1>
-          <p className="text-gray-500 mt-2">Complete these 3 quick steps to unlock full case access</p>
+          <h1 className="text-3xl font-bold text-gray-900">Complete Your Attorney Profile</h1>
+          <p className="text-gray-600 mt-2 max-w-lg mx-auto">Welcome to the Taylor Made Law Attorney Network. Before accessing the full platform, please complete the following steps to finish setting up your account.</p>
+          <p className="text-gray-500 text-sm mt-2">This helps ensure accurate referrals and a trusted attorney network.</p>
         </div>
 
         {/* Step indicators */}
@@ -214,7 +215,7 @@ export default function LawyerOnboarding() {
                 <div className="space-y-5">
                   <div>
                     <h2 className="text-xl font-bold text-gray-900 mb-1">Professional Profile</h2>
-                    <p className="text-gray-500 text-sm">Tell us about your legal background. This will appear on your public profile.</p>
+                    <p className="text-gray-500 text-sm">Tell other attorneys about your experience. This will appear on your network profile.</p>
                   </div>
 
                   {/* Headshot upload */}
@@ -291,7 +292,7 @@ export default function LawyerOnboarding() {
                 <div className="space-y-5">
                   <div>
                     <h2 className="text-xl font-bold text-gray-900 mb-1">Referral Agreement</h2>
-                    <p className="text-gray-500 text-sm">Please review and accept the Taylor Made Law referral agreement to continue.</p>
+                    <p className="text-gray-500 text-sm">To participate in the Taylor Made Law referral network, attorneys must agree to the network referral terms.</p>
                   </div>
                   <div className="bg-gray-50 border border-gray-200 rounded-xl p-5 max-h-64 overflow-y-auto text-sm text-gray-700 space-y-3 leading-relaxed">
                     <p className="font-semibold text-gray-900">Taylor Made Law Network — Referral Agreement</p>
@@ -321,16 +322,23 @@ export default function LawyerOnboarding() {
               {step === 3 && (
                 <div className="space-y-5">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-1">Billing Setup</h2>
-                    <p className="text-gray-500 text-sm">Set up your billing information for your network membership.</p>
-                  </div>
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800">
-                    <p className="font-semibold mb-1">Demonstration Mode</p>
-                    <p>Billing is currently in demonstration mode. Stripe integration will be activated later. <strong>No charges will be applied at this time.</strong></p>
+                    <h2 className="text-xl font-bold text-gray-900 mb-1">Payment Setup</h2>
+                    <p className="text-gray-500 text-sm">Set up your membership plan to complete your account.</p>
                   </div>
                   <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                    <p className="text-sm font-semibold text-emerald-900 mb-0.5">Selected Plan: 6-Month Free Trial</p>
-                    <p className="text-sm text-emerald-700">6 months free, then $49/month. Cancel anytime.</p>
+                    <p className="text-sm font-semibold text-emerald-900 mb-1">Plan: 6-Month Free Trial → $49/month</p>
+                    <p className="text-sm text-emerald-700 mb-2">Your membership includes:</p>
+                    <ul className="text-sm text-emerald-700 space-y-0.5 list-disc list-inside">
+                      <li>Access to the case marketplace</li>
+                      <li>Participation in attorney circles</li>
+                      <li>Community discussions</li>
+                      <li>Educational resources</li>
+                      <li>Network referrals</li>
+                    </ul>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800">
+                    <p className="font-semibold mb-1">Demo Notice</p>
+                    <p>Billing setup is currently in demonstration mode. Stripe integration will be activated soon. <strong>No charges will be applied at this time.</strong></p>
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <TMLInput
@@ -405,7 +413,7 @@ export default function LawyerOnboarding() {
                     onClick={handleComplete}
                     disabled={!canProceedStep3}
                   >
-                    Complete Setup <CheckCircle2 className="w-4 h-4 ml-1" />
+                    Save Billing Details <CheckCircle2 className="w-4 h-4 ml-1" />
                   </TMLButton>
                 )}
               </div>

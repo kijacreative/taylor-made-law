@@ -153,9 +153,9 @@ export default function LawyerDashboard() {
               <Clock className="w-5 h-5 text-amber-600" />
             </div>
             <div>
-              <h3 className="font-semibold text-amber-900 text-base">Pending Approval — You can explore the platform, but full case details unlock after approval.</h3>
+              <h3 className="font-semibold text-amber-900 text-base">Your account is currently under review by the Taylor Made Law team.</h3>
               <p className="text-amber-700 text-sm mt-1">
-                Our team typically reviews applications within 2–3 business days. In the meantime, you can browse blog posts, mass torts, and see a preview of the case marketplace below.
+                You can continue exploring the platform and completing your profile while this review is in progress. Full case details unlock once your account is approved.
               </p>
             </div>
           </div>

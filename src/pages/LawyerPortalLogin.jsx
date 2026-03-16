@@ -156,16 +156,16 @@ export default function LawyerPortalLogin() {
               alt="Taylor Made Law"
               className="h-14 mx-auto mb-6"
             />
-            <h1 className="text-3xl font-bold text-gray-900">Attorney Portal</h1>
-            <p className="text-gray-500 mt-2">Sign in to access your dashboard</p>
+            <h1 className="text-3xl font-bold text-gray-900">Attorney Login</h1>
+            <p className="text-gray-500 mt-2">Log in to access the Taylor Made Law attorney network.</p>
           </div>
 
           {activated && (
             <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3">
               <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-emerald-800">Your account has been activated successfully.</p>
-                <p className="text-sm text-emerald-700">Please log in to continue.</p>
+                <p className="text-sm font-semibold text-emerald-800">Email verified successfully.</p>
+                <p className="text-sm text-emerald-700">Log in to complete your attorney profile.</p>
               </div>
             </div>
           )}
@@ -200,7 +200,7 @@ export default function LawyerPortalLogin() {
                 </Link>
               </div>
               <TMLButton type="submit" variant="primary" className="w-full" loading={loading}>
-                Sign In
+                Login
               </TMLButton>
             </form>
 

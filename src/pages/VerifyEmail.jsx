@@ -47,6 +47,7 @@ const parseError = (err) => {
 export default function VerifyEmail() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
+  const isNewSignup = urlParams.get('new') === '1';
 
   const [email, setEmail] = useState(urlParams.get('email') || '');
   const [code, setCode] = useState('');
@@ -110,8 +111,9 @@ export default function VerifyEmail() {
               <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
                 <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h2>
-              <p className="text-gray-600 mb-4">Redirecting you to sign in...</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified Successfully</h2>
+              <p className="text-gray-600 mb-1">You can now log in to complete your attorney profile.</p>
+              <p className="text-gray-400 text-sm mb-4">Redirecting you to sign in...</p>
               <Loader2 className="w-6 h-6 animate-spin text-[#3a164d] mx-auto" />
             </div>
           </motion.div>
@@ -146,9 +148,16 @@ export default function VerifyEmail() {
               </div>
               <h1 className="text-2xl font-bold text-gray-900">Verify Your Email</h1>
               <p className="text-gray-500 mt-2 text-sm">
-                Enter the verification code sent to your email to activate your account.
+                To activate your account, enter the verification code sent to your email.
               </p>
             </div>
+
+            {isNewSignup && (
+              <div className="mb-4 p-4 bg-[#f5f0fa] border border-[#3a164d]/20 rounded-xl text-sm text-[#3a164d]">
+                <p className="font-semibold mb-1">Application Received</p>
+                <p className="text-[#3a164d]/80">We've sent a verification code to the email you provided. Please check your inbox — and your spam folder if you don't see it.</p>
+              </div>
+            )}
 
             <form onSubmit={handleVerify} className="space-y-4">
               {error && (
@@ -184,22 +193,25 @@ export default function VerifyEmail() {
                 onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="6-digit code"
                 autoFocus={!!email}
-                helperText="Check your inbox and spam folder for the code."
+                helperText="Check your inbox and spam folder if you don't see it."
               />
 
               <TMLButton type="submit" variant="primary" className="w-full" loading={loading}>
                 Verify Email
               </TMLButton>
 
-              <button
-                type="button"
-                onClick={handleResend}
-                disabled={resending}
-                className="w-full text-sm text-[#3a164d] hover:underline flex items-center justify-center gap-1.5 py-1 disabled:opacity-50"
-              >
-                {resending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
-                Resend Code
-              </button>
+              <div className="text-center pt-1">
+                <p className="text-sm text-gray-500 mb-1">Didn't receive a code?</p>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="text-sm text-[#3a164d] hover:underline font-semibold flex items-center justify-center gap-1.5 mx-auto disabled:opacity-50"
+                >
+                  {resending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  Resend Code
+                </button>
+              </div>
             </form>
           </div>
 
