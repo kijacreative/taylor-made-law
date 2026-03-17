@@ -63,9 +63,18 @@ export default function LawyerOnboarding() {
           navigate('/app/dashboard');
           return;
         }
-        // Pre-fill from existing user data
+        // Pre-fill bio from LawyerApplication (submitted during signup)
+        let signupBio = userData.bio || '';
+        try {
+          const apps = await base44.asServiceRole ? 
+            base44.entities.LawyerApplication.filter({ email: userData.email }) :
+            base44.entities.LawyerApplication.filter({ email: userData.email });
+          if (apps && apps.length > 0 && apps[0].bio) {
+            signupBio = apps[0].bio;
+          }
+        } catch {}
         setProfile({
-          bio: userData.bio || '',
+          bio: signupBio,
           website: userData.website || '',
           office_address: userData.office_address || '',
         });
