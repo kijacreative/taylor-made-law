@@ -105,26 +105,22 @@ export default function JoinLawyerNetwork() {
     try {
       const email = formData.email.trim().toLowerCase();
 
-      // Call backend function via direct HTTP (no auth required — public endpoint)
-      const res = await fetch(`${window.location.origin}/functions/publicLawyerSignup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          full_name: formData.full_name,
-          email,
-          password: formData.password,
-          phone: formData.phone,
-          firm_name: formData.firm_name,
-          bar_number: formData.bar_number,
-          years_experience: Number(formData.years_experience) || 0,
-          states_licensed: formData.states_licensed,
-          practice_areas: formData.practice_areas,
-          bio: formData.bio,
-          consent_terms: formData.consent_terms,
-        }),
+      // Call backend function via SDK invoke
+      const response = await base44.functions.invoke('publicLawyerSignup', {
+        full_name: formData.full_name,
+        email,
+        password: formData.password,
+        phone: formData.phone,
+        firm_name: formData.firm_name,
+        bar_number: formData.bar_number,
+        years_experience: Number(formData.years_experience) || 0,
+        states_licensed: formData.states_licensed,
+        practice_areas: formData.practice_areas,
+        bio: formData.bio,
+        consent_terms: formData.consent_terms,
       });
 
-      const result = await res.json();
+      const result = response.data;
       if (!result.success) {
         if (result.error_code === 'email_taken') {
           setSubmitError('An account with this email already exists. Please sign in or use a different email.');
