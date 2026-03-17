@@ -73,6 +73,32 @@ Deno.serve(async (req) => {
       consent_terms: !!consent_terms,
     });
 
+    // Step 3: Create LawyerProfile so bio is accessible during onboarding
+    // Wait briefly for the user account to be available
+    await new Promise(resolve => setTimeout(resolve, 800));
+    try {
+      const users = await base44.asServiceRole.entities.User.filter({ email });
+      const newUser = users[0];
+      if (newUser) {
+        await base44.asServiceRole.entities.LawyerProfile.create({
+          user_id: newUser.id,
+          full_name: full_name,
+          firm_name: firm_name,
+          phone: phone || '',
+          bar_number: bar_number || '',
+          bar_numbers: bar_numbers || {},
+          bio: bio || '',
+          states_licensed: states_licensed || [],
+          practice_areas: practice_areas || [],
+          years_experience: Number(years_experience) || 0,
+          status: 'pending',
+          subscription_status: 'none',
+        });
+      }
+    } catch (profileErr) {
+      console.error('Non-fatal: could not create LawyerProfile during signup:', profileErr.message);
+    }
+
     // Audit log (non-blocking)
     base44.asServiceRole.entities.AuditLog.create({
       entity_type: 'LawyerApplication',
