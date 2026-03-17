@@ -40,17 +40,22 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Invalid email address.' }, { status: 400 });
     }
 
-    // Step 1: Register the Base44 account
-    // This sends the OTP verification email automatically
-    try {
-      await base44.auth.register({ email, password });
-    } catch (regErr) {
-      const msg = regErr?.response?.data?.error || regErr?.response?.data?.message || regErr?.message || '';
+    // Step 1: Register the Base44 account via REST API directly
+    // (base44.auth.register() requires an authenticated context server-side, so we use fetch directly)
+    const appId = Deno.env.get('BASE44_APP_ID');
+    const regRes = await fetch(`https://api.base44.com/api/apps/${appId}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    if (!regRes.ok) {
+      const regData = await regRes.json().catch(() => ({}));
+      const msg = regData?.error || regData?.message || regData?.detail || '';
       const lower = (typeof msg === 'string' ? msg : '').toLowerCase();
-      if (lower.includes('already') || lower.includes('exists') || lower.includes('registered') || lower.includes('taken') || regErr?.response?.status === 409) {
+      if (regRes.status === 409 || lower.includes('already') || lower.includes('exists') || lower.includes('registered') || lower.includes('taken')) {
         return Response.json({ success: false, error_code: 'email_taken', error: 'An account with this email already exists. Please sign in or use a different email.' }, { status: 409 });
       }
-      console.error('Register error:', msg, regErr?.response?.status);
+      console.error('Register error:', regRes.status, msg);
       return Response.json({ success: false, error: msg || 'Failed to create account. Please try again.' }, { status: 500 });
     }
 
