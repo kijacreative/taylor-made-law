@@ -222,7 +222,7 @@ export default function JoinNetwork() {
           <div className="max-w-3xl mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-4">Ready to Grow Your Practice?</h2>
             <p className="text-gray-600 mb-8">Create your account and start accessing cases right away.</p>
-            <TMLButton variant="primary" size="lg" onClick={() => setShowForm(true)}>
+            <TMLButton variant="primary" size="lg" onClick={() => navigate('/join-lawyer-network')}>
               Create Your Account
               <ArrowRight className="ml-2 w-5 h-5" />
             </TMLButton>
