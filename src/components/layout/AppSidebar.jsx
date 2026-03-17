@@ -109,7 +109,7 @@ const AppSidebar = ({ user, lawyerProfile }) => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
-                {user.full_name || lawyerProfile?.full_name || 'Attorney'}
+                {lawyerProfile?.full_name || user.full_name || 'Attorney'}
               </p>
               <p className="text-xs text-gray-500 truncate">{user.email}</p>
             </div>
