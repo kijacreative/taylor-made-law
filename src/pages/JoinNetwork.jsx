@@ -25,6 +25,7 @@ const STEPS = [
 ];
 
 export default function JoinNetwork() {
+  const navigate = useNavigate();
   const [showForm, setShowForm] = useState(false);
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
