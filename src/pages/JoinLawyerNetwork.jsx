@@ -105,11 +105,12 @@ export default function JoinLawyerNetwork() {
     try {
       const email = formData.email.trim().toLowerCase();
 
-      // Step 1: Register Base44 account — Base44 sends OTP verification email automatically
+      // Step 1: Register Base44 account — sends OTP verification email automatically
       await base44.auth.register({ email, password: formData.password });
 
-      // Step 2: Create LawyerApplication record directly (public create, no auth required per RLS)
-      await base44.entities.LawyerApplication.create({
+      // Step 2: Create LawyerApplication record (public RLS — no auth required)
+      // Done after register so we have a confirmed email; errors here won't block login
+      base44.entities.LawyerApplication.create({
         full_name: formData.full_name,
         email,
         phone: formData.phone,
@@ -122,15 +123,20 @@ export default function JoinLawyerNetwork() {
         status: 'active_pending_review',
         signup_source: 'public_form',
         consent_terms: formData.consent_terms,
-      });
+      }).catch(() => {}); // non-blocking — don't let this fail the signup
 
       // Step 3: Redirect to email verification
       navigate(`/verify-email?email=${encodeURIComponent(email)}&new=1`, { replace: true });
     } catch (err) {
-      const raw = err?.response?.data?.error || err?.response?.data?.message || err?.message || '';
-      const msg = typeof raw === 'string' && !raw.includes('[object') ? raw : '';
-      if (msg.toLowerCase().includes('already') || msg.toLowerCase().includes('exists') || msg.toLowerCase().includes('registered')) {
+      // Extract error from multiple possible shapes
+      const data = err?.response?.data || {};
+      const raw = data.error || data.message || data.detail || err?.message || '';
+      const msg = typeof raw === 'string' ? raw : (Array.isArray(raw) ? raw[0]?.msg || '' : '');
+      const lower = msg.toLowerCase();
+      if (lower.includes('already') || lower.includes('exists') || lower.includes('registered') || lower.includes('taken') || err?.response?.status === 409) {
         setSubmitError('An account with this email already exists. Please sign in or use a different email.');
+      } else if (err?.response?.status === 500 || lower.includes('server')) {
+        setSubmitError('A server error occurred. Please try again in a moment.');
       } else {
         setSubmitError(msg || 'An error occurred. Please try again.');
       }
