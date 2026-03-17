@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
             <tr style="background:#f9f9f9;"><td style="padding:8px;font-weight:bold;color:#555;">Email</td><td style="padding:8px;">${email}</td></tr>
             <tr><td style="padding:8px;font-weight:bold;color:#555;">Phone</td><td style="padding:8px;">${phone || '—'}</td></tr>
             <tr style="background:#f9f9f9;"><td style="padding:8px;font-weight:bold;color:#555;">Firm</td><td style="padding:8px;">${firm_name}</td></tr>
-            <tr><td style="padding:8px;font-weight:bold;color:#555;">Bar #</td><td style="padding:8px;">${bar_number || '—'}</td></tr>
+            <tr><td style="padding:8px;font-weight:bold;color:#555;">Bar #s</td><td style="padding:8px;">${bar_numbers ? Object.entries(bar_numbers).map(([s,n]) => `${s}: ${n}`).join(', ') : (bar_number || '—')}</td></tr>
             <tr style="background:#f9f9f9;"><td style="padding:8px;font-weight:bold;color:#555;">States</td><td style="padding:8px;">${(states_licensed || []).join(', ') || '—'}</td></tr>
             <tr><td style="padding:8px;font-weight:bold;color:#555;">Practice Areas</td><td style="padding:8px;">${(practice_areas || []).join(', ') || '—'}</td></tr>
             <tr style="background:#f9f9f9;"><td style="padding:8px;font-weight:bold;color:#555;">Experience</td><td style="padding:8px;">${years_experience || 0} years</td></tr>
