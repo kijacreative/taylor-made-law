@@ -283,11 +283,15 @@ export default function LawyerSettings() {
     setSaving(true);
     setError(null);
     try {
-      await base44.auth.updateMe({ 
-        full_name: accountForm.full_name,
-        phone: accountForm.phone
-      });
-      setUser(prev => ({ ...prev, full_name: accountForm.full_name, phone: accountForm.phone }));
+      // Save name and phone to LawyerProfile (full_name is read-only on the User entity)
+      const profileData = { full_name: accountForm.full_name, phone: accountForm.phone };
+      if (lawyerProfile) {
+        await base44.entities.LawyerProfile.update(lawyerProfile.id, profileData);
+      } else {
+        await base44.entities.LawyerProfile.create({ ...profileData, user_id: user.id, firm_name: accountForm.full_name, states_licensed: [], practice_areas: [] });
+      }
+      queryClient.invalidateQueries(['lawyerProfile']);
+      setUser(prev => ({ ...prev, full_name: accountForm.full_name }));
       showSuccess('Account info updated!');
     } catch (err) {
       setError('Failed to update account info.');
