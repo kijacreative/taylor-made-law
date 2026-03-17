@@ -18,15 +18,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Use admin portal for case management.' }, { status: 403 });
     }
 
-    // Check approval: prefer user_status (new identity system), fall back to LawyerProfile (legacy)
-    const userRecord = await base44.asServiceRole.entities.User.filter({ id: user.id });
-    const userStatus = userRecord[0]?.user_status || null;
-
+    // Check approval: prefer user_status on the auth user object, fall back to LawyerProfile
+    const userStatus = user.user_status || null;
     let isApproved = userStatus === 'approved';
 
     // Legacy fallback: if no user_status field, check LawyerProfile
     if (!userStatus) {
-      const profiles = await base44.entities.LawyerProfile.filter({ user_id: user.id });
+      const profiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id: user.id });
       isApproved = profiles[0]?.status === 'approved';
     }
 
