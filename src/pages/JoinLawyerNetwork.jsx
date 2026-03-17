@@ -103,13 +103,15 @@ export default function JoinLawyerNetwork() {
     setLoading(true);
     setSubmitError('');
     try {
-      // Step 1: Register Base44 account
-      await base44.auth.register({ email: formData.email.trim().toLowerCase(), password: formData.password });
+      const email = formData.email.trim().toLowerCase();
 
-      // Step 2: Create TML application record + notify admin
-      await base44.functions.invoke('publicLawyerSignup', {
+      // Step 1: Register Base44 account — Base44 sends OTP verification email automatically
+      await base44.auth.register({ email, password: formData.password });
+
+      // Step 2: Create LawyerApplication record directly (public create, no auth required per RLS)
+      await base44.entities.LawyerApplication.create({
         full_name: formData.full_name,
-        email: formData.email.trim().toLowerCase(),
+        email,
         phone: formData.phone,
         firm_name: formData.firm_name,
         bar_number: formData.bar_number,
@@ -117,11 +119,13 @@ export default function JoinLawyerNetwork() {
         states_licensed: formData.states_licensed,
         practice_areas: formData.practice_areas,
         bio: formData.bio,
+        status: 'active_pending_review',
+        signup_source: 'public_form',
+        consent_terms: formData.consent_terms,
       });
 
-      // Step 3: Go to email verification
-      // Success — navigate to verify email with confirmation context
-      navigate(`/verify-email?email=${encodeURIComponent(formData.email.trim().toLowerCase())}&new=1`, { replace: true });
+      // Step 3: Redirect to email verification
+      navigate(`/verify-email?email=${encodeURIComponent(email)}&new=1`, { replace: true });
     } catch (err) {
       const raw = err?.response?.data?.error || err?.response?.data?.message || err?.message || '';
       const msg = typeof raw === 'string' && !raw.includes('[object') ? raw : '';
