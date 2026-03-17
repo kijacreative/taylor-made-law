@@ -144,6 +144,17 @@ export default function LawyerSettings() {
 
   const lawyerApplication = applications[0] || null;
 
+  // Sync account form name/phone from profile when it loads
+  useEffect(() => {
+    if (lawyerProfile?.full_name || lawyerProfile?.phone) {
+      setAccountForm(prev => ({
+        ...prev,
+        full_name: lawyerProfile.full_name || prev.full_name,
+        phone: lawyerProfile.phone || prev.phone,
+      }));
+    }
+  }, [lawyerProfile]);
+
   // Populate form when profile/application loads — profile takes priority, then application, then existing state
   useEffect(() => {
     if (lawyerProfile || lawyerApplication) {
