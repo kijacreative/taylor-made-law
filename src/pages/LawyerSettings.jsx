@@ -151,7 +151,7 @@ export default function LawyerSettings() {
     if (lawyerProfile) {
       setProfileForm({
         firm_name: lawyerProfile.firm_name || '',
-        bar_number: lawyerProfile.bar_number || '',
+        bar_numbers: lawyerProfile.bar_numbers || {},
         phone: lawyerProfile.phone || '',
         bio: lawyerProfile.bio || '',
         states_licensed: lawyerProfile.states_licensed || [],
