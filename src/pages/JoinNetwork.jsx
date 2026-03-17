@@ -102,8 +102,9 @@ export default function JoinNetwork() {
   const handleSubmit = async () => {
     if (!validateStep(4)) return;
     setLoading(true);
+    setErrors(prev => ({ ...prev, submit: null }));
     try {
-      const res = await base44.functions.invoke('joinLawyerNetwork', {
+      const res = await base44.functions.invoke('applyToNetwork', {
         full_name: formData.full_name,
         email: formData.email,
         phone: formData.phone,
@@ -114,6 +115,8 @@ export default function JoinNetwork() {
         practice_areas: formData.practice_areas,
         bio: formData.bio,
         referrals: formData.referrals.filter(r => r.email),
+        consent_terms: formData.consent_terms,
+        consent_referral: formData.consent_referral,
       });
 
       if (res.data?.success) {
