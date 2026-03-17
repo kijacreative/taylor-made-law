@@ -1,56 +1,71 @@
-/**
- * VerifyEmail — Post-signup confirmation page.
- * 
- * After publicLawyerSignup, Base44 sends a magic-link verification email.
- * This page tells the user to check their email and click the link.
- * It also handles the ?token= callback from that magic link.
- */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { motion } from 'framer-motion';
-import { Mail, CheckCircle2, AlertCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
+import { Mail, CheckCircle2, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
 import PublicFooter from '@/components/layout/PublicFooter';
 import TMLButton from '@/components/ui/TMLButton';
+import TMLInput from '@/components/ui/TMLInput';
 
 export default function VerifyEmail() {
   const navigate = useNavigate();
   const urlParams = new URLSearchParams(window.location.search);
-  const email = urlParams.get('email') || '';
   const isNewSignup = urlParams.get('new') === '1';
 
+  const [email, setEmail] = useState(urlParams.get('email') || '');
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
-  const [resentMsg, setResentMsg] = useState('');
   const [error, setError] = useState('');
-  const [verifying, setVerifying] = useState(false);
-  const [verified, setVerified] = useState(false);
+  const [resentMsg, setResentMsg] = useState('');
+  const [success, setSuccess] = useState(false);
 
-  // Handle magic-link token callback (Base44 redirects back with ?token=...)
-  useEffect(() => {
-    const token = urlParams.get('token');
-    if (!token) return;
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    setError('');
+    setResentMsg('');
 
-    setVerifying(true);
-    base44.auth.verifyOtp(email, token)
-      .then(() => {
-        setVerified(true);
-        setTimeout(() => navigate('/login?activated=1', { replace: true }), 1500);
-      })
-      .catch(() => {
-        // Token-based verify failed — just show the normal "check email" page
-        setVerifying(false);
-      });
-  }, []);
+    if (!email.trim()) {
+      setError('Please enter your email address.');
+      return;
+    }
+    if (!code || code.length !== 6) {
+      setError('Please enter the 6-digit verification code from your email.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await base44.auth.verifyOtp({ email: email.trim(), otpCode: code.trim() });
+      setSuccess(true);
+      setTimeout(() => navigate('/login?activated=1', { replace: true }), 1500);
+    } catch (err) {
+      const msg = err?.data?.error || err?.data?.message || err?.message || '';
+      const lower = msg.toLowerCase();
+      if (lower.includes('expired')) {
+        setError('This verification code has expired. Please request a new one.');
+      } else if (lower.includes('invalid') || lower.includes('incorrect') || lower.includes('wrong')) {
+        setError('Invalid verification code. Please check and try again.');
+      } else {
+        setError(msg || "We couldn't verify your code. Please try again.");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleResend = async () => {
-    if (!email) return;
+    if (!email.trim()) {
+      setError('Please enter your email address first.');
+      return;
+    }
     setResending(true);
     setError('');
     setResentMsg('');
     try {
-      await base44.auth.resendOtp(email);
-      setResentMsg(`A new verification email has been sent to ${email}.`);
+      await base44.auth.resendOtp(email.trim());
+      setResentMsg(`A new code has been sent to ${email.trim()}.`);
     } catch {
       setError('Failed to resend. Please contact support@taylormadelaw.com.');
     } finally {
@@ -58,18 +73,7 @@ export default function VerifyEmail() {
     }
   };
 
-  if (verifying) {
-    return (
-      <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-10 h-10 animate-spin text-[#3a164d] mx-auto mb-4" />
-          <p className="text-gray-600">Verifying your email...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (verified) {
+  if (success) {
     return (
       <div className="min-h-screen bg-[#faf8f5]">
         <PublicNav />
@@ -80,8 +84,7 @@ export default function VerifyEmail() {
                 <CheckCircle2 className="w-8 h-8 text-emerald-600" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">Email Verified!</h2>
-              <p className="text-gray-600 mb-1">Your account is now active.</p>
-              <p className="text-gray-400 text-sm mb-4">Redirecting you to sign in...</p>
+              <p className="text-gray-600 mb-4">Redirecting you to sign in...</p>
               <Loader2 className="w-6 h-6 animate-spin text-[#3a164d] mx-auto" />
             </div>
           </motion.div>
@@ -114,73 +117,73 @@ export default function VerifyEmail() {
               <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-purple-100 flex items-center justify-center">
                 <Mail className="w-7 h-7 text-[#3a164d]" />
               </div>
-              <h1 className="text-2xl font-bold text-gray-900">Check Your Email</h1>
+              <h1 className="text-2xl font-bold text-gray-900">Verify Your Email</h1>
               <p className="text-gray-500 mt-2 text-sm">
-                {email
-                  ? <>We sent a verification link to <strong className="text-gray-700">{email}</strong>.</>
-                  : 'We sent a verification link to your email address.'}
+                Enter the 6-digit code we sent to{' '}
+                {email ? <strong className="text-gray-700">{email}</strong> : 'your email address'}.
               </p>
             </div>
 
             {isNewSignup && (
-              <div className="mb-5 p-4 bg-[#f5f0fa] border border-[#3a164d]/20 rounded-xl text-sm text-[#3a164d]">
+              <div className="mb-4 p-4 bg-[#f5f0fa] border border-[#3a164d]/20 rounded-xl text-sm text-[#3a164d]">
                 <p className="font-semibold mb-1">Application Received ✓</p>
-                <p className="text-[#3a164d]/80">Your application is under review. Click the link in the verification email to activate your account.</p>
+                <p className="text-[#3a164d]/80">Check your inbox (and spam folder) for the verification code.</p>
               </div>
             )}
 
-            <div className="mb-5 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-              <div className="flex items-start gap-3">
-                <ExternalLink className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
-                <div className="text-sm text-blue-800">
-                  <p className="font-semibold mb-1">How to verify:</p>
-                  <ol className="list-decimal list-inside space-y-1 text-blue-700">
-                    <li>Open the email from Taylor Made Law</li>
-                    <li>Click the <strong>"Verify Email"</strong> button or link</li>
-                    <li>You'll be redirected back here automatically</li>
-                  </ol>
+            <form onSubmit={handleVerify} className="space-y-4">
+              {error && (
+                <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
+                  <p className="text-sm text-red-800">{error}</p>
                 </div>
-              </div>
-            </div>
-
-            {error && (
-              <div className="flex items-start gap-2 p-3 mb-4 bg-red-50 border border-red-200 rounded-lg">
-                <AlertCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
-                <p className="text-sm text-red-800">{error}</p>
-              </div>
-            )}
-
-            {resentMsg && (
-              <div className="flex items-start gap-2 p-3 mb-4 bg-emerald-50 border border-emerald-200 rounded-lg">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
-                <p className="text-sm text-emerald-800">{resentMsg}</p>
-              </div>
-            )}
-
-            <div className="text-center space-y-3">
-              <p className="text-sm text-gray-500">Didn't receive the email?</p>
-              <p className="text-xs text-gray-400">Check your spam/junk folder first, then:</p>
-              {email && (
-                <TMLButton
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResend}
-                  loading={resending}
-                  className="w-full"
-                >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Resend Verification Email
-                </TMLButton>
               )}
-              <TMLButton
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate('/login')}
-                className="w-full text-gray-500"
-              >
-                Already verified? Sign in
+              {resentMsg && (
+                <div className="flex items-start gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 mt-0.5 shrink-0" />
+                  <p className="text-sm text-emerald-800">{resentMsg}</p>
+                </div>
+              )}
+
+              <TMLInput
+                label="Email"
+                type="email"
+                required
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+                placeholder="your@email.com"
+              />
+
+              <TMLInput
+                label="Verification Code"
+                type="text"
+                inputMode="numeric"
+                maxLength={6}
+                required
+                value={code}
+                onChange={e => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="6-digit code"
+                autoFocus={!!email}
+                helperText="Check your inbox and spam folder if you don't see it."
+              />
+
+              <TMLButton type="submit" variant="primary" className="w-full" loading={loading}>
+                Verify Email
               </TMLButton>
-            </div>
+
+              <div className="text-center pt-1">
+                <p className="text-sm text-gray-500 mb-1">Didn't receive a code?</p>
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={resending}
+                  className="text-sm text-[#3a164d] hover:underline font-semibold flex items-center justify-center gap-1.5 mx-auto disabled:opacity-50"
+                >
+                  {resending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                  Resend Code
+                </button>
+              </div>
+            </form>
           </div>
 
           <p className="text-center text-sm text-gray-500 mt-6">
