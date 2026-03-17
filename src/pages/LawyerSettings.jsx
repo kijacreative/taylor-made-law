@@ -89,7 +89,7 @@ export default function LawyerSettings() {
 
   const [profileForm, setProfileForm] = useState({
     firm_name: '',
-    bar_number: '',
+    bar_numbers: {},
     phone: '',
     bio: '',
     states_licensed: [],
