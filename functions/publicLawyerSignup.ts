@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { full_name, email, password, phone, firm_name, bar_number, years_experience, states_licensed, practice_areas, bio, consent_terms } = body;
+    const { full_name, email, password, phone, firm_name, bar_number, bar_numbers, years_experience, states_licensed, practice_areas, bio, consent_terms } = body;
 
     // Basic validation
     if (!full_name || !email || !firm_name) {
