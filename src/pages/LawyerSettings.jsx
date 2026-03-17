@@ -134,6 +134,15 @@ export default function LawyerSettings() {
 
   const lawyerProfile = profiles[0] || null;
 
+  // Get lawyer application (signup data) as fallback
+  const { data: applications = [] } = useQuery({
+    queryKey: ['lawyerApplication', user?.email],
+    queryFn: () => base44.entities.LawyerApplication.filter({ email: user.email }),
+    enabled: !!user?.email,
+  });
+
+  const lawyerApplication = applications[0] || null;
+
   // Populate form when profile loads (merge so user-entity pre-population isn't wiped)
   useEffect(() => {
     if (lawyerProfile) {
