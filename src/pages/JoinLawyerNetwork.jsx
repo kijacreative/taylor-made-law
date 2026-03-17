@@ -231,6 +231,30 @@ export default function JoinLawyerNetwork() {
                         ))}
                       </div>
                     </div>
+
+                    {formData.states_licensed.length > 0 && (
+                      <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-2">
+                          Bar Numbers <span className="text-red-500">*</span>
+                          <span className="text-gray-400 font-normal ml-1">— enter your bar number for each selected state</span>
+                        </label>
+                        {errors.bar_numbers && <p className="text-red-600 text-xs mb-2">{errors.bar_numbers}</p>}
+                        <div className="space-y-2">
+                          {formData.states_licensed.map(state => (
+                            <div key={state} className="flex items-center gap-3">
+                              <span className="text-xs font-semibold text-gray-600 w-8 shrink-0">{state}</span>
+                              <input
+                                type="text"
+                                placeholder={`Bar # for ${state}`}
+                                value={formData.bar_numbers[state] || ''}
+                                onChange={e => setBarNumber(state, e.target.value)}
+                                className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3a164d]/30 focus:border-[#3a164d]"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">Practice Areas <span className="text-red-500">*</span></label>
                       {errors.practice_areas && <p className="text-red-600 text-xs mb-2">{errors.practice_areas}</p>}
