@@ -177,9 +177,11 @@ export default function LawyerSettings() {
     setError(null);
     setSuccess(null);
     
+    const primaryBarNumber = Object.values(profileForm.bar_numbers)[0] || '';
     const profileData = {
       firm_name: profileForm.firm_name,
-      bar_number: profileForm.bar_number,
+      bar_number: primaryBarNumber,
+      bar_numbers: profileForm.bar_numbers,
       phone: profileForm.phone,
       bio: profileForm.bio,
       states_licensed: profileForm.states_licensed,
@@ -190,7 +192,6 @@ export default function LawyerSettings() {
     // Check if profile is complete (all required fields filled)
     const isProfileComplete = 
       profileForm.firm_name?.trim() &&
-      profileForm.bar_number?.trim() &&
       profileForm.phone?.trim() &&
       profileForm.bio?.trim() &&
       profileForm.states_licensed?.length > 0 &&
