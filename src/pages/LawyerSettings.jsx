@@ -105,6 +105,7 @@ export default function LawyerSettings() {
         const userData = await base44.auth.me();
         setUser(userData);
         setAccountForm({ full_name: userData.full_name || '', email: userData.email || '', phone: userData.phone || '' });
+        // Note: full_name may also be stored on LawyerProfile — that gets merged below when profile loads
         // Pre-populate profile form with data saved on user entity during signup/activation
         setProfileForm(prev => ({
           ...prev,
