@@ -155,25 +155,20 @@ export default function LawyerSettings() {
     }
   }, [lawyerProfile]);
 
-  // Populate form when profile/application loads — profile takes priority, then application, then existing state
+  // Populate form when profile loads
   useEffect(() => {
-    if (lawyerProfile || lawyerApplication) {
-      const app = lawyerApplication;
-      setProfileForm(prev => ({
-        firm_name: lawyerProfile?.firm_name || app?.firm_name || prev.firm_name || '',
-        bar_number: lawyerProfile?.bar_number || app?.bar_number || prev.bar_number || '',
-        phone: lawyerProfile?.phone || app?.phone || prev.phone || '',
-        bio: lawyerProfile?.bio || app?.bio || prev.bio || '',
-        states_licensed: (lawyerProfile?.states_licensed?.length > 0 ? lawyerProfile.states_licensed : null)
-          || (app?.states_licensed?.length > 0 ? app.states_licensed : null)
-          || prev.states_licensed || [],
-        practice_areas: (lawyerProfile?.practice_areas?.length > 0 ? lawyerProfile.practice_areas : null)
-          || (app?.practice_areas?.length > 0 ? app.practice_areas : null)
-          || prev.practice_areas || [],
-        years_experience: lawyerProfile?.years_experience?.toString() || app?.years_experience?.toString() || prev.years_experience || ''
-      }));
+    if (lawyerProfile) {
+      setProfileForm({
+        firm_name: lawyerProfile.firm_name || '',
+        bar_number: lawyerProfile.bar_number || '',
+        phone: lawyerProfile.phone || '',
+        bio: lawyerProfile.bio || '',
+        states_licensed: lawyerProfile.states_licensed || [],
+        practice_areas: lawyerProfile.practice_areas || [],
+        years_experience: lawyerProfile.years_experience?.toString() || ''
+      });
     }
-  }, [lawyerProfile, lawyerApplication]);
+  }, [lawyerProfile]);
 
   const toggleArrayItem = (field, item) => {
     const current = profileForm[field] || [];
