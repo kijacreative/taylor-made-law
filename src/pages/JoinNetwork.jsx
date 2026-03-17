@@ -191,7 +191,7 @@ export default function JoinNetwork() {
               <p className="text-xl text-white/80 max-w-2xl mx-auto mb-10">
                 Sign up in minutes and get immediate access to pre-screened, quality case referrals matched to your practice areas.
               </p>
-              <TMLButton variant="accent" size="lg" onClick={() => setShowForm(true)}>
+              <TMLButton variant="accent" size="lg" onClick={() => navigate('/join-lawyer-network')}>
                 Join Now — It's Free
                 <ArrowRight className="ml-2 w-5 h-5" />
               </TMLButton>
