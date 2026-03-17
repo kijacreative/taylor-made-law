@@ -135,15 +135,6 @@ export default function LawyerSettings() {
 
   const lawyerProfile = profiles[0] || null;
 
-  // Get lawyer application (signup data) as fallback
-  const { data: applications = [] } = useQuery({
-    queryKey: ['lawyerApplication', user?.email],
-    queryFn: () => base44.entities.LawyerApplication.filter({ email: user.email }),
-    enabled: !!user?.email,
-  });
-
-  const lawyerApplication = applications[0] || null;
-
   // Sync account form name/phone from profile when it loads
   useEffect(() => {
     if (lawyerProfile?.full_name || lawyerProfile?.phone) {
