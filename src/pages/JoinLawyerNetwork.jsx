@@ -55,7 +55,7 @@ export default function JoinLawyerNetwork() {
     email: '',
     phone: '',
     firm_name: '',
-    bar_number: '',
+    bar_numbers: {},
     years_experience: '',
     states_licensed: [],
     practice_areas: [],
