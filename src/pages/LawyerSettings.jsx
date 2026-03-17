@@ -481,13 +481,16 @@ export default function LawyerSettings() {
                     required
                   />
                   <TMLInput
-                    label="Bar Number"
-                    placeholder="e.g. TX-123456"
-                    value={profileForm.bar_number}
-                    onChange={(e) => setProfileForm({ ...profileForm, bar_number: e.target.value })}
+                    label="Years of Experience"
+                    type="number"
+                    min="0"
+                    max="60"
+                    placeholder="e.g. 10"
+                    value={profileForm.years_experience}
+                    onChange={(e) => setProfileForm({ ...profileForm, years_experience: e.target.value })}
                   />
                 </div>
-                
+
                 <TMLInput
                   label="Phone Number"
                   placeholder="e.g. (555) 123-4567"
