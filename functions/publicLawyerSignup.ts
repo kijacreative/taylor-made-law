@@ -63,6 +63,7 @@ Deno.serve(async (req) => {
       phone: phone || '',
       firm_name,
       bar_number: bar_number || '',
+      bar_numbers: bar_numbers || {},
       years_experience: Number(years_experience) || 0,
       states_licensed: states_licensed || [],
       practice_areas: practice_areas || [],
