@@ -75,6 +75,10 @@ export default function JoinLawyerNetwork() {
     set(field, cur.includes(item) ? cur.filter(i => i !== item) : [...cur, item]);
   };
 
+  const setBarNumber = (state, value) => {
+    setFormData(p => ({ ...p, bar_numbers: { ...p.bar_numbers, [state]: value } }));
+  };
+
   const validate = (s) => {
     const e = {};
     if (s === 1) {
