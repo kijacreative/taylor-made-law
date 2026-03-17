@@ -105,14 +105,11 @@ export default function JoinLawyerNetwork() {
     try {
       const email = formData.email.trim().toLowerCase();
 
-      // Step 1: Register Base44 account — sends OTP verification email automatically
-      await base44.auth.register({ email, password: formData.password });
-
-      // Step 2: Create LawyerApplication record (public RLS — no auth required)
-      // Done after register so we have a confirmed email; errors here won't block login
-      base44.entities.LawyerApplication.create({
+      // Call backend function which handles both registration + application creation
+      const res = await base44.functions.invoke('publicLawyerSignup', {
         full_name: formData.full_name,
         email,
+        password: formData.password,
         phone: formData.phone,
         firm_name: formData.firm_name,
         bar_number: formData.bar_number,
@@ -120,26 +117,25 @@ export default function JoinLawyerNetwork() {
         states_licensed: formData.states_licensed,
         practice_areas: formData.practice_areas,
         bio: formData.bio,
-        status: 'active_pending_review',
-        signup_source: 'public_form',
         consent_terms: formData.consent_terms,
-      }).catch(() => {}); // non-blocking — don't let this fail the signup
+      });
 
-      // Step 3: Redirect to email verification
+      const result = res.data;
+      if (!result.success) {
+        if (result.error_code === 'email_taken') {
+          setSubmitError('An account with this email already exists. Please sign in or use a different email.');
+        } else {
+          setSubmitError(result.error || 'An error occurred. Please try again.');
+        }
+        return;
+      }
+
+      // Redirect to email verification
       navigate(`/verify-email?email=${encodeURIComponent(email)}&new=1`, { replace: true });
     } catch (err) {
-      // Extract error from multiple possible shapes
       const data = err?.response?.data || {};
-      const raw = data.error || data.message || data.detail || err?.message || '';
-      const msg = typeof raw === 'string' ? raw : (Array.isArray(raw) ? raw[0]?.msg || '' : '');
-      const lower = msg.toLowerCase();
-      if (lower.includes('already') || lower.includes('exists') || lower.includes('registered') || lower.includes('taken') || err?.response?.status === 409) {
-        setSubmitError('An account with this email already exists. Please sign in or use a different email.');
-      } else if (err?.response?.status === 500 || lower.includes('server')) {
-        setSubmitError('A server error occurred. Please try again in a moment.');
-      } else {
-        setSubmitError(msg || 'An error occurred. Please try again.');
-      }
+      const msg = data.error || data.message || err?.message || '';
+      setSubmitError(typeof msg === 'string' && msg ? msg : 'An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
