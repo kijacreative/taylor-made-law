@@ -279,7 +279,7 @@ export default function JoinLawyerNetwork() {
                         ['Name', formData.full_name],
                         ['Email', formData.email],
                         ['Firm', formData.firm_name],
-                        ['Bar #', formData.bar_number || '—'],
+                        ['Bar #s', Object.entries(formData.bar_numbers).map(([st, num]) => `${st}: ${num}`).join(', ') || '—'],
                         ['Experience', formData.years_experience ? `${formData.years_experience} years` : '—'],
                         ['States', (formData.states_licensed.slice(0, 5).join(', ') + (formData.states_licensed.length > 5 ? ` +${formData.states_licensed.length - 5}` : '')) || '—'],
                         ['Practice Areas', (formData.practice_areas.slice(0, 3).join(', ') + (formData.practice_areas.length > 3 ? ` +${formData.practice_areas.length - 3}` : '')) || '—'],
