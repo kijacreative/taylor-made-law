@@ -91,6 +91,8 @@ export default function JoinLawyerNetwork() {
     if (s === 2) {
       if (!formData.states_licensed.length) e.states_licensed = 'Select at least one state';
       if (!formData.practice_areas.length) e.practice_areas = 'Select at least one practice area';
+      const missingBarNumbers = formData.states_licensed.filter(st => !formData.bar_numbers[st]?.trim());
+      if (missingBarNumbers.length) e.bar_numbers = `Enter bar number for: ${missingBarNumbers.join(', ')}`;
     }
     if (s === 3) {
       if (!formData.consent_terms) e.consent_terms = 'You must accept the Terms & Privacy Policy';
