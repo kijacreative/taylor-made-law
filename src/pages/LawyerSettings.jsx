@@ -524,6 +524,31 @@ export default function LawyerSettings() {
                   </div>
                 </div>
 
+                {profileForm.states_licensed.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Bar Numbers <span className="text-xs text-gray-400 font-normal">— enter your bar number for each licensed state</span>
+                    </label>
+                    <div className="space-y-2">
+                      {profileForm.states_licensed.map(state => (
+                        <div key={state} className="flex items-center gap-3">
+                          <span className="text-xs font-semibold text-gray-600 w-8 shrink-0">{state}</span>
+                          <input
+                            type="text"
+                            placeholder={`Bar # for ${state}`}
+                            value={profileForm.bar_numbers[state] || ''}
+                            onChange={(e) => setProfileForm(prev => ({
+                              ...prev,
+                              bar_numbers: { ...prev.bar_numbers, [state]: e.target.value }
+                            }))}
+                            className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3a164d]/30 focus:border-[#3a164d]"
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Practice Areas
