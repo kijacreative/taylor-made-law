@@ -1,8 +1,8 @@
 /**
  * publicLawyerSignup — Unauthenticated public lawyer signup endpoint.
  *
- * Creates a LawyerApplication with status=active_pending_review
- * and notifies admin. Does NOT use inviteUser or any admin-only action.
+ * Registers a Base44 account AND creates a LawyerApplication record.
+ * Returns structured errors so the frontend can show helpful messages.
  */
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
 
@@ -27,17 +27,34 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { full_name, email, phone, firm_name, bar_number, years_experience, states_licensed, practice_areas, bio } = body;
+    const { full_name, email, password, phone, firm_name, bar_number, years_experience, states_licensed, practice_areas, bio, consent_terms } = body;
 
     // Basic validation
     if (!full_name || !email || !firm_name) {
       return Response.json({ success: false, error: 'Full name, email, and firm name are required.' }, { status: 400 });
     }
+    if (!password || password.length < 8) {
+      return Response.json({ success: false, error: 'Password must be at least 8 characters.' }, { status: 400 });
+    }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return Response.json({ success: false, error: 'Invalid email address.' }, { status: 400 });
     }
 
-    // Create the application record (upsert — update if exists, create if not)
+    // Step 1: Register the Base44 account
+    // This sends the OTP verification email automatically
+    try {
+      await base44.auth.register({ email, password });
+    } catch (regErr) {
+      const msg = regErr?.response?.data?.error || regErr?.response?.data?.message || regErr?.message || '';
+      const lower = (typeof msg === 'string' ? msg : '').toLowerCase();
+      if (lower.includes('already') || lower.includes('exists') || lower.includes('registered') || lower.includes('taken') || regErr?.response?.status === 409) {
+        return Response.json({ success: false, error_code: 'email_taken', error: 'An account with this email already exists. Please sign in or use a different email.' }, { status: 409 });
+      }
+      console.error('Register error:', msg, regErr?.response?.status);
+      return Response.json({ success: false, error: msg || 'Failed to create account. Please try again.' }, { status: 500 });
+    }
+
+    // Step 2: Create the LawyerApplication record
     const application = await base44.asServiceRole.entities.LawyerApplication.create({
       full_name,
       email,
@@ -50,10 +67,11 @@ Deno.serve(async (req) => {
       bio: bio || '',
       status: 'active_pending_review',
       signup_source: 'public_form',
+      consent_terms: !!consent_terms,
     });
 
-    // Audit log
-    await base44.asServiceRole.entities.AuditLog.create({
+    // Audit log (non-blocking)
+    base44.asServiceRole.entities.AuditLog.create({
       entity_type: 'LawyerApplication',
       entity_id: application.id,
       action: 'public_signup_submitted',
@@ -62,8 +80,8 @@ Deno.serve(async (req) => {
       notes: `Public signup submitted by ${full_name} (${email}) from firm ${firm_name}`,
     }).catch(() => {});
 
-    // Notify admin
-    await sendEmail(
+    // Notify admin (non-blocking)
+    sendEmail(
       ADMIN_EMAIL,
       `New Lawyer Signup: ${full_name} — ${firm_name}`,
       `
@@ -86,10 +104,11 @@ Deno.serve(async (req) => {
           </div>
         </div>
       `
-    );
+    ).catch(() => {});
 
     return Response.json({ success: true, application_id: application.id });
   } catch (error) {
-    return Response.json({ success: false, error: error.message }, { status: 500 });
+    console.error('publicLawyerSignup error:', error?.message, error?.response?.data);
+    return Response.json({ success: false, error: error.message || 'An unexpected error occurred.' }, { status: 500 });
   }
 });
