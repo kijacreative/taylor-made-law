@@ -104,7 +104,7 @@ export default function JoinNetwork() {
     setLoading(true);
     setErrors(prev => ({ ...prev, submit: null }));
     try {
-      const res = await base44.functions.invoke('applyToNetwork', {
+      const res = await base44.functions.invoke('publicLawyerSignup', {
         full_name: formData.full_name,
         email: formData.email,
         phone: formData.phone,
