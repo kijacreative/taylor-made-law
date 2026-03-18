@@ -65,49 +65,25 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
     setInviting(true);
     setInviteResult(null);
     try {
-      const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
-      await base44.entities.LegalCircleInvitation.create({
+      const res = await base44.functions.invoke('createCircleInvitation', {
         circle_id: circleId,
-        inviter_user_id: user.id,
-        inviter_name: user.full_name,
         invitee_email: selectedAttorney.email,
         invitee_name: selectedAttorney.name,
-        token,
+        invitee_user_id: selectedAttorney.user_id,
         message: inviteMessage,
-        status: 'pending',
-        sent_at: new Date().toISOString(),
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        circle_name: circleName
       });
 
-      // In-app notification
-      if (selectedAttorney.user_id) {
-        await base44.entities.CircleNotification.create({
-          user_id: selectedAttorney.user_id,
-          user_email: selectedAttorney.email,
-          circle_id: circleId,
-          type: 'invite',
-          title: `You've been invited to join a Legal Circle`,
-          body: `${user.full_name} invited you to join "${circleName || 'a circle'}" on TML Network.`,
-          is_read: false
-        }).catch(() => {});
+      if (res.data?.error) {
+        setInviteResult({ error: res.data.error });
+      } else {
+        setInviteResult({ success: `Invitation sent to ${selectedAttorney.name || selectedAttorney.email}!` });
+        setSelectedAttorney(null);
+        setInviteMessage('');
+        queryClient.invalidateQueries({ queryKey: ['circleMembers', circleId] });
       }
-
-      // Email
-      await base44.functions.invoke('sendCircleInviteEmail', {
-        invitee_email: selectedAttorney.email,
-        invitee_name: selectedAttorney.name,
-        circle_name: circleName || 'Legal Circle',
-        circle_id: circleId,
-        message: inviteMessage,
-        is_network_member: true
-      }).catch(() => {});
-
-      setInviteResult({ success: `Invitation sent to ${selectedAttorney.name || selectedAttorney.email}!` });
-      setSelectedAttorney(null);
-      setInviteMessage('');
-      queryClient.invalidateQueries({ queryKey: ['circleMembers', circleId] });
-    } catch {
-      setInviteResult({ error: 'Failed to send invitation. Please try again.' });
+    } catch (err) {
+      setInviteResult({ error: err?.response?.data?.error || 'Failed to send invitation. Please try again.' });
     }
     setInviting(false);
   };
