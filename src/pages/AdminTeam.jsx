@@ -229,6 +229,24 @@ export default function AdminTeam() {
         </div>
       </main>
 
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!confirmDeleteUser} onOpenChange={(open) => !open && setConfirmDeleteUser(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Admin User</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove <strong>{confirmDeleteUser?.email}</strong> from the platform? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUser} className="bg-red-600 hover:bg-red-700 text-white">
+              Delete User
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Invite Modal */}
       {showInviteModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
