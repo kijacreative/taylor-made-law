@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
         const u = userMap[profile.user_id] || userMap[profile.created_by] || {};
         return {
           email: u.email || profile.created_by || '',
-          name: u.full_name || profile.full_name || '',
+          name: profile.full_name || u.full_name || '',
           firm_name: profile.firm_name || '',
           practice_areas: profile.practice_areas || [],
           states_licensed: profile.states_licensed || [],
