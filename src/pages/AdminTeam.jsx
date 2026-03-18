@@ -39,6 +39,8 @@ export default function AdminTeam() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
+  const [confirmDeleteUser, setConfirmDeleteUser] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
     const checkAuth = async () => {
