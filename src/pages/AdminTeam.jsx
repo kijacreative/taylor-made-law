@@ -102,7 +102,8 @@ export default function AdminTeam() {
     if (!inviteEmail.trim()) { notifyError('Email is required.'); return; }
     setSaving(true);
     try {
-      await base44.users.inviteUser(inviteEmail.trim().toLowerCase(), 'admin');
+      const res = await base44.functions.invoke('inviteAdminUser', { email: inviteEmail.trim().toLowerCase() });
+      if (res.data?.error) throw new Error(res.data.error);
       notify(`Admin invitation sent to ${inviteEmail.trim()}.`);
       setShowInviteModal(false);
       setInviteEmail('');
