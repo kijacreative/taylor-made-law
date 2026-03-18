@@ -187,9 +187,8 @@ const AppSidebar = ({ user, lawyerProfile }) => {
         })}
       </nav>
 
-      {/* Notifications + Logout */}
+      {/* Logout */}
       <div className="absolute bottom-4 left-4 right-4 space-y-1">
-        <NotificationBell user={user} collapsed={collapsed} />
         <button
           onClick={handleLogout}
           className={`flex items-center gap-3 px-4 py-3 w-full text-gray-600 hover:bg-red-50 hover:text-red-600 rounded-xl transition-all duration-200 ${
