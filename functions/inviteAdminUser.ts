@@ -21,7 +21,8 @@ Deno.serve(async (req) => {
     await base44.users.inviteUser(email.trim().toLowerCase(), 'admin');
 
     // Send a custom branded email with the correct redirect
-    const appUrl = 'https://preview-sandbox--6976c161df20214df3a08053.base44.app/AdminDashboard';
+    const origin = req.headers.get('origin') || 'https://taylormadelaw.com';
+    const appUrl = `${origin}/AdminDashboard`;
 
     await resend.emails.send({
       from: 'Taylor Made Law <noreply@taylormadelaw.com>',
