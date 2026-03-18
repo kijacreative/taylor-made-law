@@ -10,8 +10,6 @@ import {
   ChevronLeft,
   Scale,
   Users,
-  BookOpen,
-  FileText,
   MessageSquare
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
@@ -60,18 +58,6 @@ const AppSidebar = ({ user, lawyerProfile }) => {
       icon: Users, 
       path: 'Groups',
       active: currentPath.includes('/Group')
-    },
-    { 
-      label: 'Blog & Resources', 
-      icon: BookOpen, 
-      path: 'LawyerBlog',
-      active: currentPath.includes('/LawyerBlog')
-    },
-    { 
-      label: 'Resource Library', 
-      icon: FileText, 
-      path: 'LawyerResources',
-      active: currentPath.includes('/LawyerResource')
     },
     { 
       label: 'Messages', 
