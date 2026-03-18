@@ -11,15 +11,30 @@ import {
   Scale,
   Users,
   BookOpen,
-  FileText
+  FileText,
+  MessageSquare
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import { useQuery } from '@tanstack/react-query';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
 const AppSidebar = ({ user, lawyerProfile }) => {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const currentPath = location.pathname;
+
+  const isApprovedLawyer = lawyerProfile?.status === 'approved';
+  const { data: inboxData } = useQuery({
+    queryKey: ['directInbox', user?.id],
+    queryFn: async () => {
+      const res = await base44.functions.invoke('getDirectInbox', {});
+      return res.data;
+    },
+    enabled: !!user?.id && isApprovedLawyer,
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+  const unreadCount = inboxData?.total_unread || 0;
 
   const menuItems = [
     { 
@@ -57,6 +72,14 @@ const AppSidebar = ({ user, lawyerProfile }) => {
       icon: FileText, 
       path: 'LawyerResources',
       active: currentPath.includes('/LawyerResource')
+    },
+    { 
+      label: 'Messages', 
+      icon: MessageSquare, 
+      path: null,
+      href: '/app/messages',
+      active: currentPath.includes('/app/messages'),
+      badge: unreadCount > 0 ? unreadCount : null
     },
     { 
       label: 'Settings', 
@@ -129,20 +152,39 @@ const AppSidebar = ({ user, lawyerProfile }) => {
 
       {/* Navigation */}
       <nav className="p-4 space-y-2">
-        {menuItems.map((item) => (
-          <Link
-            key={item.path}
-            to={createPageUrl(item.path)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
-              item.active
-                ? 'bg-[#3a164d] text-white shadow-lg shadow-[#3a164d]/20'
-                : 'text-gray-600 hover:bg-gray-50 hover:text-[#3a164d]'
-            }`}
-          >
-            <item.icon className={`w-5 h-5 ${collapsed ? 'mx-auto' : ''}`} />
-            {!collapsed && <span className="font-medium">{item.label}</span>}
-          </Link>
-        ))}
+        {menuItems.map((item) => {
+          const to = item.href || createPageUrl(item.path);
+          return (
+            <Link
+              key={item.label}
+              to={to}
+              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                item.active
+                  ? 'bg-[#3a164d] text-white shadow-lg shadow-[#3a164d]/20'
+                  : 'text-gray-600 hover:bg-gray-50 hover:text-[#3a164d]'
+              }`}
+            >
+              <div className="relative shrink-0">
+                <item.icon className={`w-5 h-5 ${collapsed ? 'mx-auto' : ''}`} />
+                {item.badge && (
+                  <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 px-0.5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                    {item.badge > 9 ? '9+' : item.badge}
+                  </span>
+                )}
+              </div>
+              {!collapsed && (
+                <div className="flex items-center justify-between flex-1">
+                  <span className="font-medium">{item.label}</span>
+                  {item.badge && (
+                    <span className="ml-auto min-w-[20px] h-5 px-1.5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
+                      {item.badge > 9 ? '9+' : item.badge}
+                    </span>
+                  )}
+                </div>
+              )}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* Notifications + Logout */}
