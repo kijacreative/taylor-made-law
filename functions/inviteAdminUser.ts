@@ -18,7 +18,7 @@ Deno.serve(async (req) => {
     }
 
     // Invite the user via platform (creates account / sends platform invite)
-    await base44.asServiceRole.users.inviteUser(email.trim().toLowerCase(), 'admin');
+    await base44.users.inviteUser(email.trim().toLowerCase(), 'admin');
 
     // Send a custom branded email with the correct redirect
     const appUrl = 'https://preview-sandbox--6976c161df20214df3a08053.base44.app/AdminDashboard';
