@@ -199,6 +199,26 @@ export default function AdminTeam() {
                             Joined: {u.created_date ? new Date(u.created_date).toLocaleDateString() : '—'}
                           </p>
                         </div>
+                        {u.id !== authUser?.id && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                                {actionLoading?.startsWith(`reset-${u.id}`) || actionLoading?.startsWith(`delete-${u.id}`)
+                                  ? <Loader2 className="w-4 h-4 animate-spin" />
+                                  : <MoreVertical className="w-4 h-4" />
+                                }
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handlePasswordReset(u)} className="gap-2">
+                                <KeyRound className="w-4 h-4" /> Send Password Reset
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => setConfirmDeleteUser(u)} className="gap-2 text-red-600 focus:text-red-600">
+                                <Trash2 className="w-4 h-4" /> Delete User
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                     </TMLCardContent>
                   </TMLCard>
