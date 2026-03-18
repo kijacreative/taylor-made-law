@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users, MessageSquare, Briefcase, Settings, Loader2, Shield, LogOut } from 'lucide-react';
+import { ArrowLeft, Users, MessageSquare, Briefcase, Settings, Loader2, Shield, LogOut, FolderOpen } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLCard, { TMLCardContent } from '@/components/ui/TMLCard';
@@ -13,6 +13,7 @@ import CircleChat from '@/components/circles/CircleChat';
 import CircleCases from '@/components/circles/CircleCases';
 import CircleMembers from '@/components/circles/CircleMembers';
 import CircleSettings from '@/components/circles/CircleSettings';
+import CircleResources from '@/components/circles/CircleResources';
 
 export default function GroupDetail() {
   const navigate = useNavigate();
@@ -108,6 +109,7 @@ export default function GroupDetail() {
 
   const tabs = [
     { id: 'chat', label: 'Chat', icon: MessageSquare },
+    { id: 'resources', label: 'Resources', icon: FolderOpen },
     { id: 'members', label: 'Members', icon: Users, count: members.length },
     ...(circle.case_sharing_enabled ? [{ id: 'cases', label: 'Cases', icon: Briefcase }] : []),
     ...(isAdmin ? [{ id: 'settings', label: 'Settings', icon: Settings }] : [])
@@ -185,6 +187,9 @@ export default function GroupDetail() {
           )}
           {activeTab === 'cases' && circle.case_sharing_enabled && (
             <CircleCases circleId={circleId} circle={circle} user={user} isAdmin={isAdmin} />
+          )}
+          {activeTab === 'resources' && (
+            <CircleResources circleId={circleId} user={user} isAdmin={isAdmin} />
           )}
           {activeTab === 'settings' && isAdmin && (
             <CircleSettings circle={circle} members={members} isAdmin={isAdmin} />
