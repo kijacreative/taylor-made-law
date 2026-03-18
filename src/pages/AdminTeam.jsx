@@ -67,6 +67,37 @@ export default function AdminTeam() {
   const notify = (msg) => { setSuccess(msg); setTimeout(() => setSuccess(null), 4000); };
   const notifyError = (msg) => { setError(msg); setTimeout(() => setError(null), 5000); };
 
+  const handlePasswordReset = async (u) => {
+    setActionLoading(`reset-${u.id}`);
+    try {
+      await base44.integrations.Core.SendEmail({
+        to: u.email,
+        subject: 'Reset your Taylor Made Law admin password',
+        body: `Hi ${u.full_name || 'Admin'},\n\nA password reset was requested for your account. Please visit the platform and use the "Forgot Password" option to reset your password.\n\nIf you did not request this, please ignore this email.\n\nTaylor Made Law Admin Team`,
+      });
+      notify(`Password reset email sent to ${u.email}.`);
+    } catch (err) {
+      notifyError('Failed to send password reset email.');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!confirmDeleteUser) return;
+    setActionLoading(`delete-${confirmDeleteUser.id}`);
+    try {
+      await base44.entities.User.delete(confirmDeleteUser.id);
+      notify(`User ${confirmDeleteUser.email} has been removed.`);
+      refetch();
+    } catch (err) {
+      notifyError('Failed to delete user.');
+    } finally {
+      setActionLoading(null);
+      setConfirmDeleteUser(null);
+    }
+  };
+
   const handleInvite = async () => {
     if (!inviteEmail.trim()) { notifyError('Email is required.'); return; }
     setSaving(true);
