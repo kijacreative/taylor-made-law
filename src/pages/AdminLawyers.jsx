@@ -61,7 +61,6 @@ export default function AdminLawyers() {
   const [appActionLoading, setAppActionLoading] = useState(false);
 
   // Attorneys state
-  const [attTab, setAttTab] = useState('pending');
   const [attSearch, setAttSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
@@ -70,6 +69,9 @@ export default function AdminLawyers() {
   const [approvingUser, setApprovingUser] = useState(null);
   const [disablingUser, setDisablingUser] = useState(null);
   const [moreInfoUser, setMoreInfoUser] = useState(null);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editMembershipData, setEditMembershipData] = useState({});
+  const [editMembershipTab, setEditMembershipTab] = useState('membership');
   const [freeTrialMonths, setFreeTrialMonths] = useState('6');
   const [disableReason, setDisableReason] = useState('');
   const [moreInfoItems, setMoreInfoItems] = useState('');
