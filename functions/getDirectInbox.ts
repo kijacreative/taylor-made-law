@@ -24,40 +24,47 @@ Deno.serve(async (req) => {
     const myThreads = allThreads.filter(t => threadIds.includes(t.id) && !t.is_archived);
 
     // Fetch all participants for these threads (to get other person's info)
-    const allParts = await base44.asServiceRole.entities.DirectMessageParticipant.list();
-    const threadPartsMap = {};
-    for (const p of allParts) {
-      if (!threadPartsMap[p.thread_id]) threadPartsMap[p.thread_id] = [];
-      threadPartsMap[p.thread_id].push(p);
-    }
+     const allParts = await base44.asServiceRole.entities.DirectMessageParticipant.list();
+     const threadPartsMap = {};
+     for (const p of allParts) {
+       if (!threadPartsMap[p.thread_id]) threadPartsMap[p.thread_id] = [];
+       threadPartsMap[p.thread_id].push(p);
+     }
 
-    // Build result with unread counts
-    let totalUnread = 0;
-    const threads = myThreads
-      .sort((a, b) => new Date(b.last_message_at || b.created_date) - new Date(a.last_message_at || a.created_date))
-      .map(thread => {
-        const myPart = myParticipants.find(p => p.thread_id === thread.id);
-        const otherPart = (threadPartsMap[thread.id] || []).find(p => p.user_id !== user.id);
-        
-        const lastMsgAt = thread.last_message_at ? new Date(thread.last_message_at) : null;
-        const lastReadAt = myPart?.last_read_at ? new Date(myPart.last_read_at) : null;
-        const isUnread = lastMsgAt && thread.last_message_sender_id !== user.id &&
-          (!lastReadAt || lastMsgAt > lastReadAt);
-        
-        if (isUnread) totalUnread++;
+     // Fetch lawyer profiles for full names
+     const lawyerProfiles = await base44.asServiceRole.entities.LawyerProfile.list();
 
-        return {
-          thread_id: thread.id,
-          other_user_id: otherPart?.user_id || '',
-          other_user_name: otherPart?.user_name || 'Unknown Attorney',
-          other_user_email: otherPart?.user_email || '',
-          last_message_at: thread.last_message_at || thread.created_date,
-          last_message_preview: thread.last_message_preview || '',
-          last_message_sender_id: thread.last_message_sender_id || '',
-          is_unread: isUnread,
-          my_participant_id: myPart?.id
-        };
-      });
+     // Build result with unread counts
+     let totalUnread = 0;
+     const threads = myThreads
+       .sort((a, b) => new Date(b.last_message_at || b.created_date) - new Date(a.last_message_at || a.created_date))
+       .map(thread => {
+         const myPart = myParticipants.find(p => p.thread_id === thread.id);
+         const otherPart = (threadPartsMap[thread.id] || []).find(p => p.user_id !== user.id);
+
+         const lastMsgAt = thread.last_message_at ? new Date(thread.last_message_at) : null;
+         const lastReadAt = myPart?.last_read_at ? new Date(myPart.last_read_at) : null;
+         const isUnread = lastMsgAt && thread.last_message_sender_id !== user.id &&
+           (!lastReadAt || lastMsgAt > lastReadAt);
+
+         if (isUnread) totalUnread++;
+
+         // Get other user's full name from LawyerProfile
+         const otherProfile = lawyerProfiles.find(p => p.user_id === otherPart?.user_id);
+         const fullName = otherProfile?.full_name || 'Unknown Attorney';
+
+         return {
+           thread_id: thread.id,
+           other_user_id: otherPart?.user_id || '',
+           other_user_name: fullName,
+           other_user_email: otherPart?.user_email || '',
+           last_message_at: thread.last_message_at || thread.created_date,
+           last_message_preview: thread.last_message_preview || '',
+           last_message_sender_id: thread.last_message_sender_id || '',
+           is_unread: isUnread,
+           my_participant_id: myPart?.id
+         };
+       });
 
     return Response.json({ threads, total_unread: totalUnread });
   } catch (error) {
