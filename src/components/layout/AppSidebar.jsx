@@ -113,9 +113,17 @@ const AppSidebar = ({ user, lawyerProfile }) => {
       {!collapsed && user && (
         <div className="p-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3a164d] to-[#993333] flex items-center justify-center text-white font-semibold">
-              {(user.full_name || lawyerProfile?.full_name)?.charAt(0) || user.email?.charAt(0)?.toUpperCase()}
-            </div>
+            {lawyerProfile?.profile_photo_url ? (
+              <img
+                src={lawyerProfile.profile_photo_url}
+                alt={lawyerProfile.full_name || 'Profile'}
+                className="w-10 h-10 rounded-full object-cover border border-gray-200 shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3a164d] to-[#993333] flex items-center justify-center text-white font-semibold shrink-0">
+                {(lawyerProfile?.full_name || user.full_name || user.email)?.charAt(0)?.toUpperCase()}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-900 truncate">
                 {lawyerProfile?.full_name || user.full_name || 'Attorney'}
