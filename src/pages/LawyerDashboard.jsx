@@ -121,17 +121,13 @@ export default function LawyerDashboard() {
     return null;
   }
 
-  // Use unified user_status on the user record
-  const definitivelyApproved = user?.user_status === 'approved' || user?.user_status === 'active';
-  const isPending = !definitivelyApproved && (
-    user?.user_status === 'active_pending_review' ||
-    user?.user_status === 'pending' ||
-    user?.user_status === 'invited' ||
-    !user?.user_status ||
-    lawyerProfile?.status === 'pending' ||
-    (!lawyerProfile && profiles !== undefined && profiles.length === 0)
-  );
-  const isApproved = definitivelyApproved || lawyerProfile?.status === 'approved';
+  // Determine approval status — check user_status first, then fall back to lawyerProfile.status
+  const pendingUserStatuses = ['active_pending_review', 'pending', 'invited'];
+  const approvedUserStatuses = ['approved', 'active'];
+
+  const isPending = pendingUserStatuses.includes(user?.user_status) ||
+    (!approvedUserStatuses.includes(user?.user_status) && lawyerProfile?.status === 'pending');
+  const isApproved = approvedUserStatuses.includes(user?.user_status) || lawyerProfile?.status === 'approved';
   const needsReferralAgreement = isApproved && !lawyerProfile?.referral_agreement_accepted;
 
   return (
