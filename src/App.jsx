@@ -87,6 +87,7 @@ const AuthenticatedApp = () => {
       <Route path="/app/messages/:threadId" element={<LayoutWrapper currentPageName="DirectMessageThread"><DirectMessageThreadPage /></LayoutWrapper>} />
       <Route path="/terms" element={<LayoutWrapper currentPageName="TermsAndConditions"><TermsAndConditions /></LayoutWrapper>} />
       <Route path="/privacy" element={<LayoutWrapper currentPageName="PrivacyPolicy"><PrivacyPolicy /></LayoutWrapper>} />
+      <Route path="/PublicBlogDetail" element={<LayoutWrapper currentPageName="PublicBlogDetail"><PublicBlogDetail /></LayoutWrapper>} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
