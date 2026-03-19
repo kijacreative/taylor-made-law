@@ -4,10 +4,10 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { 
-  User, 
-  Building2, 
-  CreditCard, 
+import {
+  User,
+  Building2,
+  CreditCard,
   Shield,
   CheckCircle2,
   AlertCircle,
@@ -16,8 +16,8 @@ import {
   FileText,
   KeyRound,
   Mail,
-  Phone
-} from 'lucide-react';
+  Phone } from
+'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
@@ -100,21 +100,21 @@ export default function LawyerSettings() {
     const checkAuth = async () => {
       try {
         const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('LawyerLogin')); return; }
+        if (!isAuth) {navigate(createPageUrl('LawyerLogin'));return;}
         const userData = await base44.auth.me();
         setUser(userData);
         setAccountForm({ full_name: userData.full_name || '', email: userData.email || '', phone: userData.phone || '' });
         // Note: full_name may also be stored on LawyerProfile — that gets merged below when profile loads
         // Pre-populate profile form with data saved on user entity during signup/activation
-        setProfileForm(prev => ({
+        setProfileForm((prev) => ({
           ...prev,
           firm_name: prev.firm_name || userData.firm_name || '',
           bar_number: prev.bar_number || userData.bar_number || '',
           phone: prev.phone || userData.phone || '',
-          states_licensed: prev.states_licensed?.length > 0 ? prev.states_licensed : (userData.states_licensed || []),
-          practice_areas: prev.practice_areas?.length > 0 ? prev.practice_areas : (userData.practice_areas || []),
+          states_licensed: prev.states_licensed?.length > 0 ? prev.states_licensed : userData.states_licensed || [],
+          practice_areas: prev.practice_areas?.length > 0 ? prev.practice_areas : userData.practice_areas || [],
           years_experience: prev.years_experience || userData.years_experience?.toString() || '',
-          bio: prev.bio || userData.bio || '',
+          bio: prev.bio || userData.bio || ''
         }));
       } catch (e) {
         navigate(createPageUrl('LawyerLogin'));
@@ -129,7 +129,7 @@ export default function LawyerSettings() {
   const { data: profiles = [], isLoading: profileLoading } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
     queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
-    enabled: !!user?.id,
+    enabled: !!user?.id
   });
 
   const lawyerProfile = profiles[0] || null;
@@ -137,10 +137,10 @@ export default function LawyerSettings() {
   // Sync account form name/phone from profile when it loads
   useEffect(() => {
     if (lawyerProfile?.full_name || lawyerProfile?.phone) {
-      setAccountForm(prev => ({
+      setAccountForm((prev) => ({
         ...prev,
         full_name: lawyerProfile.full_name || prev.full_name,
-        phone: lawyerProfile.phone || prev.phone,
+        phone: lawyerProfile.phone || prev.phone
       }));
     }
   }, [lawyerProfile]);
@@ -163,7 +163,7 @@ export default function LawyerSettings() {
   const toggleArrayItem = (field, item) => {
     const current = profileForm[field] || [];
     if (current.includes(item)) {
-      setProfileForm({ ...profileForm, [field]: current.filter(i => i !== item) });
+      setProfileForm({ ...profileForm, [field]: current.filter((i) => i !== item) });
     } else {
       setProfileForm({ ...profileForm, [field]: [...current, item] });
     }
@@ -171,11 +171,11 @@ export default function LawyerSettings() {
 
   const handleSaveProfile = async () => {
     if (!user) return;
-    
+
     setSaving(true);
     setError(null);
     setSuccess(null);
-    
+
     const primaryBarNumber = Object.values(profileForm.bar_numbers)[0] || '';
     const profileData = {
       firm_name: profileForm.firm_name,
@@ -189,13 +189,13 @@ export default function LawyerSettings() {
     };
 
     // Check if profile is complete (all required fields filled)
-    const isProfileComplete = 
-      profileForm.firm_name?.trim() &&
-      profileForm.phone?.trim() &&
-      profileForm.bio?.trim() &&
-      profileForm.states_licensed?.length > 0 &&
-      profileForm.practice_areas?.length > 0 &&
-      profileForm.years_experience;
+    const isProfileComplete =
+    profileForm.firm_name?.trim() &&
+    profileForm.phone?.trim() &&
+    profileForm.bio?.trim() &&
+    profileForm.states_licensed?.length > 0 &&
+    profileForm.practice_areas?.length > 0 &&
+    profileForm.years_experience;
 
     try {
       if (lawyerProfile) {
@@ -207,9 +207,9 @@ export default function LawyerSettings() {
       // Mark profile as complete on the user record if all fields are filled
       if (isProfileComplete && !user.profile_completed_at) {
         await base44.auth.updateMe({ profile_completed_at: new Date().toISOString() });
-        setUser(prev => ({ ...prev, profile_completed_at: new Date().toISOString() }));
+        setUser((prev) => ({ ...prev, profile_completed_at: new Date().toISOString() }));
       }
-      
+
       queryClient.invalidateQueries(['lawyerProfile']);
       showSuccess('Profile updated successfully!');
     } catch (err) {
@@ -222,10 +222,10 @@ export default function LawyerSettings() {
 
   const handleAcceptAgreement = async () => {
     if (!user) return;
-    
+
     setSaving(true);
     setError(null);
-    
+
     try {
       let profileId;
 
@@ -248,7 +248,7 @@ export default function LawyerSettings() {
         });
         profileId = newProfile.id;
       }
-      
+
       // Log consent
       await base44.entities.ConsentLog.create({
         entity_type: 'LawyerProfile',
@@ -258,7 +258,7 @@ export default function LawyerSettings() {
         consent_text: REFERRAL_AGREEMENT_TEXT,
         consented_at: new Date().toISOString()
       });
-      
+
       queryClient.invalidateQueries(['lawyerProfile']);
       showSuccess('Referral agreement accepted!');
     } catch (err) {
@@ -273,8 +273,8 @@ export default function LawyerSettings() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#7e277e]" />
-      </div>
-    );
+      </div>);
+
   }
 
   const handleSaveAccount = async () => {
@@ -289,7 +289,7 @@ export default function LawyerSettings() {
         await base44.entities.LawyerProfile.create({ ...profileData, user_id: user.id, firm_name: accountForm.full_name, states_licensed: [], practice_areas: [] });
       }
       queryClient.invalidateQueries(['lawyerProfile']);
-      setUser(prev => ({ ...prev, full_name: accountForm.full_name }));
+      setUser((prev) => ({ ...prev, full_name: accountForm.full_name }));
       showSuccess('Account info updated!');
     } catch (err) {
       setError('Failed to update account info.');
@@ -317,11 +317,11 @@ export default function LawyerSettings() {
   };
 
   const tabs = [
-    { id: 'account', label: 'Account', icon: User },
-    { id: 'profile', label: 'Profile', icon: Building2 },
-    { id: 'agreement', label: 'Referral Agreement', icon: FileText },
-    { id: 'billing', label: 'Billing', icon: CreditCard },
-  ];
+  { id: 'account', label: 'Account', icon: User },
+  { id: 'profile', label: 'Profile', icon: Building2 },
+  { id: 'agreement', label: 'Referral Agreement', icon: FileText },
+  { id: 'billing', label: 'Billing', icon: CreditCard }];
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -336,64 +336,64 @@ export default function LawyerSettings() {
           </div>
 
           {/* Status Badge - only show if not approved */}
-          {user && user.user_status && user.user_status !== 'approved' && (
-            <div className="mb-6">
-              <TMLBadge 
-                variant={user.user_status === 'pending' || user.user_status === 'invited' ? 'warning' : 'danger'}
-                size="lg"
-              >
-                {user.user_status === 'pending' ? 'Pending Approval' : 
-                 user.user_status === 'invited' ? 'Pending Approval' : 'Restricted'}
+          {user && user.user_status && user.user_status !== 'approved' &&
+          <div className="mb-6">
+              <TMLBadge
+              variant={user.user_status === 'pending' || user.user_status === 'invited' ? 'warning' : 'danger'}
+              size="lg">
+              
+                {user.user_status === 'pending' ? 'Pending Approval' :
+              user.user_status === 'invited' ? 'Pending Approval' : 'Restricted'}
               </TMLBadge>
             </div>
-          )}
+          }
 
           {/* Success/Error Messages */}
-          {success && (
-            <motion.div
-              key={success}
-              initial={{ opacity: 0, y: -12, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -8 }}
-              className="mb-6 flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl shadow-sm"
-            >
+          {success &&
+          <motion.div
+            key={success}
+            initial={{ opacity: 0, y: -12, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="mb-6 flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl shadow-sm">
+            
               <CheckCircle2 className="w-5 h-5 flex-shrink-0 text-emerald-600" />
               <span className="font-medium">{success}</span>
             </motion.div>
-          )}
+          }
           
-          {error && (
-            <motion.div
-              initial={{ opacity: 0, y: -12 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6 flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl shadow-sm"
-            >
+          {error &&
+          <motion.div
+            initial={{ opacity: 0, y: -12 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 flex items-center gap-3 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl shadow-sm">
+            
               <AlertCircle className="w-5 h-5 flex-shrink-0" />
               <span className="font-medium">{error}</span>
             </motion.div>
-          )}
+          }
 
           {/* Tabs */}
           <div className="flex gap-2 mb-6 bg-white rounded-xl p-1 shadow-sm border border-gray-100">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all flex-1 justify-center ${
-                  activeTab === tab.id
-                    ? 'bg-[#7e277e] text-white shadow-lg shadow-[#7e277e]/20'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-              >
+            {tabs.map((tab) =>
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-all flex-1 justify-center ${
+              activeTab === tab.id ?
+              'bg-[#7e277e] text-white shadow-lg shadow-[#7e277e]/20' :
+              'text-gray-600 hover:bg-gray-50'}`
+              }>
+              
                 <tab.icon className="w-4 h-4" />
                 {tab.label}
               </button>
-            ))}
+            )}
           </div>
 
           {/* Tab Content */}
-          {activeTab === 'account' && (
-            <div className="space-y-6">
+          {activeTab === 'account' &&
+          <div className="space-y-6">
               <TMLCard variant="elevated">
                 <TMLCardHeader>
                   <TMLCardTitle className="flex items-center gap-2">
@@ -403,25 +403,25 @@ export default function LawyerSettings() {
                 </TMLCardHeader>
                 <TMLCardContent className="space-y-4">
                   <TMLInput
-                    label="Full Name"
-                    placeholder="Jane Smith"
-                    value={accountForm.full_name}
-                    onChange={(e) => setAccountForm({ ...accountForm, full_name: e.target.value })}
-                  />
+                  label="Full Name"
+                  placeholder="Jane Smith"
+                  value={accountForm.full_name}
+                  onChange={(e) => setAccountForm({ ...accountForm, full_name: e.target.value })} />
+                
                   <TMLInput
-                    label="Email Address"
-                    type="email"
-                    placeholder="jane@lawfirm.com"
-                    value={accountForm.email}
-                    disabled
-                    hint="Email cannot be changed. Contact support if needed."
-                  />
-                  <TMLInput
-                    label="Phone Number"
-                    placeholder="(555) 123-4567"
-                    value={accountForm.phone}
-                    onChange={(e) => setAccountForm({ ...accountForm, phone: e.target.value })}
-                  />
+                  label="Email Address"
+                  type="email"
+                  placeholder="jane@lawfirm.com"
+                  value={accountForm.email}
+                  disabled
+                  hint="Email cannot be changed. Contact support if needed." />
+                
+                  
+
+
+
+
+                
                   <div className="pt-4 border-t border-gray-100">
                     <TMLButton variant="primary" onClick={handleSaveAccount} loading={saving}>
                       <Save className="w-4 h-4 mr-2" /> Save Changes
@@ -439,19 +439,19 @@ export default function LawyerSettings() {
                 </TMLCardHeader>
                 <TMLCardContent className="space-y-4">
                   <TMLInput
-                    label="New Password"
-                    type="password"
-                    placeholder="Enter new password"
-                    value={passwordForm.new_password}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })}
-                  />
+                  label="New Password"
+                  type="password"
+                  placeholder="Enter new password"
+                  value={passwordForm.new_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, new_password: e.target.value })} />
+                
                   <TMLInput
-                    label="Confirm Password"
-                    type="password"
-                    placeholder="Re-enter new password"
-                    value={passwordForm.confirm_password}
-                    onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })}
-                  />
+                  label="Confirm Password"
+                  type="password"
+                  placeholder="Re-enter new password"
+                  value={passwordForm.confirm_password}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirm_password: e.target.value })} />
+                
                   <div className="pt-4 border-t border-gray-100">
                     <TMLButton variant="primary" onClick={handleResetPassword} loading={saving}>
                       <KeyRound className="w-4 h-4 mr-2" /> Update Password
@@ -460,10 +460,10 @@ export default function LawyerSettings() {
                 </TMLCardContent>
               </TMLCard>
             </div>
-          )}
+          }
 
-          {activeTab === 'profile' && (
-            <TMLCard variant="elevated">
+          {activeTab === 'profile' &&
+          <TMLCard variant="elevated">
               <TMLCardHeader>
                 <TMLCardTitle className="flex items-center gap-2">
                   <Building2 className="w-5 h-5 text-[#7e277e]" />
@@ -473,123 +473,123 @@ export default function LawyerSettings() {
               <TMLCardContent className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-4">
                   <TMLInput
-                    label="Firm Name"
-                    placeholder="e.g. Smith & Associates Law Firm"
-                    value={profileForm.firm_name}
-                    onChange={(e) => setProfileForm({ ...profileForm, firm_name: e.target.value })}
-                    required
-                  />
+                  label="Firm Name"
+                  placeholder="e.g. Smith & Associates Law Firm"
+                  value={profileForm.firm_name}
+                  onChange={(e) => setProfileForm({ ...profileForm, firm_name: e.target.value })}
+                  required />
+                
                   <TMLInput
-                    label="Years of Experience"
-                    type="number"
-                    min="0"
-                    max="60"
-                    placeholder="e.g. 10"
-                    value={profileForm.years_experience}
-                    onChange={(e) => setProfileForm({ ...profileForm, years_experience: e.target.value })}
-                  />
+                  label="Years of Experience"
+                  type="number"
+                  min="0"
+                  max="60"
+                  placeholder="e.g. 10"
+                  value={profileForm.years_experience}
+                  onChange={(e) => setProfileForm({ ...profileForm, years_experience: e.target.value })} />
+                
                 </div>
 
                 <TMLInput
-                  label="Phone Number"
-                  placeholder="e.g. (555) 123-4567"
-                  value={profileForm.phone}
-                  onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                  required
-                />
+                label="Phone Number"
+                placeholder="e.g. (555) 123-4567"
+                value={profileForm.phone}
+                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                required />
+              
                 
                 <TMLTextarea
-                  label="Professional Bio"
-                  placeholder="e.g. I am a licensed attorney with X years of experience specializing in personal injury and civil litigation. I am dedicated to providing compassionate and effective legal representation..."
-                  value={profileForm.bio}
-                  onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
-                  rows={4}
-                />
+                label="Professional Bio"
+                placeholder="e.g. I am a licensed attorney with X years of experience specializing in personal injury and civil litigation. I am dedicated to providing compassionate and effective legal representation..."
+                value={profileForm.bio}
+                onChange={(e) => setProfileForm({ ...profileForm, bio: e.target.value })}
+                rows={4} />
+              
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     States Licensed
                   </label>
                   <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-4">
-                    {US_STATES.map((state) => (
-                      <label key={state} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                    {US_STATES.map((state) =>
+                  <label key={state} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
                         <Checkbox
-                          checked={profileForm.states_licensed.includes(state)}
-                          onCheckedChange={() => toggleArrayItem('states_licensed', state)}
-                        />
+                      checked={profileForm.states_licensed.includes(state)}
+                      onCheckedChange={() => toggleArrayItem('states_licensed', state)} />
+                    
                         <span className="text-sm text-gray-700">{state}</span>
                       </label>
-                    ))}
+                  )}
                   </div>
                 </div>
 
-                {profileForm.states_licensed.length > 0 && (
-                  <div>
+                {profileForm.states_licensed.length > 0 &&
+              <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Bar Numbers <span className="text-xs text-gray-400 font-normal">— enter your bar number for each licensed state</span>
                     </label>
                     <div className="space-y-2">
-                      {profileForm.states_licensed.map(state => (
-                        <div key={state} className="flex items-center gap-3">
+                      {profileForm.states_licensed.map((state) =>
+                  <div key={state} className="flex items-center gap-3">
                           <span className="text-xs font-semibold text-gray-600 w-8 shrink-0">{state}</span>
                           <input
-                            type="text"
-                            placeholder={`Bar # for ${state}`}
-                            value={profileForm.bar_numbers[state] || ''}
-                            onChange={(e) => setProfileForm(prev => ({
-                              ...prev,
-                              bar_numbers: { ...prev.bar_numbers, [state]: e.target.value }
-                            }))}
-                            className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3a164d]/30 focus:border-[#3a164d]"
-                          />
+                      type="text"
+                      placeholder={`Bar # for ${state}`}
+                      value={profileForm.bar_numbers[state] || ''}
+                      onChange={(e) => setProfileForm((prev) => ({
+                        ...prev,
+                        bar_numbers: { ...prev.bar_numbers, [state]: e.target.value }
+                      }))}
+                      className="flex-1 text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-[#3a164d]/30 focus:border-[#3a164d]" />
+                    
                         </div>
-                      ))}
+                  )}
                     </div>
                   </div>
-                )}
+              }
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Practice Areas
                   </label>
                   <div className="grid grid-cols-2 gap-2 border border-gray-200 rounded-lg p-4">
-                    {PRACTICE_AREAS.map((area) => (
-                      <label key={area} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                    {PRACTICE_AREAS.map((area) =>
+                  <label key={area} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
                         <Checkbox
-                          checked={profileForm.practice_areas.includes(area)}
-                          onCheckedChange={() => toggleArrayItem('practice_areas', area)}
-                        />
+                      checked={profileForm.practice_areas.includes(area)}
+                      onCheckedChange={() => toggleArrayItem('practice_areas', area)} />
+                    
                         <span className="text-sm text-gray-700">{area}</span>
                       </label>
-                    ))}
+                  )}
                   </div>
                 </div>
 
                 <div className="pt-4 border-t border-gray-100 flex items-center gap-3">
-                  <TMLButton 
-                    variant="primary" 
-                    onClick={handleSaveProfile}
-                    loading={saving}
-                  >
+                  <TMLButton
+                  variant="primary"
+                  onClick={handleSaveProfile}
+                  loading={saving}>
+                  
                     <Save className="w-4 h-4 mr-2" />
                     Save Changes
                   </TMLButton>
-                  {success && activeTab === 'profile' && (
-                    <motion.span
-                      initial={{ opacity: 0, x: -8 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium"
-                    >
+                  {success && activeTab === 'profile' &&
+                <motion.span
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
+                  
                       <CheckCircle2 className="w-4 h-4" /> Saved!
                     </motion.span>
-                  )}
+                }
                 </div>
               </TMLCardContent>
             </TMLCard>
-          )}
+          }
 
-          {activeTab === 'agreement' && (
-            <TMLCard variant="elevated">
+          {activeTab === 'agreement' &&
+          <TMLCard variant="elevated">
               <TMLCardHeader>
                 <TMLCardTitle className="flex items-center gap-2">
                   <FileText className="w-5 h-5 text-[#7e277e]" />
@@ -597,8 +597,8 @@ export default function LawyerSettings() {
                 </TMLCardTitle>
               </TMLCardHeader>
               <TMLCardContent>
-                {lawyerProfile?.referral_agreement_accepted ? (
-                  <div className="text-center py-8">
+                {lawyerProfile?.referral_agreement_accepted ?
+              <div className="text-center py-8">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-emerald-100 flex items-center justify-center">
                       <CheckCircle2 className="w-8 h-8 text-emerald-600" />
                     </div>
@@ -615,9 +615,9 @@ export default function LawyerSettings() {
                         {REFERRAL_AGREEMENT_TEXT}
                       </div>
                     </details>
-                  </div>
-                ) : (
-                  <div>
+                  </div> :
+
+              <div>
                     <div className="flex items-center gap-2 p-4 bg-amber-50 text-amber-700 rounded-xl mb-6">
                       <AlertCircle className="w-5 h-5" />
                       <span>You must accept the referral agreement before accepting cases.</span>
@@ -630,32 +630,32 @@ export default function LawyerSettings() {
                     </div>
                     
                     <div className="flex items-center gap-3">
-                      <TMLButton 
-                        variant="primary" 
-                        onClick={handleAcceptAgreement}
-                        loading={saving}
-                      >
+                      <TMLButton
+                    variant="primary"
+                    onClick={handleAcceptAgreement}
+                    loading={saving}>
+                    
                         <Shield className="w-4 h-4 mr-2" />
                         I Accept the Referral Agreement
                       </TMLButton>
-                      {success && activeTab === 'agreement' && (
-                        <motion.span
-                          initial={{ opacity: 0, x: -8 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium"
-                        >
+                      {success && activeTab === 'agreement' &&
+                  <motion.span
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
+                    
                           <CheckCircle2 className="w-4 h-4" /> Accepted!
                         </motion.span>
-                      )}
+                  }
                     </div>
                   </div>
-                )}
+              }
               </TMLCardContent>
             </TMLCard>
-          )}
+          }
 
-          {activeTab === 'billing' && (
-            <div className="space-y-6">
+          {activeTab === 'billing' &&
+          <div className="space-y-6">
               {/* Membership Status */}
               <TMLCard variant="elevated">
                 <TMLCardHeader>
@@ -668,31 +668,31 @@ export default function LawyerSettings() {
                   <div className="flex items-center justify-between mb-4">
                     <div>
                       <p className="text-gray-600">
-                        {lawyerProfile?.subscription_status === 'active' 
-                          ? 'Your membership is active'
-                          : lawyerProfile?.subscription_status === 'trial'
-                          ? 'You are in your free trial period'
-                          : 'Billing starts after approval'}
+                        {lawyerProfile?.subscription_status === 'active' ?
+                      'Your membership is active' :
+                      lawyerProfile?.subscription_status === 'trial' ?
+                      'You are in your free trial period' :
+                      'Billing starts after approval'}
                       </p>
                     </div>
-                    <TMLBadge 
-                      variant={lawyerProfile?.subscription_status === 'active' ? 'success' : 'warning'}
-                      size="lg"
-                    >
-                      {lawyerProfile?.subscription_status === 'active' ? 'Active' : 
-                       lawyerProfile?.subscription_status === 'trial' ? 'Trial' : 'Pending'}
+                    <TMLBadge
+                    variant={lawyerProfile?.subscription_status === 'active' ? 'success' : 'warning'}
+                    size="lg">
+                    
+                      {lawyerProfile?.subscription_status === 'active' ? 'Active' :
+                    lawyerProfile?.subscription_status === 'trial' ? 'Trial' : 'Pending'}
                     </TMLBadge>
                   </div>
                   <div className="border-t border-gray-100 pt-4">
                     <p className="text-sm text-gray-500 mb-1">Membership Price</p>
                     <p className="text-3xl font-bold text-gray-900">$50<span className="text-lg font-normal text-gray-500">/month</span></p>
                   </div>
-                  {lawyerProfile?.free_trial_months > 0 && (
-                    <div className="mt-4 p-3 bg-emerald-50 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
+                  {lawyerProfile?.free_trial_months > 0 &&
+                <div className="mt-4 p-3 bg-emerald-50 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4" />
                       You have {lawyerProfile.free_trial_months} free trial month{lawyerProfile.free_trial_months > 1 ? 's' : ''}!
                     </div>
-                  )}
+                }
                 </TMLCardContent>
               </TMLCard>
 
@@ -706,76 +706,76 @@ export default function LawyerSettings() {
                 </TMLCardHeader>
                 <TMLCardContent className="space-y-4">
                   <TMLInput
-                    label="Cardholder Name"
-                    placeholder="e.g. Jane Smith"
-                    value={billingForm.cardholder_name}
-                    onChange={(e) => setBillingForm({ ...billingForm, cardholder_name: e.target.value })}
-                  />
+                  label="Cardholder Name"
+                  placeholder="e.g. Jane Smith"
+                  value={billingForm.cardholder_name}
+                  onChange={(e) => setBillingForm({ ...billingForm, cardholder_name: e.target.value })} />
+                
                   <TMLInput
-                    label="Card Number"
-                    placeholder="1234 5678 9012 3456"
-                    maxLength={19}
-                    value={billingForm.card_number}
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
-                      setBillingForm({ ...billingForm, card_number: v });
-                    }}
-                  />
+                  label="Card Number"
+                  placeholder="1234 5678 9012 3456"
+                  maxLength={19}
+                  value={billingForm.card_number}
+                  onChange={(e) => {
+                    const v = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
+                    setBillingForm({ ...billingForm, card_number: v });
+                  }} />
+                
                   <div className="grid grid-cols-2 gap-4">
                     <TMLInput
-                      label="Expiry Date"
-                      placeholder="MM / YY"
-                      maxLength={7}
-                      value={billingForm.expiry}
-                      onChange={(e) => {
-                        const v = e.target.value.replace(/\D/g, '').replace(/^(\d{2})(\d)/, '$1 / $2');
-                        setBillingForm({ ...billingForm, expiry: v });
-                      }}
-                    />
+                    label="Expiry Date"
+                    placeholder="MM / YY"
+                    maxLength={7}
+                    value={billingForm.expiry}
+                    onChange={(e) => {
+                      const v = e.target.value.replace(/\D/g, '').replace(/^(\d{2})(\d)/, '$1 / $2');
+                      setBillingForm({ ...billingForm, expiry: v });
+                    }} />
+                  
                     <TMLInput
-                      label="CVV"
-                      placeholder="123"
-                      maxLength={4}
-                      value={billingForm.cvv}
-                      onChange={(e) => setBillingForm({ ...billingForm, cvv: e.target.value.replace(/\D/g, '') })}
-                    />
+                    label="CVV"
+                    placeholder="123"
+                    maxLength={4}
+                    value={billingForm.cvv}
+                    onChange={(e) => setBillingForm({ ...billingForm, cvv: e.target.value.replace(/\D/g, '') })} />
+                  
                   </div>
 
                   <div className="border-t border-gray-100 pt-4">
                     <p className="text-sm font-medium text-gray-700 mb-3">Billing Address</p>
                     <div className="space-y-3">
                       <TMLInput
-                        label="Street Address"
-                        placeholder="e.g. 123 Main St, Suite 100"
-                        value={billingForm.billing_address}
-                        onChange={(e) => setBillingForm({ ...billingForm, billing_address: e.target.value })}
-                      />
+                      label="Street Address"
+                      placeholder="e.g. 123 Main St, Suite 100"
+                      value={billingForm.billing_address}
+                      onChange={(e) => setBillingForm({ ...billingForm, billing_address: e.target.value })} />
+                    
                       <div className="grid grid-cols-3 gap-3">
                         <div className="col-span-1">
                           <TMLInput
-                            label="City"
-                            placeholder="e.g. Austin"
-                            value={billingForm.billing_city}
-                            onChange={(e) => setBillingForm({ ...billingForm, billing_city: e.target.value })}
-                          />
+                          label="City"
+                          placeholder="e.g. Austin"
+                          value={billingForm.billing_city}
+                          onChange={(e) => setBillingForm({ ...billingForm, billing_city: e.target.value })} />
+                        
                         </div>
                         <div>
                           <TMLInput
-                            label="State"
-                            placeholder="TX"
-                            maxLength={2}
-                            value={billingForm.billing_state}
-                            onChange={(e) => setBillingForm({ ...billingForm, billing_state: e.target.value.toUpperCase() })}
-                          />
+                          label="State"
+                          placeholder="TX"
+                          maxLength={2}
+                          value={billingForm.billing_state}
+                          onChange={(e) => setBillingForm({ ...billingForm, billing_state: e.target.value.toUpperCase() })} />
+                        
                         </div>
                         <div>
                           <TMLInput
-                            label="ZIP Code"
-                            placeholder="78701"
-                            maxLength={5}
-                            value={billingForm.billing_zip}
-                            onChange={(e) => setBillingForm({ ...billingForm, billing_zip: e.target.value.replace(/\D/g, '') })}
-                          />
+                          label="ZIP Code"
+                          placeholder="78701"
+                          maxLength={5}
+                          value={billingForm.billing_zip}
+                          onChange={(e) => setBillingForm({ ...billingForm, billing_zip: e.target.value.replace(/\D/g, '') })} />
+                        
                         </div>
                       </div>
                     </div>
@@ -783,33 +783,33 @@ export default function LawyerSettings() {
 
                   <div className="pt-2 flex items-center gap-3">
                     <TMLButton
-                      variant="primary"
-                      onClick={() => {
-                        setBillingSaved(true);
-                        showSuccess('Billing information saved!');
-                        setTimeout(() => setBillingSaved(false), 4000);
-                      }}
-                    >
+                    variant="primary"
+                    onClick={() => {
+                      setBillingSaved(true);
+                      showSuccess('Billing information saved!');
+                      setTimeout(() => setBillingSaved(false), 4000);
+                    }}>
+                    
                       <Save className="w-4 h-4 mr-2" />
                       Save Billing Info
                     </TMLButton>
-                    {billingSaved && (
-                      <motion.span
-                        initial={{ opacity: 0, x: -8 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium"
-                      >
+                    {billingSaved &&
+                  <motion.span
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
+                    
                         <CheckCircle2 className="w-4 h-4" /> Saved!
                       </motion.span>
-                    )}
+                  }
                   </div>
                   <p className="text-xs text-gray-400">Your payment information is securely stored. Billing begins after approval and any trial period ends.</p>
                 </TMLCardContent>
               </TMLCard>
             </div>
-          )}
+          }
         </div>
       </main>
-    </div>
-  );
+    </div>);
+
 }
