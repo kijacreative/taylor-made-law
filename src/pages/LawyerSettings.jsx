@@ -74,7 +74,7 @@ export default function LawyerSettings() {
   const { data: applications = [] } = useQuery({
     queryKey: ['lawyerApplication', user?.email],
     queryFn: () => base44.entities.LawyerApplication.filter({ email: user.email }),
-    enabled: !!user?.email,
+    enabled: !!user?.email
   });
   const lawyerApplication = applications[0] || null;
   const [passwordForm, setPasswordForm] = useState({ new_password: '', confirm_password: '' });
@@ -451,12 +451,12 @@ export default function LawyerSettings() {
                   disabled
                   hint="Email cannot be changed. Contact support if needed." />
 
-                  <TMLInput
-                  label="Firm Name"
-                  placeholder="—"
-                  value={lawyerProfile?.firm_name || ''}
-                  disabled
-                  hint="Update your firm name in the Profile tab." />
+                  
+
+
+
+
+                
                 
                   
 
@@ -517,17 +517,17 @@ export default function LawyerSettings() {
                 {/* Profile Photo */}
                 <div className="flex items-center gap-5">
                   <div className="relative shrink-0">
-                    {profileForm.profile_photo_url ? (
-                      <img
-                        src={profileForm.profile_photo_url}
-                        alt="Profile"
-                        className="w-20 h-20 rounded-full object-cover border-2 border-[#3a164d]/20"
-                      />
-                    ) : (
-                      <div className="w-20 h-20 rounded-full bg-[#3a164d] flex items-center justify-center text-white font-bold text-2xl">
+                    {profileForm.profile_photo_url ?
+                  <img
+                    src={profileForm.profile_photo_url}
+                    alt="Profile"
+                    className="w-20 h-20 rounded-full object-cover border-2 border-[#3a164d]/20" /> :
+
+
+                  <div className="w-20 h-20 rounded-full bg-[#3a164d] flex items-center justify-center text-white font-bold text-2xl">
                         {(profileForm.full_name || user?.full_name || '?').charAt(0).toUpperCase()}
                       </div>
-                    )}
+                  }
                     <label className="absolute bottom-0 right-0 w-7 h-7 bg-white border border-gray-200 rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:bg-gray-50 transition-colors">
                       {uploadingPhoto ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#3a164d]" /> : <Camera className="w-3.5 h-3.5 text-[#3a164d]" />}
                       <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
@@ -541,11 +541,11 @@ export default function LawyerSettings() {
                 </div>
 
                 <TMLInput
-                  label="Full Name"
-                  placeholder="e.g. Jane Smith"
-                  value={profileForm.full_name}
-                  onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
-                  required />
+                label="Full Name"
+                placeholder="e.g. Jane Smith"
+                value={profileForm.full_name}
+                onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
+                required />
 
                 <div className="grid md:grid-cols-2 gap-4">
                   <TMLInput
@@ -666,14 +666,14 @@ export default function LawyerSettings() {
 
           {activeTab === 'application' &&
           <div className="space-y-6">
-            {!lawyerApplication ? (
-              <TMLCard variant="elevated">
+            {!lawyerApplication ?
+            <TMLCard variant="elevated">
                 <TMLCardContent className="text-center py-12 text-gray-500">
                   No application on file.
                 </TMLCardContent>
-              </TMLCard>
-            ) : (
-              <>
+              </TMLCard> :
+
+            <>
                 {/* Personal Info */}
                 <TMLCard variant="elevated">
                   <TMLCardHeader>
@@ -711,12 +711,12 @@ export default function LawyerSettings() {
                         </TMLBadge>
                       </div>
                     </div>
-                    {lawyerApplication.bio && (
-                      <div className="mt-4">
+                    {lawyerApplication.bio &&
+                  <div className="mt-4">
                         <p className="text-xs text-gray-500 mb-1">Professional Bio</p>
                         <p className="text-gray-700 text-sm leading-relaxed">{lawyerApplication.bio}</p>
                       </div>
-                    )}
+                  }
                   </TMLCardContent>
                 </TMLCard>
 
@@ -729,20 +729,20 @@ export default function LawyerSettings() {
                     </TMLCardTitle>
                   </TMLCardHeader>
                   <TMLCardContent>
-                    {lawyerApplication.states_licensed?.length > 0 ? (
-                      <div className="space-y-2">
-                        {lawyerApplication.states_licensed.map((state) => (
-                          <div key={state} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                    {lawyerApplication.states_licensed?.length > 0 ?
+                  <div className="space-y-2">
+                        {lawyerApplication.states_licensed.map((state) =>
+                    <div key={state} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                             <span className="font-medium text-gray-800">{state}</span>
                             <span className="text-sm text-gray-500">
-                              Bar #: {(lawyerApplication.bar_numbers?.[state]) || lawyerApplication.bar_number || '—'}
+                              Bar #: {lawyerApplication.bar_numbers?.[state] || lawyerApplication.bar_number || '—'}
                             </span>
                           </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 text-sm">No states listed.</p>
                     )}
+                      </div> :
+
+                  <p className="text-gray-500 text-sm">No states listed.</p>
+                  }
                   </TMLCardContent>
                 </TMLCard>
 
@@ -755,21 +755,21 @@ export default function LawyerSettings() {
                     </TMLCardTitle>
                   </TMLCardHeader>
                   <TMLCardContent>
-                    {lawyerApplication.practice_areas?.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {lawyerApplication.practice_areas.map((area) => (
-                          <TMLBadge key={area} variant="primary">{area}</TMLBadge>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500 text-sm">No practice areas listed.</p>
+                    {lawyerApplication.practice_areas?.length > 0 ?
+                  <div className="flex flex-wrap gap-2">
+                        {lawyerApplication.practice_areas.map((area) =>
+                    <TMLBadge key={area} variant="primary">{area}</TMLBadge>
                     )}
+                      </div> :
+
+                  <p className="text-gray-500 text-sm">No practice areas listed.</p>
+                  }
                   </TMLCardContent>
                 </TMLCard>
 
                 {/* Referrals */}
-                {lawyerApplication.referrals?.length > 0 && (
-                  <TMLCard variant="elevated">
+                {lawyerApplication.referrals?.length > 0 &&
+              <TMLCard variant="elevated">
                     <TMLCardHeader>
                       <TMLCardTitle className="flex items-center gap-2">
                         <Mail className="w-5 h-5 text-[#7e277e]" />
@@ -778,8 +778,8 @@ export default function LawyerSettings() {
                     </TMLCardHeader>
                     <TMLCardContent>
                       <div className="space-y-3">
-                        {lawyerApplication.referrals.map((ref, i) => (
-                          <div key={i} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
+                        {lawyerApplication.referrals.map((ref, i) =>
+                    <div key={i} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
                             <div className="w-8 h-8 rounded-full bg-[#3a164d]/10 flex items-center justify-center text-[#3a164d] font-bold text-sm">
                               {i + 1}
                             </div>
@@ -788,18 +788,18 @@ export default function LawyerSettings() {
                               <p className="text-sm text-gray-500">{ref.email || '—'}</p>
                             </div>
                           </div>
-                        ))}
+                    )}
                       </div>
                     </TMLCardContent>
                   </TMLCard>
-                )}
+              }
 
                 {/* Submitted date */}
                 <p className="text-xs text-gray-400 text-right">
                   Application submitted: {lawyerApplication.created_date ? new Date(lawyerApplication.created_date).toLocaleDateString() : '—'}
                 </p>
               </>
-            )}
+            }
           </div>
           }
 
