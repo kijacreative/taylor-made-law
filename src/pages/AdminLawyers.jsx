@@ -256,6 +256,44 @@ export default function AdminLawyers() {
     finally { setSaving(false); }
   };
 
+  const handleEditMembership = async () => {
+    if (!editingUser) return;
+    setSaving(true);
+    try {
+      await base44.entities.User.update(editingUser.id, editMembershipData);
+      showToast(`${editingUser.full_name || editingUser.email} updated successfully.`);
+      setEditingUser(null);
+      setEditMembershipData({});
+      refetchUsers();
+    } catch (err) {
+      showToast(err.message || 'Failed to update.', 'error');
+    } finally { setSaving(false); }
+  };
+
+  const handleCancelMembership = async () => {
+    if (!editingUser) return;
+    setSaving(true);
+    try {
+      const res = await base44.functions.invoke('disableLawyer', { user_id: editingUser.id, reason: 'Membership cancelled by admin.' });
+      if (res.data?.success) {
+        showToast(`${editingUser.full_name || editingUser.email}'s membership cancelled.`);
+        setEditingUser(null);
+        refetchUsers();
+      } else { showToast(res.data?.error || 'Failed to cancel membership.', 'error'); }
+    } catch (err) { showToast(err.message || 'Error cancelling membership.', 'error'); }
+    finally { setSaving(false); }
+  };
+
+  const handleResetPassword = async (user) => {
+    setSaving(true);
+    try {
+      const res = await base44.functions.invoke('resendActivation', { user_id: user.id });
+      if (res.data?.success) { showToast(`Password reset email sent to ${user.email}.`); }
+      else { showToast(res.data?.error || 'Failed to send reset email.', 'error'); }
+    } catch (err) { showToast(err.message || 'Error sending reset email.', 'error'); }
+    finally { setSaving(false); }
+  };
+
   const handleGenerateReport = async () => {
     setGeneratingReport(true);
     try {
