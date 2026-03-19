@@ -137,7 +137,7 @@ export default function GroupInvitations() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-gray-900">{circle?.name || 'Legal Circle'}</h3>
-                            <p className="text-sm text-gray-500 mt-0.5">Invited by {invite.inviter_name}</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Invited by {invite.full_name}</p>
                             {invite.message && <p className="text-sm text-gray-600 mt-2 italic">"{invite.message}"</p>}
                             {circle?.description && <p className="text-sm text-gray-500 mt-1">{circle.description}</p>}
                           </div>
