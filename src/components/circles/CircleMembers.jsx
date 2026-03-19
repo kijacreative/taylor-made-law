@@ -325,13 +325,13 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
           const isMe = member.user_id === user.id;
           const memberIsAdmin = member.role === 'admin';
           return (
-            <div key={member.id} className="flex items-center gap-3 p-4">
+            <div key={member.id} className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setViewingMember(member)}>
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3a164d] to-[#a47864] flex items-center justify-center text-white font-semibold text-sm shrink-0">
                 {member.full_name?.charAt(0)?.toUpperCase() || member.user_name?.charAt(0)?.toUpperCase() || '?'}
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <p className="font-medium text-gray-900 truncate">{member.full_name || member.user_name} {isMe && <span className="text-gray-400 font-normal text-sm">(you)</span>}</p>
+                   <p className="font-medium text-gray-900 truncate">{member.full_name || member.user_name} {isMe && <span className="text-gray-400 font-normal text-sm">(you)</span>}</p>
                   <TMLBadge variant={memberIsAdmin ? 'primary' : 'default'} size="sm">
                     {memberIsAdmin && <Shield className="w-3 h-3 mr-1" />}
                     {member.role}
