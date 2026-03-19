@@ -161,11 +161,17 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
     const filesToSend = [...pendingFiles];
     setPendingFiles([]);
 
+    // Get lawyer profile for full_name
+    const lawyerProfiles = await base44.entities.LawyerProfile.list();
+    const profile = lawyerProfiles.find(p => p.user_id === user.id);
+    const senderFullName = profile?.full_name || user.full_name || 'Attorney';
+
     // Create message first
     const msg = await base44.entities.CircleMessage.create({
       circle_id: circleId,
       sender_user_id: user.id,
-      sender_name: user.full_name,
+      sender_name: senderFullName,
+      sender_full_name: senderFullName,
       sender_email: user.email,
       message_text: text || '',
       has_attachments: filesToSend.length > 0,
