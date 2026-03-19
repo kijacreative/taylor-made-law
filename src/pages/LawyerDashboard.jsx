@@ -123,7 +123,7 @@ export default function LawyerDashboard() {
 
   // Use unified user_status on the user record
   const isPending = user?.user_status === 'active_pending_review' || user?.user_status === 'pending' || user?.user_status === 'invited' || (!user?.user_status && (!lawyerProfile || lawyerProfile.status === 'pending'));
-  const isApproved = user?.user_status === 'active' || user?.user_status === 'approved' || (!user?.user_status && lawyerProfile?.status === 'approved');
+  const isApproved = user?.user_status === 'approved' || user?.user_status === 'active' || lawyerProfile?.status === 'approved';
   const needsReferralAgreement = isApproved && !lawyerProfile?.referral_agreement_accepted;
 
   return (
