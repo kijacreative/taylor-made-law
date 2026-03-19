@@ -70,7 +70,20 @@ export default function GroupDetail() {
 
   const { data: members = [], isLoading: membersLoading } = useQuery({
     queryKey: ['circleMembers', circleId],
-    queryFn: () => base44.entities.LegalCircleMember.filter({ circle_id: circleId, status: 'active' }, '-joined_at', 100),
+    queryFn: async () => {
+      const circleMembers = await base44.entities.LegalCircleMember.filter({ circle_id: circleId, status: 'active' }, '-joined_at', 100);
+      // Fetch lawyer profiles to get profile photos
+      const lawyerProfiles = await base44.entities.LawyerProfile.list();
+      // Merge profile data with members
+      return circleMembers.map(member => {
+        const profile = lawyerProfiles.find(p => p.user_id === member.user_id);
+        return {
+          ...member,
+          profile_photo_url: profile?.profile_photo_url || null,
+          full_name: member.user_name || profile?.full_name || member.full_name
+        };
+      });
+    },
     enabled: !!circleId && !!myMembership,
     retry: 2,
     retryDelay: 1000,
