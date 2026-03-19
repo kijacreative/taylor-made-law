@@ -191,7 +191,10 @@ export default function JoinLawyerNetwork() {
                     <TMLInput label="Full Name" required value={formData.full_name} onChange={e => set('full_name', e.target.value)} placeholder="Jane Smith" error={errors.full_name} />
                     <TMLInput label="Email Address" type="email" required value={formData.email} onChange={e => set('email', e.target.value)} placeholder="jane@smithlaw.com" error={errors.email} />
                     <TMLInput label="Law Firm Name" required value={formData.firm_name} onChange={e => set('firm_name', e.target.value)} placeholder="Smith & Associates" error={errors.firm_name} />
-                    <TMLInput label="Years in Practice" type="number" min="0" max="60" value={formData.years_experience} onChange={e => set('years_experience', e.target.value)} placeholder="10" />
+                    <div className="pt-2 border-t border-gray-100">
+                      <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-4">Experience</p>
+                      <TMLInput label="Years in Practice" type="number" min="0" max="60" value={formData.years_experience} onChange={e => set('years_experience', e.target.value)} placeholder="10" />
+                    </div>
                     <div className="pt-2 border-t border-gray-100 space-y-4">
                       <p className="text-xs text-gray-500 font-medium uppercase tracking-wide">Create Your Password</p>
                       <div className="relative">
