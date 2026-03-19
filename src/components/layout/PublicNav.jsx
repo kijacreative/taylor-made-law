@@ -26,7 +26,6 @@ const PublicNav = () => {
 
   const contentLinks = [
     { label: 'Blog Posts', path: 'Blog' },
-    { label: 'Resources', path: 'LawyerResources' },
     { label: 'White Papers', href: '/Blog?type=whitepaper' },
   ];
 
