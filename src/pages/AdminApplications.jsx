@@ -179,7 +179,9 @@ export default function AdminApplications() {
                 const isExpanded = expandedId === app.id;
                 const loading = actionLoading[app.id];
                 const onboarded = !!app.billing_demo_status;
-                const referralDone = !!app.consent_referral;
+                const profile = Object.values(profileByEmail).find(p => p.user_id && lawyerProfiles.find(lp => lp.user_id === p.user_id && lp.user_id));
+                const matchedProfile = lawyerProfiles.find(lp => applications.find(a => a.email === app.email) && lp.full_name === app.full_name);
+                const referralDone = !!app.consent_referral || !!matchedProfile?.referral_agreement_accepted;
 
                 return (
                   <TMLCard key={app.id} variant="elevated" className="overflow-hidden">
