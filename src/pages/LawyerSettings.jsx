@@ -424,6 +424,13 @@ export default function LawyerSettings() {
                   value={accountForm.email}
                   disabled
                   hint="Email cannot be changed. Contact support if needed." />
+
+                  <TMLInput
+                  label="Firm Name"
+                  placeholder="—"
+                  value={lawyerProfile?.firm_name || ''}
+                  disabled
+                  hint="Update your firm name in the Profile tab." />
                 
                   
 
