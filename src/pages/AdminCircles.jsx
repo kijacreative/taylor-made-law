@@ -131,10 +131,13 @@ export default function AdminCircles() {
                             </div>
                           </td>
                           <td className="px-4 py-4">
-                            <div className="flex items-center gap-1.5 text-gray-600">
+                            <button
+                              onClick={() => setMembersModal({ circleName: circle.name, members: circleMembers })}
+                              className="flex items-center gap-1.5 text-[#3a164d] hover:underline font-medium"
+                            >
                               <Users className="w-4 h-4" />
                               <span>{circleMembers.length}</span>
-                            </div>
+                            </button>
                           </td>
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-1.5 text-gray-600">
