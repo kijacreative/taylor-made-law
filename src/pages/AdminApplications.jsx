@@ -64,6 +64,18 @@ export default function AdminApplications() {
     enabled: !!user,
   });
 
+  const { data: lawyerProfiles = [] } = useQuery({
+    queryKey: ['lawyerProfilesForApps'],
+    queryFn: () => base44.entities.LawyerProfile.list('-created_date', 200),
+    enabled: !!user,
+  });
+
+  const profileByEmail = React.useMemo(() => {
+    const map = {};
+    lawyerProfiles.forEach(p => { if (p.user_id) map[p.user_id] = p; });
+    return map;
+  }, [lawyerProfiles]);
+
   const filtered = applications.filter(app => {
     const matchStatus = !statusFilter || statusFilter === 'all' || app.status === statusFilter;
     const q = search.toLowerCase();
