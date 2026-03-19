@@ -27,6 +27,7 @@ export default function AdminResourceEdit() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [tagInput, setTagInput] = useState('');
 

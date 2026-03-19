@@ -35,6 +35,7 @@ export default function AdminBlogEdit() {
   const [publishing, setPublishing] = useState(false);
   const [toast, setToast] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
   const [tagInput, setTagInput] = useState('');
 
   const [form, setForm] = useState({
