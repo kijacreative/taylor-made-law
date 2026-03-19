@@ -273,6 +273,7 @@ export default function AdminPopupEdit() {
                     { value: 'mass_torts', label: 'Mass Torts' },
                     { value: 'blog', label: 'Blog / Resources' },
                     { value: 'all_app', label: 'All App Pages' },
+                    { value: 'public_only', label: 'Public Pages (Not Logged In)' },
                   ]} />
                 </Field>
                 <Field label="Audience">
