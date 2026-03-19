@@ -72,17 +72,25 @@ export default function GroupDetail() {
     queryKey: ['circleMembers', circleId],
     queryFn: async () => {
       const circleMembers = await base44.entities.LegalCircleMember.filter({ circle_id: circleId, status: 'active' }, '-joined_at', 100);
-      // Fetch lawyer profiles to get profile photos
+      // Fetch lawyer profiles to get profile photos and full names
       const lawyerProfiles = await base44.entities.LawyerProfile.list();
-      // Merge profile data with members
-      return circleMembers.map(member => {
+      // Merge profile data with members and update full_name if missing
+      const enrichedMembers = await Promise.all(circleMembers.map(async (member) => {
         const profile = lawyerProfiles.find(p => p.user_id === member.user_id);
+        const fullName = member.full_name || profile?.full_name || member.user_name || 'Attorney';
+        
+        // Update the member record if full_name is missing
+        if (!member.full_name && fullName) {
+          await base44.entities.LegalCircleMember.update(member.id, { full_name: fullName });
+        }
+        
         return {
           ...member,
-          profile_photo_url: profile?.profile_photo_url || null,
-          full_name: member.user_name || profile?.full_name || member.full_name
+          full_name,
+          profile_photo_url: profile?.profile_photo_url || null
         };
-      });
+      }));
+      return enrichedMembers;
     },
     enabled: !!circleId && !!myMembership,
     retry: 2,
