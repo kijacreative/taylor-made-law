@@ -16,7 +16,8 @@ import {
   FileText,
   KeyRound,
   Mail,
-  Phone } from
+  Phone,
+  Camera } from
 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
