@@ -53,11 +53,13 @@ export default function AdminBlogEdit() {
     meta_title: '',
     meta_description: '',
     canonical_url: '',
+    pdf_download_url: '',
+    pdf_file_name: '',
     status: 'draft',
     is_pinned: false,
     feature_on_dashboard: false,
     post_to_community: false,
-  });
+    });
 
   const [slugManuallyEdited, setSlugManuallyEdited] = useState(false);
 
@@ -94,6 +96,8 @@ export default function AdminBlogEdit() {
               meta_title: p.meta_title || '',
               meta_description: p.meta_description || '',
               canonical_url: p.canonical_url || '',
+              pdf_download_url: p.pdf_download_url || '',
+              pdf_file_name: p.pdf_file_name || '',
               status: p.status || 'draft',
               is_pinned: p.is_pinned || false,
               feature_on_dashboard: p.feature_on_dashboard || false,
