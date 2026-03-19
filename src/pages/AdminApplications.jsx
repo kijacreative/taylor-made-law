@@ -5,7 +5,7 @@
  * Shows LawyerApplication records with status = 'active_pending_review'
  * Actions: Mark Reviewed (→ active), Request More Info, Disable Lawyer
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
