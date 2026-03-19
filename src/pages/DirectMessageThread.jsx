@@ -97,7 +97,15 @@ export default function DirectMessageThreadPage() {
     const res = await base44.functions.invoke('getDirectThread', { thread_id: threadId });
     if (res.data?.error) { navigate('/app/messages'); return; }
     setThreadData(res.data?.thread);
-    setOtherParticipant(res.data?.other_participant);
+    const participant = res.data?.other_participant;
+    // Enrich with LawyerProfile full_name if available
+    if (participant?.user_id) {
+      const profiles = await base44.entities.LawyerProfile.filter({ user_id: participant.user_id });
+      if (profiles[0]?.full_name) {
+        participant.user_name = profiles[0].full_name;
+      }
+    }
+    setOtherParticipant(participant);
     setMessages(res.data?.messages || []);
     queryClient.invalidateQueries({ queryKey: ['directInbox'] });
   };
