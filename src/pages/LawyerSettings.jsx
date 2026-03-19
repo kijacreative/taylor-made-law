@@ -241,6 +241,10 @@ export default function LawyerSettings() {
       }
 
       queryClient.invalidateQueries(['lawyerProfile']);
+      // Keep account form in sync with the updated name
+      if (profileForm.full_name) {
+        setAccountForm((prev) => ({ ...prev, full_name: profileForm.full_name }));
+      }
       showSuccess('Profile updated successfully!');
     } catch (err) {
       console.error('Error saving profile:', err);
