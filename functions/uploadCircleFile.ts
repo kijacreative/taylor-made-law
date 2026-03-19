@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 Deno.serve(async (req) => {
   try {
@@ -27,7 +27,10 @@ Deno.serve(async (req) => {
     }
 
     // Upload the file to storage
-    const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ file });
+    const fileBuffer = await file.arrayBuffer();
+    const uploadResult = await base44.asServiceRole.integrations.Core.UploadFile({ 
+      file: new Blob([fileBuffer], { type: file.type || 'application/octet-stream' })
+    });
     const fileUrl = uploadResult.file_url;
 
     if (!fileUrl) {
