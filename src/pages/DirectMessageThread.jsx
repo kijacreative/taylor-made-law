@@ -253,7 +253,7 @@ export default function DirectMessageThreadPage() {
             {otherName.charAt(0).toUpperCase()}
           </div>
           <div>
-            <p className="font-semibold text-gray-900">{user.full_name}</p>
+            <p className="font-semibold text-gray-900">{otherParticipant?.user.full_name}</p>
             <p className="text-xs text-gray-400">{otherParticipant?.user_email || ''}</p>
           </div>
         </div>
