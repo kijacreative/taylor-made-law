@@ -136,7 +136,7 @@ export default function LawyerDashboard() {
           {/* Header */}
           <div className="mb-6">
           <h1 className="text-3xl font-bold text-gray-900">
-          Welcome{user?.full_name ? `, ${user.full_name.split(' ')[0]}` : ''}
+          Welcome{user?.full_name ? `, ${user.full_name}` : ''}
           </h1>
           <p className="text-gray-600 mt-1">Here's what's happening with your cases today.</p>
           </div>
