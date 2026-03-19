@@ -66,23 +66,7 @@ export default function SubmitCaseModal({ user, onClose }) {
         status: form.circle_id ? 'pending_approval' : 'draft',
       };
 
-      if (form.circle_id) {
-        await base44.entities.LegalCircleCase.create(caseData);
-      } else {
-        // Submit to main case exchange for admin approval
-        await base44.entities.Case.create({
-          title: form.title,
-          description: form.description,
-          state: form.state,
-          practice_area: form.practice_area,
-          estimated_value: form.estimated_value ? parseFloat(form.estimated_value) : undefined,
-          client_first_name: form.client_first_name,
-          client_last_name: form.client_last_name,
-          client_email: form.client_email,
-          client_phone: form.client_phone,
-          status: 'draft',
-        });
-      }
+      await base44.functions.invoke('submitCase', caseData);
 
       setStep('success');
     } catch (err) {
