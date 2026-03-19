@@ -110,8 +110,8 @@ const PublicNav = () => {
           <div className="px-4 py-6 space-y-4">
             {navLinks.map((link) => (
               <Link
-                key={link.path}
-                to={createPageUrl(link.path)}
+                key={link.label}
+                to={link.href || createPageUrl(link.path)}
                 onClick={() => setMobileOpen(false)}
                 className="block py-2 text-gray-700 hover:text-[#3a164d] font-medium"
               >
