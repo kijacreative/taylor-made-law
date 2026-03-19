@@ -251,24 +251,52 @@ export default function DirectMessageThreadPage() {
       <AppSidebar user={user} lawyerProfile={lawyerProfile} />
 
       <main className="ml-64 flex flex-col h-screen">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center gap-4 shrink-0">
-          <Link to="/app/messages" className="p-2 rounded-xl text-gray-400 hover:text-[#3a164d] hover:bg-gray-100 transition-colors">
-            <ArrowLeft className="w-5 h-5" />
-          </Link>
-          <div className="w-10 h-10 rounded-full bg-[#a47864] flex items-center justify-center text-white font-semibold">
-            {otherName.charAt(0).toUpperCase()}
+        {/* Header with notifications */}
+        <div className="bg-white border-b border-gray-100 shrink-0">
+          <div className="px-6 py-4 flex items-center gap-4">
+            <Link to="/app/messages" className="p-2 rounded-xl text-gray-400 hover:text-[#3a164d] hover:bg-gray-100 transition-colors">
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div className="w-10 h-10 rounded-full bg-[#a47864] flex items-center justify-center text-white font-semibold">
+              {otherName.charAt(0).toUpperCase()}
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-gray-900">{otherParticipant?.user_name || 'Attorney'}</p>
+              <p className="text-xs text-gray-400">{otherParticipant?.user_email || ''}</p>
+            </div>
           </div>
-          <div>
-            <p className="font-semibold text-gray-900">{otherParticipant?.user_name || 'Attorney'}</p>
-            <p className="text-xs text-gray-400">{otherParticipant?.user_email || ''}</p>
-          </div>
-        </div>
 
-        {/* PHI Warning */}
-        <div className="flex items-center gap-2 px-6 py-2 bg-amber-50 border-b border-amber-100 shrink-0">
-          <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
-          <p className="text-xs text-amber-700">Do not share PHI, client names, or sensitive identifiers. This channel is for professional discussion only.</p>
+          {/* PHI Warning */}
+          <div className="flex items-center gap-2 px-6 py-2 bg-amber-50 border-t border-amber-100 text-xs text-amber-700">
+            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+            <p>Do not share PHI, client names, or sensitive identifiers. This channel is for professional discussion only.</p>
+          </div>
+
+          {/* Send error */}
+          {sendError && (
+            <div className="px-6 py-2 bg-red-50 border-t border-red-100 text-xs text-red-600">
+              {sendError}
+            </div>
+          )}
+
+          {/* Pending files */}
+          {pendingFiles.length > 0 && (
+            <div className="px-6 py-2 bg-gray-50 border-t border-gray-100 flex gap-2 flex-wrap">
+              {pendingFiles.map((pf, i) => (
+                <div key={i} className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs text-gray-700">
+                  {pf.preview ? (
+                    <img src={pf.preview} alt="" className="w-7 h-7 object-cover rounded-lg" />
+                  ) : (
+                    <File className="w-4 h-4 text-[#3a164d]" />
+                  )}
+                  <span className="truncate max-w-[120px]">{pf.file_name}</span>
+                  <button onClick={() => removePendingFile(i)} className="text-gray-400 hover:text-red-500 transition-colors">
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Messages */}
@@ -323,30 +351,7 @@ export default function DirectMessageThreadPage() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Pending file previews */}
-        {pendingFiles.length > 0 && (
-          <div className="px-6 py-2 border-t border-gray-100 bg-gray-50 flex gap-2 flex-wrap shrink-0">
-            {pendingFiles.map((pf, i) => (
-              <div key={i} className="flex items-center gap-2 px-3 py-2 bg-white border border-gray-200 rounded-xl text-xs text-gray-700">
-                {pf.preview ? (
-                  <img src={pf.preview} alt="" className="w-7 h-7 object-cover rounded-lg" />
-                ) : (
-                  <File className="w-4 h-4 text-[#3a164d]" />
-                )}
-                <span className="truncate max-w-[120px]">{pf.file_name}</span>
-                <button onClick={() => removePendingFile(i)} className="text-gray-400 hover:text-red-500 transition-colors">
-                  <X className="w-3 h-3" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
 
-        {sendError && (
-          <div className="mx-6 px-4 py-2 bg-red-50 border border-red-100 rounded-lg text-xs text-red-600 shrink-0">
-            {sendError}
-          </div>
-        )}
 
         {/* Composer */}
         <form onSubmit={handleSend} className="px-6 py-4 border-t border-gray-100 bg-white shrink-0">
