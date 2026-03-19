@@ -206,6 +206,7 @@ export default function LawyerSettings() {
 
     const primaryBarNumber = Object.values(profileForm.bar_numbers)[0] || '';
     const profileData = {
+      full_name: profileForm.full_name,
       firm_name: profileForm.firm_name,
       bar_number: primaryBarNumber,
       bar_numbers: profileForm.bar_numbers,
@@ -213,7 +214,8 @@ export default function LawyerSettings() {
       bio: profileForm.bio,
       states_licensed: profileForm.states_licensed,
       practice_areas: profileForm.practice_areas,
-      years_experience: parseInt(profileForm.years_experience) || 0
+      years_experience: parseInt(profileForm.years_experience) || 0,
+      profile_photo_url: profileForm.profile_photo_url || null
     };
 
     // Check if profile is complete (all required fields filled)
