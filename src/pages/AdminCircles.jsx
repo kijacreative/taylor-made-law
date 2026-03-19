@@ -10,6 +10,7 @@ export default function AdminCircles() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [membersModal, setMembersModal] = useState(null); // { circleName, members }
 
   useEffect(() => {
     const checkAuth = async () => {
