@@ -63,17 +63,19 @@ function MessageAttachments({ attachments }) {
 }
 
 export default function CircleChat({ circleId, user, isAdmin, circleName }) {
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [pendingFiles, setPendingFiles] = useState([]); // {file, preview, file_name, file_type}
-  const [sending, setSending] = useState(false);
-  const [loading, setLoading] = useState(true);
-  // Map of message_id -> [CircleFile] for attachments
-  const [fileMap, setFileMap] = useState({});
-  const bottomRef = useRef(null);
-  const inputRef = useRef(null);
-  const fileInputRef = useRef(null);
-  const queryClient = useQueryClient();
+   const [messages, setMessages] = useState([]);
+   const [newMessage, setNewMessage] = useState('');
+   const [pendingFiles, setPendingFiles] = useState([]); // {file, preview, file_name, file_type}
+   const [sending, setSending] = useState(false);
+   const [loading, setLoading] = useState(true);
+   // Map of message_id -> [CircleFile] for attachments
+   const [fileMap, setFileMap] = useState({});
+   // Map of user_id -> full_name from LawyerProfile
+   const [userFullNames, setUserFullNames] = useState({});
+   const bottomRef = useRef(null);
+   const inputRef = useRef(null);
+   const fileInputRef = useRef(null);
+   const queryClient = useQueryClient();
 
   useEffect(() => {
     loadMessages();
@@ -85,6 +87,10 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
           if (event.data?.has_attachments) {
             loadFilesForMessages([event.data]);
           }
+          // Load full name for new sender
+          if (event.data?.sender_user_id && !userFullNames[event.data.sender_user_id]) {
+            loadUserFullName(event.data.sender_user_id);
+          }
         } else if (event.type === 'update') {
           setMessages(prev => prev.map(m => m.id === event.id ? event.data : m));
         } else if (event.type === 'delete') {
@@ -93,7 +99,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
       }
     });
     return () => unsubscribe();
-  }, [circleId]);
+  }, [circleId, userFullNames]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -109,7 +115,20 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
     setMessages(msgs);
     const withAttachments = msgs.filter(m => m.has_attachments);
     if (withAttachments.length > 0) await loadFilesForMessages(withAttachments);
+    // Load full names for all senders
+    const uniqueSenders = [...new Set(msgs.map(m => m.sender_user_id))];
+    for (const senderId of uniqueSenders) {
+      if (!userFullNames[senderId]) {
+        await loadUserFullName(senderId);
+      }
+    }
     setLoading(false);
+  };
+
+  const loadUserFullName = async (userId) => {
+    const profiles = await base44.entities.LawyerProfile.filter({ user_id: userId });
+    const fullName = profiles[0]?.full_name || 'Attorney';
+    setUserFullNames(prev => ({ ...prev, [userId]: fullName }));
   };
 
   const loadFilesForMessages = async (msgs) => {
@@ -161,17 +180,10 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
     const filesToSend = [...pendingFiles];
     setPendingFiles([]);
 
-    // Get lawyer profile for full_name
-    const lawyerProfiles = await base44.entities.LawyerProfile.list();
-    const profile = lawyerProfiles.find(p => p.user_id === user.id);
-    const senderFullName = profile?.full_name || user.full_name || 'Attorney';
-
     // Create message first
     const msg = await base44.entities.CircleMessage.create({
       circle_id: circleId,
       sender_user_id: user.id,
-      sender_name: senderFullName,
-      sender_full_name: senderFullName,
       sender_email: user.email,
       message_text: text || '',
       has_attachments: filesToSend.length > 0,
@@ -287,11 +299,11 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
                 {!msg.showHeader && <div className="w-8 shrink-0" />}
                 <div className={`group max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
                   {msg.showHeader && (
-                    <div className={`flex items-center gap-2 mb-1 ${isMe ? 'flex-row-reverse' : ''}`}>
-                      <span className="text-xs font-semibold text-gray-700">{isMe ? 'You' : (msg.sender_full_name || msg.sender_name || 'Attorney')}</span>
-                      <span className="text-xs text-gray-400">{formatTime(msg.created_date)}</span>
-                    </div>
-                  )}
+                      <div className={`flex items-center gap-2 mb-1 ${isMe ? 'flex-row-reverse' : ''}`}>
+                        <span className="text-xs font-semibold text-gray-700">{isMe ? 'You' : (userFullNames[msg.sender_user_id] || 'Attorney')}</span>
+                        <span className="text-xs text-gray-400">{formatTime(msg.created_date)}</span>
+                      </div>
+                    )}
                   <div className={`relative flex items-start gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
                     <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                       isMe
