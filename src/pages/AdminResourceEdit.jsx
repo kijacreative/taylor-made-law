@@ -294,6 +294,34 @@ export default function AdminResourceEdit() {
             </label>
           </div>
 
+          {/* PDF Download */}
+          <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 space-y-4">
+            <h2 className="text-white font-semibold text-sm uppercase tracking-wider mb-4 flex items-center gap-2">
+              <FileDown className="w-4 h-4" /> PDF Download (Optional)
+            </h2>
+            <p className="text-gray-400 text-xs">Upload a PDF so users see a "Download PDF" button on this resource.</p>
+            {form.pdf_download_url ? (
+              <div className="flex items-center gap-3 bg-purple-900/30 border border-purple-700/40 rounded-lg px-4 py-3">
+                <FileDown className="w-4 h-4 text-purple-400" />
+                <span className="text-purple-200 text-sm font-medium flex-1 truncate">{form.pdf_file_name || 'PDF uploaded'}</span>
+                <button
+                  onClick={() => setForm(f => ({ ...f, pdf_download_url: '', pdf_file_name: '' }))}
+                  className="text-gray-400 hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="relative">
+                <input type="file" accept=".pdf" onChange={handlePdfUpload} className="hidden" id="pdfInput" />
+                <label htmlFor="pdfInput" className="flex items-center gap-3 px-4 py-3 bg-gray-800 border-2 border-dashed border-gray-600 rounded-lg cursor-pointer hover:border-[#3a164d] transition-colors">
+                  {uploadingPdf ? <Loader2 className="w-5 h-5 text-[#3a164d] animate-spin" /> : <FileDown className="w-5 h-5 text-gray-400" />}
+                  <span className="text-gray-400 text-sm">{uploadingPdf ? 'Uploading…' : 'Click to upload PDF'}</span>
+                </label>
+              </div>
+            )}
+          </div>
+
           {/* Actions */}
           <div className="flex gap-3 pb-8">
             <button
