@@ -18,7 +18,6 @@ export default function CircleSettings({ circle, members, isAdmin }) {
     require_admin_approval: circle.require_admin_approval,
     member_can_submit_cases: circle.member_can_submit_cases,
     member_can_accept_cases: circle.member_can_accept_cases,
-    case_approval_required: circle.case_approval_required,
     visibility: circle.visibility
   });
 
@@ -34,7 +33,6 @@ export default function CircleSettings({ circle, members, isAdmin }) {
       require_admin_approval: form.require_admin_approval,
       member_can_submit_cases: form.member_can_submit_cases,
       member_can_accept_cases: form.member_can_accept_cases,
-      case_approval_required: form.case_approval_required,
       visibility: form.visibility
     });
     queryClient.invalidateQueries({ queryKey: ['legalCircle', circle.id] });
@@ -97,7 +95,6 @@ export default function CircleSettings({ circle, members, isAdmin }) {
             {checkboxRow('require_admin_approval', 'Require Admin Approval for Members', 'New member invites need admin approval')}
             {form.case_sharing_enabled && checkboxRow('member_can_submit_cases', 'Members Can Submit Cases', 'Allow all members to submit cases')}
             {form.case_sharing_enabled && checkboxRow('member_can_accept_cases', 'Members Can Accept Cases', 'Allow all members to accept open cases')}
-            {form.case_sharing_enabled && checkboxRow('case_approval_required', 'Case Approval Required', 'Submitted cases need admin approval before becoming visible')}
           </div>
         </div>
         <div className="px-6 pb-6 flex justify-end">
