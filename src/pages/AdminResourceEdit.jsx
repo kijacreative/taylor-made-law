@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Upload, Link2, Loader2, Star, X, Plus } from 'lucide-react';
+import { ArrowLeft, Upload, Link2, Loader2, Star, X, Plus, FileDown } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 
 const CATEGORIES = [
@@ -37,6 +37,7 @@ export default function AdminResourceEdit() {
     file_url: '', file_name: '', file_type: '', file_size: 0,
     external_url: '', external_new_tab: true,
     thumbnail_url: '', category: '', tags: [],
+    pdf_download_url: '', pdf_file_name: '',
     is_featured: false, visibility: 'approved_only', status: 'draft',
   });
 
@@ -73,6 +74,15 @@ export default function AdminResourceEdit() {
       file_size: file.size,
     }));
     setUploading(false);
+  };
+
+  const handlePdfUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPdf(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setForm(f => ({ ...f, pdf_download_url: file_url, pdf_file_name: file.name }));
+    setUploadingPdf(false);
   };
 
   const addTag = () => {
