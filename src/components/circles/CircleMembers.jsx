@@ -325,14 +325,25 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
         {members.map(member => {
           const isMe = member.user_id === user.id;
           const memberIsAdmin = member.role === 'admin';
+          const displayName = member.full_name || member.user_name || 'Attorney';
+          const initials = displayName.charAt(0)?.toUpperCase() || '?';
+          
           return (
             <div key={member.id} className="flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setViewingMember(member)}>
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3a164d] to-[#a47864] flex items-center justify-center text-white font-semibold text-sm shrink-0">
-                {member.full_name?.charAt(0)?.toUpperCase() || member.user_name?.charAt(0)?.toUpperCase() || '?'}
-              </div>
+              {member.profile_photo_url ? (
+                <img 
+                  src={member.profile_photo_url} 
+                  alt={displayName}
+                  className="w-10 h-10 rounded-full object-cover shrink-0 border-2 border-gray-100"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3a164d] to-[#a47864] flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                  {initials}
+                </div>
+              )}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                   <p className="font-medium text-gray-900 truncate">{member.user_name || member.full_name || 'Attorney'} {isMe && <span className="text-gray-400 font-normal text-sm">(you)</span>}</p>
+                   <p className="font-medium text-gray-900 truncate">{displayName} {isMe && <span className="text-gray-400 font-normal text-sm">(you)</span>}</p>
                   <TMLBadge variant={memberIsAdmin ? 'primary' : 'default'} size="sm">
                     {memberIsAdmin && <Shield className="w-3 h-3 mr-1" />}
                     {member.role}
