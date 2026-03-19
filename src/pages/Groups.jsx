@@ -117,13 +117,37 @@ export default function Groups() {
                 Private communities for collaboration, case sharing, and professional networking.
               </p>
             </div>
-            <Link to={createPageUrl('CreateGroup')}>
-              <TMLButton variant="primary">
+            {isPending ? (
+              <TMLButton variant="primary" disabled>
                 <Plus className="w-4 h-4 mr-2" />
                 Create Circle
               </TMLButton>
-            </Link>
+            ) : (
+              <Link to={createPageUrl('CreateGroup')}>
+                <TMLButton variant="primary">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Circle
+                </TMLButton>
+              </Link>
+            )}
           </div>
+
+          {/* Pending Approval Banner */}
+          {isPending && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+              <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-5 flex items-start gap-4">
+                <div className="p-2.5 bg-amber-100 rounded-xl shrink-0">
+                  <Clock className="w-5 h-5 text-amber-600" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-amber-900 text-base">Your application is pending approval.</h3>
+                  <p className="text-amber-700 text-sm mt-1">
+                    A Taylor Made Law admin will approve your account within <strong>24–48 hours</strong>. Creating circles is unavailable until your account is approved.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          )}
 
           {/* Pending Invitations */}
           {pendingInvites.length > 0 && (
