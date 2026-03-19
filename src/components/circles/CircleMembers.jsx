@@ -17,6 +17,7 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
   const [inviteMessage, setInviteMessage] = useState('');
   const [inviting, setInviting] = useState(false);
   const [inviteResult, setInviteResult] = useState(null);
+  const [viewingMember, setViewingMember] = useState(null);
   const queryClient = useQueryClient();
   const searchTimeout = useRef(null);
 
