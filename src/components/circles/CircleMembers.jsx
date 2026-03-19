@@ -332,7 +332,7 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                   <p className="font-medium text-gray-900 truncate">{member.full_name || member.user_name} {isMe && <span className="text-gray-400 font-normal text-sm">(you)</span>}</p>
+                   <p className="font-medium text-gray-900 truncate">{lawyerProfile?.full_name || user.full_name || 'Attorney'} {isMe && <span className="text-gray-400 font-normal text-sm">(you)</span>}</p>
                   <TMLBadge variant={memberIsAdmin ? 'primary' : 'default'} size="sm">
                     {memberIsAdmin && <Shield className="w-3 h-3 mr-1" />}
                     {member.role}
