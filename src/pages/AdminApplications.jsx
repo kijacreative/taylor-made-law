@@ -70,7 +70,7 @@ export default function AdminApplications() {
     enabled: !!user,
   });
 
-  const profileByEmail = React.useMemo(() => {
+  const profileByEmail = useMemo(() => {
     const map = {};
     lawyerProfiles.forEach(p => { if (p.user_id) map[p.user_id] = p; });
     return map;
