@@ -509,6 +509,40 @@ export default function LawyerSettings() {
                 </TMLCardTitle>
               </TMLCardHeader>
               <TMLCardContent className="space-y-6">
+
+                {/* Profile Photo */}
+                <div className="flex items-center gap-5">
+                  <div className="relative shrink-0">
+                    {profileForm.profile_photo_url ? (
+                      <img
+                        src={profileForm.profile_photo_url}
+                        alt="Profile"
+                        className="w-20 h-20 rounded-full object-cover border-2 border-[#3a164d]/20"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full bg-[#3a164d] flex items-center justify-center text-white font-bold text-2xl">
+                        {(profileForm.full_name || user?.full_name || '?').charAt(0).toUpperCase()}
+                      </div>
+                    )}
+                    <label className="absolute bottom-0 right-0 w-7 h-7 bg-white border border-gray-200 rounded-full flex items-center justify-center cursor-pointer shadow-sm hover:bg-gray-50 transition-colors">
+                      {uploadingPhoto ? <Loader2 className="w-3.5 h-3.5 animate-spin text-[#3a164d]" /> : <Camera className="w-3.5 h-3.5 text-[#3a164d]" />}
+                      <input type="file" accept="image/*" className="hidden" onChange={handlePhotoUpload} disabled={uploadingPhoto} />
+                    </label>
+                  </div>
+                  <div>
+                    <p className="font-medium text-gray-900">{profileForm.full_name || user?.full_name || '—'}</p>
+                    <p className="text-sm text-gray-500">{user?.email}</p>
+                    <p className="text-xs text-gray-400 mt-1">Click the camera icon to update your photo</p>
+                  </div>
+                </div>
+
+                <TMLInput
+                  label="Full Name"
+                  placeholder="e.g. Jane Smith"
+                  value={profileForm.full_name}
+                  onChange={(e) => setProfileForm({ ...profileForm, full_name: e.target.value })}
+                  required />
+
                 <div className="grid md:grid-cols-2 gap-4">
                   <TMLInput
                   label="Firm Name"
