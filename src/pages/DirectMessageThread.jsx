@@ -98,18 +98,15 @@ export default function DirectMessageThreadPage() {
     if (res.data?.error) { navigate('/app/messages'); return; }
     setThreadData(res.data?.thread);
     const participant = res.data?.other_participant;
-    // Enrich with User full_name if available, fallback to LawyerProfile
+    // Fetch full name from LawyerProfile
     if (participant?.user_id) {
       try {
-        const users = await base44.entities.User.filter({ id: participant.user_id });
-        if (users[0]?.full_name) {
-          participant.user_name = users[0].full_name;
-        }
-      } catch {
         const profiles = await base44.entities.LawyerProfile.filter({ user_id: participant.user_id });
         if (profiles[0]?.full_name) {
           participant.user_name = profiles[0].full_name;
         }
+      } catch {
+        // fallback to unknown
       }
     }
     setOtherParticipant(participant);
