@@ -98,14 +98,19 @@ export default function DirectMessageThreadPage() {
     if (res.data?.error) { navigate('/app/messages'); return; }
     setThreadData(res.data?.thread);
     const participant = res.data?.other_participant;
-    // Enrich with LawyerProfile full_name
+    // Enrich with User full_name if available, fallback to LawyerProfile
     if (participant?.user_id) {
       try {
+        const users = await base44.entities.User.filter({ id: participant.user_id });
+        if (users[0]?.full_name) {
+          participant.user_name = users[0].full_name;
+        }
+      } catch {
         const profiles = await base44.entities.LawyerProfile.filter({ user_id: participant.user_id });
         if (profiles[0]?.full_name) {
-          participant.full_name = profiles[0].full_name;
+          participant.user_name = profiles[0].full_name;
         }
-      } catch {}
+      }
     }
     setOtherParticipant(participant);
     setMessages(res.data?.messages || []);
@@ -239,7 +244,7 @@ export default function DirectMessageThreadPage() {
     );
   }
 
-  const otherName = otherParticipant?.full_name || otherParticipant?.user_name || 'Attorney';
+  const otherName = otherParticipant?.user_name || 'Attorney';
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -256,7 +261,7 @@ export default function DirectMessageThreadPage() {
               {otherName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1">
-              <p className="font-semibold text-gray-900">{otherName}</p>
+              <p className="font-semibold text-gray-900">{otherParticipant?.user_name || 'Attorney'}</p>
               <p className="text-xs text-gray-400">{otherParticipant?.user_email || ''}</p>
             </div>
           </div>
