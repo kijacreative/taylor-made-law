@@ -70,8 +70,10 @@ export default function GroupDetail() {
 
   const { data: members = [], isLoading: membersLoading } = useQuery({
     queryKey: ['circleMembers', circleId],
-    queryFn: () => base44.entities.LegalCircleMember.filter({ circle_id: circleId, status: 'active' }),
+    queryFn: () => base44.entities.LegalCircleMember.filter({ circle_id: circleId, status: 'active' }, '-joined_at', 100),
     enabled: !!circleId && !!myMembership,
+    retry: 2,
+    retryDelay: 1000,
   });
 
   const handleLeave = async () => {
