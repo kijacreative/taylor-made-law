@@ -54,25 +54,27 @@ function MessageAttachments({ attachments }) {
 }
 
 export default function DirectMessageThreadPage() {
-  const navigate = useNavigate();
-  const { threadId } = useParams();
-  const queryClient = useQueryClient();
+   const navigate = useNavigate();
+   const { threadId } = useParams();
+   const queryClient = useQueryClient();
 
-  const [user, setUser] = useState(null);
-  const [lawyerProfile, setLawyerProfile] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [threadData, setThreadData] = useState(null);
-  const [messages, setMessages] = useState([]);
-  const [otherParticipant, setOtherParticipant] = useState(null);
+   const [user, setUser] = useState(null);
+   const [lawyerProfile, setLawyerProfile] = useState(null);
+   const [loading, setLoading] = useState(true);
+   const [threadData, setThreadData] = useState(null);
+   const [messages, setMessages] = useState([]);
+   const [otherParticipant, setOtherParticipant] = useState(null);
+   // Map of user_id -> full_name from LawyerProfile
+   const [userFullNames, setUserFullNames] = useState({});
 
-  const [newMessage, setNewMessage] = useState('');
-  const [pendingFiles, setPendingFiles] = useState([]);
-  const [sending, setSending] = useState(false);
-  const [sendError, setSendError] = useState('');
+   const [newMessage, setNewMessage] = useState('');
+   const [pendingFiles, setPendingFiles] = useState([]);
+   const [sending, setSending] = useState(false);
+   const [sendError, setSendError] = useState('');
 
-  const bottomRef = useRef(null);
-  const inputRef = useRef(null);
-  const fileInputRef = useRef(null);
+   const bottomRef = useRef(null);
+   const inputRef = useRef(null);
+   const fileInputRef = useRef(null);
 
   useEffect(() => {
     const init = async () => {
@@ -100,17 +102,18 @@ export default function DirectMessageThreadPage() {
     const participant = res.data?.other_participant;
     // Fetch full name from LawyerProfile
     if (participant?.user_id) {
-      try {
-        const profiles = await base44.entities.LawyerProfile.filter({ user_id: participant.user_id });
-        if (profiles[0]?.full_name) {
-          participant.user_name = profiles[0].full_name;
-        }
-      } catch {
-        // fallback to unknown
-      }
+      await loadUserFullName(participant.user_id);
     }
     setOtherParticipant(participant);
-    setMessages(res.data?.messages || []);
+    const msgs = res.data?.messages || [];
+    setMessages(msgs);
+    // Load full names for all senders
+    const uniqueSenders = [...new Set(msgs.map(m => m.sender_user_id))];
+    for (const senderId of uniqueSenders) {
+      if (!userFullNames[senderId]) {
+        await loadUserFullName(senderId);
+      }
+    }
     queryClient.invalidateQueries({ queryKey: ['directInbox'] });
   };
 
@@ -132,6 +135,10 @@ export default function DirectMessageThreadPage() {
             if (prev.find(m => m.id === event.id)) return prev;
             return [...prev, { ...event.data, attachments: [] }];
           });
+          // Load sender's full name if not cached
+          if (event.data?.sender_user_id && !userFullNames[event.data.sender_user_id]) {
+            loadUserFullName(event.data.sender_user_id);
+          }
           // Mark read
           base44.functions.invoke('getDirectThread', { thread_id: threadId }).then(res => {
             queryClient.invalidateQueries({ queryKey: ['directInbox'] });
@@ -142,7 +149,17 @@ export default function DirectMessageThreadPage() {
       }
     });
     return () => unsub();
-  }, [threadId]);
+  }, [threadId, userFullNames]);
+
+  const loadUserFullName = async (userId) => {
+    try {
+      const profiles = await base44.entities.LawyerProfile.filter({ user_id: userId });
+      const fullName = profiles[0]?.full_name || 'Attorney';
+      setUserFullNames(prev => ({ ...prev, [userId]: fullName }));
+    } catch {
+      setUserFullNames(prev => ({ ...prev, [userId]: 'Attorney' }));
+    }
+  };
 
   const handleFileSelect = (e) => {
     const files = Array.from(e.target.files || []);
@@ -319,11 +336,11 @@ export default function DirectMessageThreadPage() {
                   {!msg.showHeader && <div className="w-8 shrink-0" />}
                   <div className={`group max-w-[65%] flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                     {msg.showHeader && (
-                      <div className={`flex items-center gap-2 mb-1 ${isMe ? 'flex-row-reverse' : ''}`}>
-                        <span className="text-xs font-semibold text-gray-700">{isMe ? 'You' : msg.sender_name}</span>
-                        <span className="text-xs text-gray-400">{formatTime(msg.created_date)}</span>
-                      </div>
-                    )}
+                       <div className={`flex items-center gap-2 mb-1 ${isMe ? 'flex-row-reverse' : ''}`}>
+                         <span className="text-xs font-semibold text-gray-700">{isMe ? 'You' : (userFullNames[msg.sender_user_id] || 'Attorney')}</span>
+                         <span className="text-xs text-gray-400">{formatTime(msg.created_date)}</span>
+                       </div>
+                     )}
                     <div className={`flex items-end gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
                       <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
                         isMe ? 'bg-[#3a164d] text-white rounded-tr-sm' : 'bg-white border border-gray-100 text-gray-800 rounded-tl-sm shadow-sm'
