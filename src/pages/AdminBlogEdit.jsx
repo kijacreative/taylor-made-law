@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import {
   ArrowLeft, Save, Eye, Upload, X, Plus, Loader2,
-  CheckCircle2, AlertCircle, Image as ImageIcon, Tag
+  CheckCircle2, AlertCircle, Image as ImageIcon, Tag, FileDown
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
@@ -392,6 +392,33 @@ export default function AdminBlogEdit() {
                     onChange={e => setForm(f => ({ ...f, author_name: e.target.value }))}
                     placeholder="Full name"
                   />
+                </div>
+
+                {/* PDF Download */}
+                <div className="bg-white rounded-2xl border border-gray-100 p-5">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                    <FileDown className="w-4 h-4" /> PDF Download
+                  </h3>
+                  {form.pdf_download_url ? (
+                    <div className="flex items-center gap-2 bg-purple-50 border border-purple-100 rounded-xl px-3 py-2 mb-3">
+                      <FileDown className="w-4 h-4 text-[#3a164d]" />
+                      <span className="text-sm text-[#3a164d] font-medium truncate flex-1">{form.pdf_file_name || 'PDF uploaded'}</span>
+                      <button onClick={() => setForm(f => ({ ...f, pdf_download_url: '', pdf_file_name: '' }))} className="p-1 hover:bg-purple-100 rounded">
+                        <X className="w-3.5 h-3.5 text-gray-500" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center h-24 border-2 border-dashed border-gray-200 rounded-xl cursor-pointer hover:border-[#3a164d]/40 hover:bg-gray-50 transition-colors mb-3">
+                      {uploadingPdf ? <Loader2 className="w-5 h-5 animate-spin text-[#3a164d]" /> : (
+                        <>
+                          <FileDown className="w-6 h-6 text-gray-300 mb-1" />
+                          <span className="text-xs text-gray-500">Upload PDF for download</span>
+                        </>
+                      )}
+                      <input type="file" accept=".pdf" className="hidden" onChange={handlePdfUpload} />
+                    </label>
+                  )}
+                  <p className="text-xs text-gray-400">Readers will see a "Download PDF" button on the post.</p>
                 </div>
 
                 {/* Publishing Options */}
