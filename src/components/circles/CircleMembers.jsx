@@ -129,6 +129,7 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
   };
 
   return (
+    <>
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <p className="text-sm text-gray-500">{members.length} member{members.length !== 1 ? 's' : ''}</p>
