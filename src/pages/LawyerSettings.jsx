@@ -96,14 +96,17 @@ export default function LawyerSettings() {
   };
 
   const [profileForm, setProfileForm] = useState({
+    full_name: '',
     firm_name: '',
     bar_numbers: {},
     phone: '',
     bio: '',
     states_licensed: [],
     practice_areas: [],
-    years_experience: ''
+    years_experience: '',
+    profile_photo_url: ''
   });
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
