@@ -23,7 +23,6 @@ Deno.serve(async (req) => {
       circle_id,
       user_id: user.id,
       user_email: user.email,
-      user_name: user.full_name,
       role: 'member',
       status: 'active',
       joined_at: new Date().toISOString(),
