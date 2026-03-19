@@ -36,29 +36,69 @@ Deno.serve(async (req) => {
     const now = new Date().toISOString();
 
     if (action === 'approve') {
-      // Update LawyerApplication status
+      // 1. Fetch full application data
+      const apps = await base44.asServiceRole.entities.LawyerApplication.filter({ id: application_id });
+      const application = apps[0];
+
+      // 2. Update LawyerApplication status
       await base44.asServiceRole.entities.LawyerApplication.update(application_id, {
-        status: 'active',
+        status: 'approved',
         reviewed_by: user.email,
         reviewed_at: now,
       });
 
-      // Find user by email and update user_status
+      // 3. Find user by email, update user_status + migrate all application data
+      let lawyerUser = null;
       if (email) {
         const users = await base44.asServiceRole.entities.User.filter({ email });
         if (users.length > 0) {
-          await base44.asServiceRole.entities.User.update(users[0].id, { user_status: 'active' });
+          lawyerUser = users[0];
+          await base44.asServiceRole.entities.User.update(lawyerUser.id, {
+            user_status: 'approved',
+            approved_at: now,
+            approved_by: user.email,
+            firm_name: lawyerUser.firm_name || application?.firm_name || '',
+            phone: lawyerUser.phone || application?.phone || '',
+            bar_number: lawyerUser.bar_number || application?.bar_number || '',
+            bio: lawyerUser.bio || application?.bio || '',
+            states_licensed: lawyerUser.states_licensed?.length ? lawyerUser.states_licensed : (application?.states_licensed || []),
+            practice_areas: lawyerUser.practice_areas?.length ? lawyerUser.practice_areas : (application?.practice_areas || []),
+            years_experience: lawyerUser.years_experience || application?.years_experience || 0,
+          });
         }
       }
 
-      // Send approval notification
+      // 4. Upsert LawyerProfile with full application data
+      if (lawyerUser && application) {
+        const profileData = {
+          user_id: lawyerUser.id,
+          firm_name: application.firm_name || '',
+          phone: application.phone || '',
+          bar_number: application.bar_number || '',
+          bio: application.bio || '',
+          states_licensed: application.states_licensed || [],
+          practice_areas: application.practice_areas || [],
+          years_experience: application.years_experience || 0,
+          status: 'approved',
+          approved_at: now,
+          approved_by: user.email,
+        };
+        const existingProfiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id: lawyerUser.id });
+        if (existingProfiles.length > 0) {
+          await base44.asServiceRole.entities.LawyerProfile.update(existingProfiles[0].id, profileData).catch(() => {});
+        } else {
+          await base44.asServiceRole.entities.LawyerProfile.create(profileData).catch(() => {});
+        }
+      }
+
+      // 5. Send approval notification
       if (email) {
         await resend.emails.send({
           from: 'Taylor Made Law <noreply@taylormadelaw.com>',
           to: email,
-          subject: 'Your TML Network Application Has Been Approved',
+          subject: "You're Approved — Cases Are Now Unlocked",
           html: emailHtml(`
-            <h2 style="color:#3a164d;margin-bottom:8px;">Your Application Has Been Approved!</h2>
+            <h2 style="color:#3a164d;margin-bottom:8px;">You're Approved!</h2>
             <p style="color:#555;">Congratulations${name ? `, ${name}` : ''}! Your application to join the Taylor Made Law Network has been reviewed and approved.</p>
             <p style="color:#555;">You now have full access to the case marketplace, referral network, and all attorney resources.</p>
             <a href="${Deno.env.get('APP_URL') || 'https://app.taylormadelaw.com'}/login" 
