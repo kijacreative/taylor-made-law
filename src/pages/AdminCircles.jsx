@@ -198,6 +198,45 @@ export default function AdminCircles() {
           )}
         </div>
       </main>
+
+      {/* Members Modal */}
+      {membersModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div>
+                <h2 className="text-lg font-bold text-gray-900">{membersModal.circleName}</h2>
+                <p className="text-sm text-gray-500">{membersModal.members.length} member{membersModal.members.length !== 1 ? 's' : ''}</p>
+              </div>
+              <button onClick={() => setMembersModal(null)} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+            <div className="overflow-y-auto flex-1 p-4 space-y-2">
+              {membersModal.members.length === 0 ? (
+                <p className="text-center text-gray-400 py-8">No active members.</p>
+              ) : (
+                membersModal.members.map(member => (
+                  <div key={member.id} className="flex items-center gap-3 p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-[#3a164d] to-[#a47864] flex items-center justify-center text-white font-semibold text-sm shrink-0">
+                      {(member.full_name || member.user_name || member.user_email || '?').charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-gray-900 text-sm truncate">{member.full_name || member.user_name || '—'}</p>
+                      <p className="text-xs text-gray-500 truncate">{member.user_email}</p>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                      member.role === 'admin' ? 'bg-purple-50 text-purple-700' : 'bg-gray-200 text-gray-600'
+                    }`}>
+                      {member.role}
+                    </span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
