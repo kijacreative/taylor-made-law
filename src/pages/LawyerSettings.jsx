@@ -68,6 +68,14 @@ export default function LawyerSettings() {
   const [success, setSuccess] = useState(null);
   const [error, setError] = useState(null);
   const [accountForm, setAccountForm] = useState({ full_name: '', email: '', phone: '' });
+
+  // Fetch the original lawyer application (read-only display)
+  const { data: applications = [] } = useQuery({
+    queryKey: ['lawyerApplication', user?.email],
+    queryFn: () => base44.entities.LawyerApplication.filter({ email: user.email }),
+    enabled: !!user?.email,
+  });
+  const lawyerApplication = applications[0] || null;
   const [passwordForm, setPasswordForm] = useState({ new_password: '', confirm_password: '' });
   const [billingForm, setBillingForm] = useState({
     cardholder_name: '',
@@ -319,7 +327,8 @@ export default function LawyerSettings() {
   const tabs = [
   { id: 'account', label: 'Account', icon: User },
   { id: 'profile', label: 'Profile', icon: Building2 },
-  { id: 'agreement', label: 'Referral Agreement', icon: FileText },
+  { id: 'application', label: 'Application', icon: FileText },
+  { id: 'agreement', label: 'Referral Agreement', icon: Shield },
   { id: 'billing', label: 'Billing', icon: CreditCard }];
 
 
