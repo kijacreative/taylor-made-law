@@ -22,6 +22,7 @@ const PublicNav = () => {
     { label: 'Find a Lawyer', path: 'FindLawyer' },
     { label: 'Join the Attorney Network', path: 'JoinNetwork' },
     { label: 'Blog', path: 'Blog' },
+    { label: 'White Papers', path: 'Blog?type=whitepaper' },
   ];
 
   return (
