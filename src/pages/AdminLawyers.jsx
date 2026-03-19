@@ -116,7 +116,10 @@ export default function AdminLawyers() {
     enabled: !!authUser,
   });
 
-  const lawyerUsers = allUsers.filter(u => u.role !== 'admin' && u.user_status);
+  // Normalize 'active' (legacy) → treat as 'approved' for display
+  const lawyerUsers = allUsers
+    .filter(u => u.role !== 'admin' && u.user_status)
+    .map(u => u.user_status === 'active' ? { ...u, user_status: 'approved' } : u);
 
   // ── Filtered Lists ────────────────────────────────────────────────────────
 
