@@ -128,6 +128,7 @@ export default function JoinLawyerNetwork() {
         practice_areas: formData.practice_areas,
         bio: formData.bio,
         consent_terms: formData.consent_terms,
+        ...(circleToken ? { circle_token: circleToken } : {}),
       });
 
       const result = response.data;
