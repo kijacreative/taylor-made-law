@@ -19,6 +19,7 @@ import TermsAndConditions from './pages/TermsAndConditions.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
 import DirectMessageThreadPage from './pages/DirectMessageThread.jsx';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
+import PublicBlogDetail from './pages/PublicBlogDetail.jsx';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
