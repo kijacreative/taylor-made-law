@@ -52,6 +52,7 @@ export default function Groups() {
   });
 
   const lawyerProfile = profiles[0] || null;
+  const isPending = user?.user_status === 'active_pending_review' || user?.user_status === 'pending' || user?.user_status === 'invited' || (!user?.user_status && (!lawyerProfile || lawyerProfile?.status === 'pending'));
 
   // Get user's group memberships
   const { data: memberships = [], isLoading: membershipsLoading } = useQuery({
