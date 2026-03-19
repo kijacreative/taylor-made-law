@@ -134,11 +134,24 @@ export default function LawyerDashboard() {
       <main className="ml-64 p-8">
         <div className="max-w-6xl mx-auto">
           {/* Header */}
-          <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900">
-          Welcome{lawyerProfile?.full_name ? `, ${lawyerProfile.full_name}` : user?.full_name ? `, ${user.full_name}` : ''}
-          </h1>
-          <p className="text-gray-600 mt-1">Here's what's happening with your cases today.</p>
+          <div className="mb-6 flex items-center gap-4">
+            {lawyerProfile?.profile_photo_url ? (
+              <img
+                src={lawyerProfile.profile_photo_url}
+                alt={lawyerProfile.full_name || 'Profile'}
+                className="w-14 h-14 rounded-full object-cover border-2 border-[#3a164d]/20 shrink-0"
+              />
+            ) : (
+              <div className="w-14 h-14 rounded-full bg-[#3a164d] flex items-center justify-center text-white font-bold text-xl shrink-0">
+                {(lawyerProfile?.full_name || user?.full_name || '?').charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">
+                Welcome{lawyerProfile?.full_name ? `, ${lawyerProfile.full_name}` : user?.full_name ? `, ${user.full_name}` : ''}
+              </h1>
+              <p className="text-gray-600 mt-1">Here's what's happening with your cases today.</p>
+            </div>
           </div>
 
           {/* Status Banners */}
