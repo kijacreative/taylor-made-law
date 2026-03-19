@@ -32,13 +32,12 @@ function emailWrapper(content) {
 
 function buildAccessGrantedEmail(name, loginUrl) {
   return emailWrapper(`
-    <h1 style="margin:0 0 8px;color:#111827;font-size:26px;font-weight:700;">You're Approved — Access Granted</h1>
-    <p style="margin:0 0 28px;color:#6b7280;font-size:15px;">You can now log in and review available cases.</p>
-    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${name},</p>
-    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Your account has been <strong>approved</strong>. You can now log in and begin reviewing available cases inside the Taylor Made Law platform.</p>
+    <h1 style="margin:0 0 8px;color:#111827;font-size:26px;font-weight:700;">You're Approved!</h1>
+    <p style="margin:0 0 28px;color:#6b7280;font-size:15px;">Congratulations, ${name}! Your application to join the Taylor Made Law Network has been reviewed and approved.</p>
+    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">You now have full access to the case marketplace, referral network, and all attorney resources.</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
       <tr><td align="center">
-        <a href="${loginUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Log In to Your Account →</a>
+        <a href="${loginUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Sign In to Your Dashboard →</a>
       </td></tr>
     </table>
     <p style="margin:0;color:#4b5563;font-size:15px;line-height:1.7;">We're glad to have you as part of the Taylor Made Law network.</p>
