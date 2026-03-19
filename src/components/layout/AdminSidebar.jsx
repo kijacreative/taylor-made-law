@@ -11,7 +11,8 @@ import {
   BookOpen,
   Layers,
   ShieldCheck,
-  ClipboardList
+  ClipboardList,
+  Zap
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
@@ -60,6 +61,13 @@ const AdminSidebar = ({ user }) => {
       path: null,
       href: '/admin/applications',
       active: currentPath.includes('/admin/applications'),
+    },
+    {
+      label: 'Lead Docket Sync',
+      icon: Zap,
+      path: null,
+      href: '/admin/lead-docket-sync',
+      active: currentPath.includes('/admin/lead-docket-sync'),
     },
     { 
       label: 'Blog & Resources', 
