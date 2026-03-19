@@ -4,7 +4,7 @@ import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Users, MessageSquare, Briefcase, Settings, Loader2, Shield, LogOut, FolderOpen } from 'lucide-react';
+import { ArrowLeft, Users, MessageSquare, Briefcase, Settings, Loader2, Shield, LogOut, FolderOpen, FileText } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLCard, { TMLCardContent } from '@/components/ui/TMLCard';
@@ -14,6 +14,7 @@ import CircleCases from '@/components/circles/CircleCases';
 import CircleMembers from '@/components/circles/CircleMembers';
 import CircleSettings from '@/components/circles/CircleSettings';
 import CircleResources from '@/components/circles/CircleResources';
+import CircleDocuments from '@/components/circles/CircleDocuments';
 
 export default function GroupDetail() {
   const navigate = useNavigate();
@@ -109,6 +110,7 @@ export default function GroupDetail() {
 
   const tabs = [
     { id: 'chat', label: 'Chat', icon: MessageSquare },
+    { id: 'documents', label: 'Documents', icon: FileText },
     { id: 'resources', label: 'Resources', icon: FolderOpen },
     { id: 'members', label: 'Members', icon: Users, count: members.length },
     ...(circle.case_sharing_enabled ? [{ id: 'cases', label: 'Cases', icon: Briefcase }] : []),
@@ -181,6 +183,9 @@ export default function GroupDetail() {
           {/* Tab Content */}
           {activeTab === 'chat' && (
             <CircleChat circleId={circleId} user={user} isAdmin={isAdmin} circleName={circle.name} />
+          )}
+          {activeTab === 'documents' && (
+            <CircleDocuments circleId={circleId} user={user} isAdmin={isAdmin} />
           )}
           {activeTab === 'members' && (
             <CircleMembers circleId={circleId} members={members} user={user} isAdmin={isAdmin} circleName={circle.name} />
