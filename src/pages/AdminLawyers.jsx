@@ -452,7 +452,7 @@ export default function AdminLawyers() {
                             className="hover:bg-gray-50 transition-colors cursor-pointer"
                             onClick={() => { setSelectedApp(app); setAppPanelAction(null); setAppRejectionReason(''); setAppFreeTrialMonths(0); }}>
                             <td className="px-5 py-4 text-gray-500 whitespace-nowrap text-xs">{new Date(app.created_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</td>
-                            <td className="px-5 py-4"><p className="font-semibold text-gray-900">{app.full_name || '—'}</p><p className="text-gray-400 text-xs">{app.email}</p></td>
+                            <td className="px-5 py-4"><p className="font-semibold text-gray-900">{app.full_name}</p><p className="text-gray-400 text-xs">{app.email}</p></td>
                             <td className="px-5 py-4"><p className="text-gray-700">{app.firm_name || '—'}</p><p className="text-gray-400 text-xs">{app.bar_number || 'No bar #'}</p></td>
                             <td className="px-5 py-4 hidden lg:table-cell text-gray-600 text-xs">{(app.states_licensed || []).slice(0, 3).join(', ')}{(app.states_licensed || []).length > 3 ? ` +${app.states_licensed.length - 3}` : ''}</td>
                             <td className="px-5 py-4"><span className={`inline-flex items-center text-xs font-semibold px-2.5 py-1 rounded-full ${sc.bg} ${sc.text}`}>{sc.label}</span></td>
@@ -559,8 +559,8 @@ export default function AdminLawyers() {
               className="fixed right-0 top-0 h-full w-full max-w-xl bg-white shadow-2xl z-40 flex flex-col overflow-hidden">
               <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
                 <div className="flex items-center gap-3">
-                  <button onClick={() => { setSelectedApp(null); setAppPanelAction(null); }} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"><ArrowLeft className="w-5 h-5" /></button>
-                  <div><h2 className="font-bold text-gray-900 text-lg leading-tight">{selectedApp.full_name || selectedApp.email}</h2><p className="text-sm text-gray-500">{selectedApp.firm_name || '—'}</p></div>
+                <button onClick={() => { setSelectedApp(null); setAppPanelAction(null); }} className="p-1.5 rounded-lg text-gray-400 hover:text-gray-700 hover:bg-gray-100"><ArrowLeft className="w-5 h-5" /></button>
+                <div><h2 className="font-bold text-gray-900 text-lg leading-tight">{selectedApp.full_name}</h2><p className="text-sm text-gray-500">{selectedApp.firm_name || '—'}</p></div>
                 </div>
                 {(() => { const sc = APP_STATUS_CONFIG[selectedApp.status] || APP_STATUS_CONFIG.pending; return <span className={`text-xs font-semibold px-3 py-1.5 rounded-full ${sc.bg} ${sc.text}`}>{sc.label}</span>; })()}
               </div>
@@ -608,14 +608,14 @@ export default function AdminLawyers() {
                     )}
                     {appPanelAction === 'approve' && (
                       <motion.div key="approve" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                        <div className="p-3 bg-emerald-50 rounded-xl text-sm text-emerald-800 border border-emerald-100"><p className="font-semibold mb-1">Confirm Approval</p><p>Approving <strong>{selectedApp.full_name || selectedApp.email}</strong> will send them an activation email.</p></div>
+                        <div className="p-3 bg-emerald-50 rounded-xl text-sm text-emerald-800 border border-emerald-100"><p className="font-semibold mb-1">Confirm Approval</p><p>Approving <strong>{selectedApp.full_name}</strong> will send them an activation email.</p></div>
                         <div><label className="text-xs text-gray-500 font-medium block mb-1">Free Trial Months (optional)</label><input type="number" min="0" max="24" value={appFreeTrialMonths} onChange={e => setAppFreeTrialMonths(parseInt(e.target.value) || 0)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20" /></div>
                         <div className="flex gap-2"><TMLButton variant="success" className="flex-1" loading={appActionLoading} onClick={handleAppApprove}>Confirm Approval</TMLButton><TMLButton variant="ghost" onClick={() => setAppPanelAction(null)}>Cancel</TMLButton></div>
                       </motion.div>
                     )}
                     {appPanelAction === 'reject' && (
                       <motion.div key="reject" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
-                        <div className="p-3 bg-red-50 rounded-xl text-sm text-red-800 border border-red-100"><p className="font-semibold mb-1">Reject Application</p><p>This will reject <strong>{selectedApp.full_name || selectedApp.email}</strong> and send a rejection email.</p></div>
+                        <div className="p-3 bg-red-50 rounded-xl text-sm text-red-800 border border-red-100"><p className="font-semibold mb-1">Reject Application</p><p>This will reject <strong>{selectedApp.full_name}</strong> and send a rejection email.</p></div>
                         <TMLTextarea label="Rejection Reason (optional)" value={appRejectionReason} onChange={e => setAppRejectionReason(e.target.value)} placeholder="Provide a reason..." rows={3} />
                         <div className="flex gap-2"><TMLButton variant="danger" className="flex-1" loading={appActionLoading} onClick={handleAppReject}>Confirm Rejection</TMLButton><TMLButton variant="ghost" onClick={() => setAppPanelAction(null)}>Cancel</TMLButton></div>
                       </motion.div>
@@ -633,7 +633,7 @@ export default function AdminLawyers() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-1">Approve Attorney</h3>
-            <p className="text-gray-600 mb-6">Approve <strong>{approvingUser.full_name || approvingUser.email}</strong> to join the network.</p>
+            <p className="text-gray-600 mb-6">Approve <strong>{approvingUser.full_name}</strong> to join the network.</p>
             <TMLSelect label="Free Trial Period" options={[{ value: '0', label: 'No free trial' }, { value: '1', label: '1 month free' }, { value: '3', label: '3 months free' }, { value: '6', label: '6 months free (default)' }, { value: '12', label: '12 months free' }]} value={freeTrialMonths} onChange={e => setFreeTrialMonths(e.target.value)} />
             <p className="text-sm text-gray-500 mt-2 mb-6">{approvingUser.password_set ? '✓ Already activated — will receive login link.' : '✓ Not yet activated — will receive activation email.'}</p>
             <div className="flex gap-3">
@@ -649,7 +649,7 @@ export default function AdminLawyers() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-1">Disable Account</h3>
-            <p className="text-gray-600 mb-4">Disable <strong>{disablingUser.full_name || disablingUser.email}</strong>. They will be blocked from logging in.</p>
+            <p className="text-gray-600 mb-4">Disable <strong>{disablingUser.full_name}</strong>. They will be blocked from logging in.</p>
             <TMLTextarea label="Reason (internal)" value={disableReason} onChange={e => setDisableReason(e.target.value)} placeholder="Optional reason for audit log..." rows={3} />
             <div className="flex gap-3 mt-4">
               <TMLButton variant="outline" onClick={() => setDisablingUser(null)} className="flex-1">Cancel</TMLButton>
@@ -664,7 +664,7 @@ export default function AdminLawyers() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl max-w-md w-full p-6">
             <h3 className="text-xl font-bold text-gray-900 mb-1">Request More Information</h3>
-            <p className="text-gray-600 mb-4">Send a request to <strong>{moreInfoUser.full_name || moreInfoUser.email}</strong>.</p>
+            <p className="text-gray-600 mb-4">Send a request to <strong>{moreInfoUser.full_name}</strong>.</p>
             <TMLTextarea label="Checklist Items (one per line)" value={moreInfoItems} onChange={e => setMoreInfoItems(e.target.value)} placeholder="Bar verification document&#10;Certificate of Good Standing" rows={4} />
             <div className="mt-3"><TMLTextarea label="Additional Notes (optional)" value={moreInfoNotes} onChange={e => setMoreInfoNotes(e.target.value)} placeholder="Any additional context..." rows={2} /></div>
             <div className="flex gap-3 mt-4">
@@ -704,7 +704,7 @@ export default function AdminLawyers() {
             <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between">
               <div>
                 <h3 className="text-xl font-bold text-gray-900">Edit Membership</h3>
-                <p className="text-sm text-gray-500 mt-0.5">{editingUser.full_name || editingUser.email}</p>
+                <p className="text-sm text-gray-500 mt-0.5">{editingUser.full_name}</p>
               </div>
               <button onClick={() => setEditingUser(null)} className="text-gray-400 hover:text-gray-600"><X className="w-6 h-6" /></button>
             </div>
@@ -806,7 +806,7 @@ export default function AdminLawyers() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-gray-100 p-6 flex items-center justify-between">
-              <div><h3 className="text-xl font-bold text-gray-900">{viewingUser.full_name || viewingUser.email}</h3><p className="text-sm text-gray-500 mt-1">{viewingUser.email}</p></div>
+              <div><h3 className="text-xl font-bold text-gray-900">{viewingUser.full_name}</h3><p className="text-sm text-gray-500 mt-1">{viewingUser.email}</p></div>
               <button onClick={() => setViewingUser(null)} className="text-gray-400 hover:text-gray-600"><X className="w-6 h-6" /></button>
             </div>
             <div className="p-6 space-y-5">

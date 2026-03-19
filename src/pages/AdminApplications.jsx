@@ -335,7 +335,7 @@ export default function AdminApplications() {
               <h3 className="text-lg font-bold text-gray-900">Disable Account</h3>
             </div>
             <p className="text-sm text-gray-600 mb-4">
-              This will block <strong>{disableModal.name}</strong> from logging in and send them a notification email.
+             This will block <strong>{disableModal.name}</strong> from logging in and send them a notification email.
             </p>
             <textarea
               rows={3}

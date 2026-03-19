@@ -30,10 +30,11 @@ function emailWrapper(content) {
 </html>`;
 }
 
-function buildAccessGrantedEmail(name, loginUrl) {
+function buildAccessGrantedEmail(full_name, loginUrl) {
+  const firstName = (full_name || 'there').split(' ')[0];
   return emailWrapper(`
     <h1 style="margin:0 0 8px;color:#111827;font-size:26px;font-weight:700;">You're Approved!</h1>
-    <p style="margin:0 0 28px;color:#6b7280;font-size:15px;">Congratulations, ${name}! Your application to join the Taylor Made Law Network has been reviewed and approved.</p>
+    <p style="margin:0 0 28px;color:#6b7280;font-size:15px;">Congratulations, ${firstName}! Your application to join the Taylor Made Law Network has been reviewed and approved.</p>
     <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">You now have full access to the case marketplace, referral network, and all attorney resources.</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
       <tr><td align="center">
@@ -44,11 +45,12 @@ function buildAccessGrantedEmail(name, loginUrl) {
   `);
 }
 
-function buildActivateAccountEmail(name, activationUrl) {
+function buildActivateAccountEmail(full_name, activationUrl) {
+  const firstName = (full_name || 'there').split(' ')[0];
   return emailWrapper(`
     <h1 style="margin:0 0 8px;color:#111827;font-size:26px;font-weight:700;">You're Approved — Activate Your Account</h1>
     <p style="margin:0 0 28px;color:#6b7280;font-size:15px;">One step left — set your password to get started.</p>
-    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${name},</p>
+    <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${firstName},</p>
     <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Your application to the Taylor Made Law Network has been <strong>approved</strong>. To access the platform and begin reviewing case opportunities, please activate your account by setting your password:</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
       <tr><td align="center">
@@ -94,7 +96,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: lawyerUser.email,
         subject: "You're Approved — You Can Now Access Cases",
-        body: buildAccessGrantedEmail(lawyerUser.full_name || 'there', loginUrl)
+        body: buildAccessGrantedEmail(lawyerUser.full_name, loginUrl)
       });
     } else {
       const tokenBytes = crypto.getRandomValues(new Uint8Array(32));
@@ -122,7 +124,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: lawyerUser.email,
         subject: "You're Approved — Activate Your TML Account",
-        body: buildActivateAccountEmail(lawyerUser.full_name || 'there', activationUrl)
+        body: buildActivateAccountEmail(lawyerUser.full_name, activationUrl)
       });
     }
 
