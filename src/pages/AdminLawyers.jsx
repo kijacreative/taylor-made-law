@@ -480,30 +480,23 @@ export default function AdminLawyers() {
           {/* ── ACTIVE ATTORNEYS SECTION ── */}
           {section === 'attorneys' && (
             <>
-              <div className="flex gap-2 mb-6 flex-wrap">
-                {ATTORNEY_TABS.map(tab => (
-                  <button key={tab} onClick={() => setAttTab(tab)}
-                    className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${attTab === tab ? 'bg-[#3a164d] text-white' : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-200'}`}>
-                    {USER_STATUS_CONFIG[tab]?.label}
-                    <span className={`ml-2 ${attTab === tab ? 'text-white/70' : 'text-gray-400'}`}>({attCounts[tab] || 0})</span>
-                  </button>
-                ))}
+              <div className="flex items-center gap-4 mb-6">
+                <div className="relative flex-1 max-w-md">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <input type="text" placeholder="Search by name, email, or firm..." value={attSearch} onChange={e => setAttSearch(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]" />
+                </div>
+                <div className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-600">
+                  <span className="font-bold text-gray-900">{filteredUsers.length}</span> approved attorneys
+                </div>
               </div>
-
-              <div className="relative mb-5 max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                <input type="text" placeholder="Search by name, email, or firm..." value={attSearch} onChange={e => setAttSearch(e.target.value)}
-                  className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]" />
-              </div>
-
-              <p className="text-gray-600 mb-4 text-sm">Showing <span className="font-semibold">{filteredUsers.length}</span> {USER_STATUS_CONFIG[attTab]?.label.toLowerCase()} attorneys</p>
 
               {usersLoading ? (
                 <div className="flex items-center justify-center py-12"><Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" /></div>
               ) : filteredUsers.length === 0 ? (
                 <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
                   <Users className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-gray-500 font-medium">No {USER_STATUS_CONFIG[attTab]?.label} attorneys.</p>
+                  <p className="text-gray-500 font-medium">No approved attorneys found.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -518,7 +511,8 @@ export default function AdminLawyers() {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-3 flex-wrap mb-1">
                                 <h3 className="font-semibold text-gray-900">{u.full_name || '—'}</h3>
-                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${USER_STATUS_CONFIG[u.user_status]?.color}`}>{USER_STATUS_CONFIG[u.user_status]?.label}</span>
+                                <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">Approved</span>
+                                {u.referral_agreement_accepted && <span className="text-xs font-medium bg-purple-50 text-purple-700 px-2 py-0.5 rounded-full"><Shield className="w-2.5 h-2.5 inline mr-0.5" />Agreement Signed</span>}
                                 {!u.password_set ? (
                                   <span className="text-xs font-medium bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">Not Activated</span>
                                 ) : (
@@ -543,21 +537,7 @@ export default function AdminLawyers() {
                           </div>
                           <div className="flex flex-col gap-2 items-end shrink-0">
                             <button onClick={() => setViewingUser(u)} className="flex items-center gap-1.5 text-sm text-[#3a164d] hover:underline font-medium"><Eye className="w-4 h-4" /> View</button>
-                            {(u.user_status === 'pending' || u.user_status === 'invited') && (
-                              <button onClick={() => setApprovingUser(u)} className="flex items-center gap-1.5 text-sm text-emerald-600 hover:underline font-medium"><CheckCircle2 className="w-4 h-4" /> Approve</button>
-                            )}
-                            {u.user_status === 'pending' && (
-                              <button onClick={() => setMoreInfoUser(u)} className="flex items-center gap-1.5 text-sm text-amber-600 hover:underline font-medium"><Info className="w-4 h-4" /> Request Info</button>
-                            )}
-                            {!u.password_set && u.user_status !== 'disabled' && (
-                              <button onClick={() => handleResendActivation(u)} disabled={saving} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium disabled:opacity-50"><Send className="w-4 h-4" /> Resend Activation</button>
-                            )}
-                            {u.user_status === 'approved' && (
-                              <button onClick={() => setDisablingUser(u)} className="flex items-center gap-1.5 text-sm text-red-600 hover:underline font-medium"><Ban className="w-4 h-4" /> Disable</button>
-                            )}
-                            {u.user_status === 'disabled' && (
-                              <button onClick={() => handleReinstate(u)} disabled={saving} className="flex items-center gap-1.5 text-sm text-emerald-600 hover:underline font-medium disabled:opacity-50"><RotateCcw className="w-4 h-4" /> Reinstate</button>
-                            )}
+                            <button onClick={() => { setEditingUser(u); setEditMembershipData({ firm_name: u.firm_name || '', phone: u.phone || '', free_trial_months: u.free_trial_months || 0 }); setEditMembershipTab('membership'); }} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium"><Edit2 className="w-4 h-4" /> Edit Membership</button>
                           </div>
                         </div>
                       </div>
