@@ -66,7 +66,7 @@ export default function CaseDetail() {
   // Use unified user_status if available (new identity system), fall back to LawyerProfile legacy
   const userStatusApproved = user?.user_status === 'approved';
   const profileStatusApproved = lawyerProfile?.status === 'approved';
-  const isApproved = profileLoaded && (userStatusApproved || (!user?.user_status && profileStatusApproved));
+  const isApproved = profileLoaded && (userStatusApproved || user?.user_status === 'active' || profileStatusApproved);
   const isPending = profileLoaded && !isApproved;
 
   // Redirect pending lawyers — only once profile is loaded
