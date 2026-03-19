@@ -171,6 +171,15 @@ export default function AdminBlogEdit() {
     setUploadingImage(false);
   };
 
+  const handlePdfUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingPdf(true);
+    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    setForm(f => ({ ...f, pdf_download_url: file_url, pdf_file_name: file.name }));
+    setUploadingPdf(false);
+  };
+
   const addTag = (e) => {
     e.preventDefault();
     const t = tagInput.trim();
