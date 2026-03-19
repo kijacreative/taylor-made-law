@@ -8,6 +8,7 @@ import TMLButton from '../ui/TMLButton';
 const PublicNav = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [contentDropdownOpen, setContentDropdownOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   React.useEffect(() => {
@@ -21,7 +22,11 @@ const PublicNav = () => {
   const navLinks = [
     { label: 'Find a Lawyer', path: 'FindLawyer' },
     { label: 'Join the Attorney Network', path: 'JoinNetwork' },
-    { label: 'Blog', path: 'Blog' },
+  ];
+
+  const contentLinks = [
+    { label: 'Blog Posts', path: 'Blog' },
+    { label: 'Resources', path: 'LawyerResources' },
     { label: 'White Papers', href: '/Blog?type=whitepaper' },
   ];
 
@@ -50,6 +55,33 @@ const PublicNav = () => {
                 <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#a47864] transition-all duration-300 group-hover:w-full" />
               </Link>
             ))}
+            
+            {/* Content Dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setContentDropdownOpen(!contentDropdownOpen)}
+                className="text-gray-700 hover:text-[#3a164d] font-medium transition-colors flex items-center gap-2 relative group"
+              >
+                Content
+                <ChevronDown className={`w-4 h-4 transition-transform ${contentDropdownOpen ? 'rotate-180' : ''}`} />
+                <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-[#a47864] transition-all duration-300 group-hover:w-full" />
+              </button>
+              
+              {contentDropdownOpen && (
+                <div className="absolute top-full mt-2 left-0 w-48 bg-white rounded-lg shadow-xl border border-gray-100 overflow-hidden animate-slideDown">
+                  {contentLinks.map((link) => (
+                    <Link 
+                      key={link.label}
+                      to={link.href || createPageUrl(link.path)}
+                      className="block px-4 py-3 text-gray-700 hover:bg-[#3a164d] hover:text-white transition-colors first:border-t-0 border-t border-gray-100"
+                      onClick={() => setContentDropdownOpen(false)}
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           </nav>
 
           {/* Desktop CTA */}
@@ -118,6 +150,32 @@ const PublicNav = () => {
                 {link.label}
               </Link>
             ))}
+            
+            {/* Mobile Content Dropdown */}
+            <div>
+              <button
+                onClick={() => setContentDropdownOpen(!contentDropdownOpen)}
+                className="w-full text-left py-2 text-gray-700 hover:text-[#3a164d] font-medium flex items-center justify-between"
+              >
+                Content
+                <ChevronDown className={`w-4 h-4 transition-transform ${contentDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {contentDropdownOpen && (
+                <div className="pl-4 space-y-2 mt-2">
+                  {contentLinks.map((link) => (
+                    <Link
+                      key={link.label}
+                      to={link.href || createPageUrl(link.path)}
+                      onClick={() => { setMobileOpen(false); setContentDropdownOpen(false); }}
+                      className="block py-2 text-gray-600 hover:text-[#3a164d]"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+            
             <div className="pt-4 space-y-3">
               {isAuthenticated ? (
                 <Link to={createPageUrl('LawyerDashboard')} onClick={() => setMobileOpen(false)}>
