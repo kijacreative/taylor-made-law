@@ -42,8 +42,8 @@ const PublicNav = () => {
           <nav className="hidden md:flex items-center gap-8">
             {navLinks.map((link) => (
               <Link
-                key={link.path}
-                to={createPageUrl(link.path)}
+                key={link.label}
+                to={link.href || createPageUrl(link.path)}
                 className="text-gray-700 hover:text-[#3a164d] font-medium transition-colors relative group"
               >
                 {link.label}
