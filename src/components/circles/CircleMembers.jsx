@@ -325,7 +325,7 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
         {members.map(member => {
           const isMe = member.user_id === user.id;
           const memberIsAdmin = member.role === 'admin';
-          const displayName = member.full_name || member.user_name || 'Attorney';
+          const displayName = member.full_name || 'Attorney';
           const initials = displayName.charAt(0)?.toUpperCase() || '?';
           
           return (
