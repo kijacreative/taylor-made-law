@@ -291,9 +291,9 @@ export default function JoinLawyerNetwork() {
                       <Checkbox checked={formData.consent_terms} onCheckedChange={v => set('consent_terms', v)} className="mt-0.5" />
                       <span className="text-sm text-gray-700">
                         I accept the{' '}
-                        <a href="https://taylormadelaw.com/terms" target="_blank" rel="noopener noreferrer" className="text-[#3a164d] hover:underline">Terms & Conditions</a>
+                        <a href="/terms" className="text-[#3a164d] hover:underline">Terms & Conditions</a>
                         {' '}and{' '}
-                        <a href="https://taylormadelaw.com/privacy" target="_blank" rel="noopener noreferrer" className="text-[#3a164d] hover:underline">Privacy Policy</a>
+                        <a href="/privacy" className="text-[#3a164d] hover:underline">Privacy Policy</a>
                       </span>
                     </label>
                     {errors.consent_terms && <p className="text-red-600 text-xs">{errors.consent_terms}</p>}
