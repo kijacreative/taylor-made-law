@@ -91,7 +91,7 @@ Deno.serve(async (req) => {
     const lawyerUser = users[0];
 
     if (has_password) {
-      const loginUrl = `https://app.taylormadelaw.com/login`;
+      const loginUrl = `https://app.taylormadelaw.com/LawyerLogin`;
       await base44.asServiceRole.integrations.Core.SendEmail({
         to: lawyerUser.email,
         subject: "You're Approved — You Can Now Access Cases",
