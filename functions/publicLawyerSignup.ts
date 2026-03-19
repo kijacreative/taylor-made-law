@@ -2,9 +2,9 @@
  * publicLawyerSignup — Unauthenticated public lawyer signup endpoint.
  *
  * Registers a Base44 account AND creates a LawyerApplication record.
- * Returns structured errors so the frontend can show helpful messages.
+ * Accepts optional circle_token to link signup to a circle invitation.
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const RESEND_KEY = Deno.env.get('RESEND_API_KEY');
 const ADMIN_EMAIL = 'support@taylormadelaw.com';
@@ -27,7 +27,7 @@ Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json();
-    const { full_name, email, password, phone, firm_name, bar_number, bar_numbers, years_experience, states_licensed, practice_areas, bio, consent_terms } = body;
+    const { full_name, email, password, phone, firm_name, bar_number, bar_numbers, years_experience, states_licensed, practice_areas, bio, consent_terms, circle_token } = body;
 
     // Basic validation
     if (!full_name || !email || !firm_name) {
@@ -40,8 +40,14 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, error: 'Invalid email address.' }, { status: 400 });
     }
 
-    // Step 1: Register the Base44 account via SDK auth.register
-    // Must be called without user context — base44 client from request handles this
+    // Look up circle invitation if token provided
+    let circleInvitation = null;
+    if (circle_token) {
+      const invites = await base44.asServiceRole.entities.LegalCircleInvitation.filter({ token: circle_token, status: 'pending' }).catch(() => []);
+      circleInvitation = invites[0] || null;
+    }
+
+    // Step 1: Register the Base44 account
     try {
       await base44.auth.register({ email, password, full_name });
     } catch (regErr) {
@@ -57,7 +63,7 @@ Deno.serve(async (req) => {
     }
 
     // Step 2: Create the LawyerApplication record
-    const application = await base44.asServiceRole.entities.LawyerApplication.create({
+    const applicationData = {
       full_name,
       email,
       phone: phone || '',
@@ -69,12 +75,17 @@ Deno.serve(async (req) => {
       practice_areas: practice_areas || [],
       bio: bio || '',
       status: 'active_pending_review',
-      signup_source: 'public_form',
+      signup_source: circleInvitation ? 'circle_invite' : 'public_form',
       consent_terms: !!consent_terms,
-    });
+      ...(circleInvitation ? {
+        circle_token,
+        circle_id: circleInvitation.circle_id,
+      } : {}),
+    };
 
-    // Step 3: Create LawyerProfile so bio is accessible during onboarding
-    // Wait briefly for the user account to be available
+    const application = await base44.asServiceRole.entities.LawyerApplication.create(applicationData);
+
+    // Step 3: Create LawyerProfile
     await new Promise(resolve => setTimeout(resolve, 800));
     try {
       const users = await base44.asServiceRole.entities.User.filter({ email });
@@ -82,8 +93,8 @@ Deno.serve(async (req) => {
       if (newUser) {
         await base44.asServiceRole.entities.LawyerProfile.create({
           user_id: newUser.id,
-          full_name: full_name,
-          firm_name: firm_name,
+          full_name,
+          firm_name,
           phone: phone || '',
           bar_number: bar_number || '',
           bar_numbers: bar_numbers || {},
@@ -106,7 +117,7 @@ Deno.serve(async (req) => {
       action: 'public_signup_submitted',
       actor_email: email,
       actor_role: 'applicant',
-      notes: `Public signup submitted by ${full_name} (${email}) from firm ${firm_name}`,
+      notes: `Public signup submitted by ${full_name} (${email}) from firm ${firm_name}${circleInvitation ? '. Circle invite token: ' + circle_token : ''}`,
     }).catch(() => {});
 
     // Notify admin (non-blocking)
@@ -117,6 +128,7 @@ Deno.serve(async (req) => {
         <div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:24px;">
           <h2 style="color:#3a164d;">New Lawyer Signup</h2>
           <p>A new attorney has submitted a public signup application and needs review.</p>
+          ${circleInvitation ? `<p style="background:#f5f0fa;padding:10px;border-radius:8px;color:#3a164d;"><strong>⭐ Circle Invite:</strong> This applicant was invited to a circle by ${circleInvitation.inviter_name}. They will be auto-added to the circle upon approval.</p>` : ''}
           <table style="width:100%;border-collapse:collapse;margin-top:16px;">
             <tr><td style="padding:8px;font-weight:bold;color:#555;">Name</td><td style="padding:8px;">${full_name}</td></tr>
             <tr style="background:#f9f9f9;"><td style="padding:8px;font-weight:bold;color:#555;">Email</td><td style="padding:8px;">${email}</td></tr>
@@ -129,13 +141,13 @@ Deno.serve(async (req) => {
           </table>
           ${bio ? `<div style="margin-top:16px;"><strong>Bio:</strong><p style="color:#555;">${bio}</p></div>` : ''}
           <div style="margin-top:24px;">
-            <a href="https://taylormadelaw.com/AdminNetworkReview" style="background:#3a164d;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">Review Application</a>
+            <a href="https://app.taylormadelaw.com/AdminNetworkReview" style="background:#3a164d;color:white;padding:12px 24px;text-decoration:none;border-radius:8px;font-weight:bold;">Review Application</a>
           </div>
         </div>
       `
     ).catch(() => {});
 
-    return Response.json({ success: true, application_id: application.id });
+    return Response.json({ success: true, application_id: application.id, has_circle_invite: !!circleInvitation });
   } catch (error) {
     console.error('publicLawyerSignup error:', error?.message, error?.response?.data);
     return Response.json({ success: false, error: error.message || 'An unexpected error occurred.' }, { status: 500 });

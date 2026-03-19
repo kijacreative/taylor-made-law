@@ -4,11 +4,9 @@
  * 2. Updates User entity with user_status='approved'
  * 3. Upserts LawyerProfile
  * 4. Sends "You're Approved — Log In" email
- *
- * No activation tokens. No set-password links.
- * Lawyers already created their account + password at signup.
+ * 5. If applicant was invited to a circle, auto-adds them as a member
  */
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.20';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.21';
 
 const LOGO = 'https://taylormadelaw.com/wp-content/uploads/2026/02/TaylorMadeLaw_Purple-scaled.png';
 const BASE_URL = 'https://app.taylormadelaw.com';
@@ -39,7 +37,7 @@ function emailWrapper(content) {
 </html>`;
 }
 
-function buildApprovedEmail(firstName, loginUrl, freeTrialMonths) {
+function buildApprovedEmail(firstName, loginUrl, freeTrialMonths, circleName) {
   const trialBanner = parseInt(freeTrialMonths) > 0
     ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
         <tr><td style="background:#f0fdf4;border-left:4px solid #22c55e;border-radius:0 8px 8px 0;padding:14px 18px;">
@@ -47,6 +45,16 @@ function buildApprovedEmail(firstName, loginUrl, freeTrialMonths) {
         </td></tr>
       </table>`
     : '';
+
+  const circleBanner = circleName
+    ? `<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;">
+        <tr><td style="background:#f5f0fa;border-left:4px solid #3a164d;border-radius:0 8px 8px 0;padding:14px 18px;">
+          <p style="margin:0;color:#3a164d;font-size:14px;font-weight:600;">🎉 You've been added to the <strong>${circleName}</strong> Legal Circle!</p>
+          <p style="margin:6px 0 0;color:#5a2a6d;font-size:13px;">You can access your circle from the Groups section of your dashboard.</p>
+        </td></tr>
+      </table>`
+    : '';
+
   return emailWrapper(`
     <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom:16px;">
       <tr><td align="center">
@@ -58,6 +66,7 @@ function buildApprovedEmail(firstName, loginUrl, freeTrialMonths) {
     <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Hi ${firstName},</p>
     <p style="margin:0 0 16px;color:#333333;font-size:15px;line-height:1.7;">Your application to join the <strong>Taylor Made Law Network</strong> has been <strong>approved</strong>. You now have full access to case details and can accept cases in the Case Exchange.</p>
     ${trialBanner}
+    ${circleBanner}
     <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
       <tr><td align="center">
         <a href="${loginUrl}" style="display:inline-block;background-color:#3a164d;color:#ffffff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;font-weight:600;text-decoration:none;padding:14px 32px;border-radius:8px;">Log In to Your Dashboard →</a>
@@ -134,6 +143,7 @@ Deno.serve(async (req) => {
       const existingProfiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id: lawyerUser.id });
       const profileData = {
         user_id: lawyerUser.id,
+        full_name: application.full_name || '',
         firm_name: application.firm_name || '',
         phone: application.phone || '',
         bar_number: application.bar_number || '',
@@ -153,35 +163,131 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 4. Send "You're Approved — Log In" email
+    // 4. Handle circle invitation — auto-add to circle on approval
+    let addedToCircle = false;
+    let circleName = null;
+
+    // Check for circle token on the application
+    const circleInviteToken = application.circle_token;
+    const circleId = application.circle_id;
+
+    if (circleInviteToken && circleId && lawyerUser) {
+      try {
+        // Find the invitation by token
+        const invitations = await base44.asServiceRole.entities.LegalCircleInvitation.filter({
+          token: circleInviteToken,
+          status: 'pending'
+        });
+        const invitation = invitations[0] || null;
+
+        if (invitation) {
+          // Look up circle name
+          const circles = await base44.asServiceRole.entities.LegalCircle.filter({ id: circleId }).catch(() => []);
+          const circle = circles[0] || null;
+          circleName = circle?.name || 'Legal Circle';
+
+          // Check not already a member
+          const existingMembers = await base44.asServiceRole.entities.LegalCircleMember.filter({
+            circle_id: circleId,
+            user_id: lawyerUser.id,
+            status: 'active'
+          }).catch(() => []);
+
+          if (existingMembers.length === 0) {
+            await base44.asServiceRole.entities.LegalCircleMember.create({
+              circle_id: circleId,
+              user_id: lawyerUser.id,
+              user_email: normalizedEmail,
+              user_name: application.full_name || lawyerUser.full_name || '',
+              role: 'member',
+              status: 'active',
+              joined_at: new Date().toISOString(),
+              invited_by: invitation.inviter_user_id
+            });
+            addedToCircle = true;
+          }
+
+          // Mark invitation as accepted
+          await base44.asServiceRole.entities.LegalCircleInvitation.update(invitation.id, {
+            status: 'accepted',
+            accepted_at: new Date().toISOString()
+          });
+        }
+      } catch (circleErr) {
+        console.error('Non-fatal: failed to add to circle:', circleErr.message);
+      }
+    } else if (lawyerUser) {
+      // Also check for any pending circle invitations by email (for existing network member invites)
+      try {
+        const emailInvitations = await base44.asServiceRole.entities.LegalCircleInvitation.filter({
+          invitee_email: normalizedEmail,
+          status: 'pending'
+        }).catch(() => []);
+
+        for (const invite of emailInvitations) {
+          const existingMembers = await base44.asServiceRole.entities.LegalCircleMember.filter({
+            circle_id: invite.circle_id,
+            user_id: lawyerUser.id,
+            status: 'active'
+          }).catch(() => []);
+
+          if (existingMembers.length === 0) {
+            const circles = await base44.asServiceRole.entities.LegalCircle.filter({ id: invite.circle_id }).catch(() => []);
+            const circle = circles[0] || null;
+            if (!circleName) circleName = circle?.name || 'Legal Circle';
+
+            await base44.asServiceRole.entities.LegalCircleMember.create({
+              circle_id: invite.circle_id,
+              user_id: lawyerUser.id,
+              user_email: normalizedEmail,
+              user_name: application.full_name || lawyerUser.full_name || '',
+              role: 'member',
+              status: 'active',
+              joined_at: new Date().toISOString(),
+              invited_by: invite.inviter_user_id
+            });
+
+            await base44.asServiceRole.entities.LegalCircleInvitation.update(invite.id, {
+              status: 'accepted',
+              accepted_at: new Date().toISOString()
+            });
+            addedToCircle = true;
+          }
+        }
+      } catch (emailInviteErr) {
+        console.error('Non-fatal: failed to check email circle invites:', emailInviteErr.message);
+      }
+    }
+
+    // 5. Send approval email
     let emailSent = false;
     if (resendKey) {
       const loginUrl = `${BASE_URL}/login`;
-      const html = buildApprovedEmail(firstName, loginUrl, free_trial_months);
+      const html = buildApprovedEmail(firstName, loginUrl, free_trial_months, addedToCircle ? circleName : null);
       const res = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           from: 'Taylor Made Law <noreply@taylormadelaw.com>',
           to: [normalizedEmail],
-          subject: "You're Approved — Cases Are Now Unlocked",
+          subject: addedToCircle ? `You're Approved & Added to ${circleName}!` : "You're Approved — Cases Are Now Unlocked",
           html
         })
       });
       emailSent = res.ok;
     }
 
-    // 5. Audit log
+    // 6. Audit log
     await base44.asServiceRole.entities.AuditLog.create({
       entity_type: 'LawyerApplication',
       entity_id: application_id,
       action: 'application_approved',
       actor_email: adminUser.email,
       actor_role: 'admin',
-      notes: `Approved by ${adminUser.email}. Trial: ${free_trial_months} months. Email sent: ${emailSent}.`
+      notes: `Approved by ${adminUser.email}. Trial: ${free_trial_months} months. Email sent: ${emailSent}. Added to circle: ${addedToCircle ? circleName : 'no'}.`
     });
 
-    return Response.json({ success: true, email_sent: emailSent, user_id: lawyerUser?.id });
+    return Response.json({ success: true, email_sent: emailSent, user_id: lawyerUser?.id, added_to_circle: addedToCircle, circle_name: circleName });
 
   } catch (error) {
     console.error('Error approving application:', error);

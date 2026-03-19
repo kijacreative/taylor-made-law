@@ -44,6 +44,9 @@ function StepDots({ steps, current }) {
 
 export default function JoinLawyerNetwork() {
   const navigate = useNavigate();
+  // Read circle_token from URL if this is a circle invite signup
+  const urlParams = new URLSearchParams(window.location.search);
+  const circleToken = urlParams.get('circle_token') || '';
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
