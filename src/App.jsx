@@ -14,6 +14,7 @@ import AdminNetworkReview from './pages/AdminNetworkReview.jsx';
 import JoinLawyerNetwork from './pages/JoinLawyerNetwork.jsx';
 import LawyerPortalLogin from './pages/LawyerPortalLogin.jsx';
 import AdminApplications from './pages/AdminApplications.jsx';
+import AdminLeadDocketSync from './pages/AdminLeadDocketSync.jsx';
 import DirectMessages from './pages/DirectMessages.jsx';
 import TermsAndConditions from './pages/TermsAndConditions.jsx';
 import PrivacyPolicy from './pages/PrivacyPolicy.jsx';
@@ -83,6 +84,7 @@ const AuthenticatedApp = () => {
       <Route path="/app/onboarding" element={<LayoutWrapper currentPageName="LawyerOnboarding"><LawyerOnboarding /></LayoutWrapper>} />
       <Route path="/app/dashboard" element={<Navigate to="/LawyerDashboard" replace />} />
       <Route path="/admin/applications" element={<LayoutWrapper currentPageName="AdminApplications"><AdminApplications /></LayoutWrapper>} />
+      <Route path="/admin/lead-docket-sync" element={<LayoutWrapper currentPageName="AdminLeadDocketSync"><AdminLeadDocketSync /></LayoutWrapper>} />
       <Route path="/app/messages" element={<LayoutWrapper currentPageName="DirectMessages"><DirectMessages /></LayoutWrapper>} />
       <Route path="/app/messages/:threadId" element={<LayoutWrapper currentPageName="DirectMessageThread"><DirectMessageThreadPage /></LayoutWrapper>} />
       <Route path="/terms" element={<LayoutWrapper currentPageName="TermsAndConditions"><TermsAndConditions /></LayoutWrapper>} />
