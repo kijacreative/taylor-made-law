@@ -162,6 +162,18 @@ export default function JoinLawyerNetwork() {
             <p className="text-gray-500 mt-2">Complete the form below to apply as a referring attorney.</p>
           </div>
 
+          {circleToken && (
+            <div className="mb-6 flex items-start gap-3 bg-[#f5f0fa] border border-[#3a164d]/20 rounded-xl p-4">
+              <div className="w-8 h-8 rounded-full bg-[#3a164d] flex items-center justify-center shrink-0 mt-0.5">
+                <CheckCircle2 className="w-4 h-4 text-white" />
+              </div>
+              <div>
+                <p className="font-semibold text-[#3a164d] text-sm">You were invited to a Legal Circle</p>
+                <p className="text-sm text-gray-600 mt-0.5">Once your application is approved, you'll automatically be added to the circle that invited you.</p>
+              </div>
+            </div>
+          )}
+
           <StepDots steps={STEPS} current={step} />
 
           <AnimatePresence mode="wait">
