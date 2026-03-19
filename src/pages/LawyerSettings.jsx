@@ -161,16 +161,32 @@ export default function LawyerSettings() {
   useEffect(() => {
     if (lawyerProfile) {
       setProfileForm({
+        full_name: lawyerProfile.full_name || '',
         firm_name: lawyerProfile.firm_name || '',
         bar_numbers: lawyerProfile.bar_numbers || {},
         phone: lawyerProfile.phone || '',
         bio: lawyerProfile.bio || '',
         states_licensed: lawyerProfile.states_licensed || [],
         practice_areas: lawyerProfile.practice_areas || [],
-        years_experience: lawyerProfile.years_experience?.toString() || ''
+        years_experience: lawyerProfile.years_experience?.toString() || '',
+        profile_photo_url: lawyerProfile.profile_photo_url || ''
       });
     }
   }, [lawyerProfile]);
+
+  const handlePhotoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      setProfileForm((prev) => ({ ...prev, profile_photo_url: file_url }));
+    } catch (err) {
+      setError('Failed to upload photo. Please try again.');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
 
   const toggleArrayItem = (field, item) => {
     const current = profileForm[field] || [];
