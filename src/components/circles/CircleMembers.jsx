@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQueryClient } from '@tanstack/react-query';
+import MemberProfileModal from './MemberProfileModal';
 import { UserPlus, Shield, Trash2, Mail, Search, Loader2, CheckCircle, Users, ExternalLink, X } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLBadge from '@/components/ui/TMLBadge';
