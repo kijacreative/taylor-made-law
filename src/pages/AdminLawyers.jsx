@@ -140,13 +140,9 @@ export default function AdminLawyers() {
     return true;
   });
 
-  const attCounts = ATTORNEY_TABS.reduce((acc, t) => {
-    acc[t] = lawyerUsers.filter(u => u.user_status === t).length;
-    return acc;
-  }, {});
+  const approvedAttorneys = lawyerUsers.filter(u => u.user_status === 'approved');
 
-  const filteredUsers = lawyerUsers.filter(u => {
-    if (u.user_status !== attTab) return false;
+  const filteredUsers = approvedAttorneys.filter(u => {
     if (attSearch) {
       const s = attSearch.toLowerCase();
       return u.full_name?.toLowerCase().includes(s) || u.email?.toLowerCase().includes(s) || u.firm_name?.toLowerCase().includes(s);
