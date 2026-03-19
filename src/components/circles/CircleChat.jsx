@@ -288,7 +288,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
                 <div className={`group max-w-[70%] ${isMe ? 'items-end' : 'items-start'} flex flex-col`}>
                   {msg.showHeader && (
                     <div className={`flex items-center gap-2 mb-1 ${isMe ? 'flex-row-reverse' : ''}`}>
-                      <span className="text-xs font-semibold text-gray-700">{isMe ? 'You' : msg.sender_name}</span>
+                      <span className="text-xs font-semibold text-gray-700">{isMe ? 'You' : (msg.sender_full_name || msg.sender_name || 'Attorney')}</span>
                       <span className="text-xs text-gray-400">{formatTime(msg.created_date)}</span>
                     </div>
                   )}
