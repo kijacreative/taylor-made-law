@@ -597,6 +597,145 @@ export default function LawyerSettings() {
             </TMLCard>
           }
 
+          {activeTab === 'application' &&
+          <div className="space-y-6">
+            {!lawyerApplication ? (
+              <TMLCard variant="elevated">
+                <TMLCardContent className="text-center py-12 text-gray-500">
+                  No application on file.
+                </TMLCardContent>
+              </TMLCard>
+            ) : (
+              <>
+                {/* Personal Info */}
+                <TMLCard variant="elevated">
+                  <TMLCardHeader>
+                    <TMLCardTitle className="flex items-center gap-2">
+                      <User className="w-5 h-5 text-[#7e277e]" />
+                      Personal Information
+                    </TMLCardTitle>
+                  </TMLCardHeader>
+                  <TMLCardContent>
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Full Name</p>
+                        <p className="font-medium text-gray-900">{lawyerApplication.full_name || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Email</p>
+                        <p className="font-medium text-gray-900">{lawyerApplication.email || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Phone</p>
+                        <p className="font-medium text-gray-900">{lawyerApplication.phone || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Firm Name</p>
+                        <p className="font-medium text-gray-900">{lawyerApplication.firm_name || '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Years of Experience</p>
+                        <p className="font-medium text-gray-900">{lawyerApplication.years_experience ?? '—'}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-gray-500 mb-1">Application Status</p>
+                        <TMLBadge variant={lawyerApplication.status === 'approved' || lawyerApplication.status === 'active' ? 'success' : lawyerApplication.status === 'rejected' ? 'danger' : 'warning'}>
+                          {lawyerApplication.status}
+                        </TMLBadge>
+                      </div>
+                    </div>
+                    {lawyerApplication.bio && (
+                      <div className="mt-4">
+                        <p className="text-xs text-gray-500 mb-1">Professional Bio</p>
+                        <p className="text-gray-700 text-sm leading-relaxed">{lawyerApplication.bio}</p>
+                      </div>
+                    )}
+                  </TMLCardContent>
+                </TMLCard>
+
+                {/* States & Bar Numbers */}
+                <TMLCard variant="elevated">
+                  <TMLCardHeader>
+                    <TMLCardTitle className="flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-[#7e277e]" />
+                      Bar Admissions
+                    </TMLCardTitle>
+                  </TMLCardHeader>
+                  <TMLCardContent>
+                    {lawyerApplication.states_licensed?.length > 0 ? (
+                      <div className="space-y-2">
+                        {lawyerApplication.states_licensed.map((state) => (
+                          <div key={state} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
+                            <span className="font-medium text-gray-800">{state}</span>
+                            <span className="text-sm text-gray-500">
+                              Bar #: {(lawyerApplication.bar_numbers?.[state]) || lawyerApplication.bar_number || '—'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-sm">No states listed.</p>
+                    )}
+                  </TMLCardContent>
+                </TMLCard>
+
+                {/* Practice Areas */}
+                <TMLCard variant="elevated">
+                  <TMLCardHeader>
+                    <TMLCardTitle className="flex items-center gap-2">
+                      <Building2 className="w-5 h-5 text-[#7e277e]" />
+                      Practice Areas
+                    </TMLCardTitle>
+                  </TMLCardHeader>
+                  <TMLCardContent>
+                    {lawyerApplication.practice_areas?.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {lawyerApplication.practice_areas.map((area) => (
+                          <TMLBadge key={area} variant="primary">{area}</TMLBadge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-sm">No practice areas listed.</p>
+                    )}
+                  </TMLCardContent>
+                </TMLCard>
+
+                {/* Referrals */}
+                {lawyerApplication.referrals?.length > 0 && (
+                  <TMLCard variant="elevated">
+                    <TMLCardHeader>
+                      <TMLCardTitle className="flex items-center gap-2">
+                        <Mail className="w-5 h-5 text-[#7e277e]" />
+                        Professional References
+                      </TMLCardTitle>
+                    </TMLCardHeader>
+                    <TMLCardContent>
+                      <div className="space-y-3">
+                        {lawyerApplication.referrals.map((ref, i) => (
+                          <div key={i} className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl">
+                            <div className="w-8 h-8 rounded-full bg-[#3a164d]/10 flex items-center justify-center text-[#3a164d] font-bold text-sm">
+                              {i + 1}
+                            </div>
+                            <div>
+                              <p className="font-medium text-gray-900">{ref.name || '—'}</p>
+                              <p className="text-sm text-gray-500">{ref.email || '—'}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </TMLCardContent>
+                  </TMLCard>
+                )}
+
+                {/* Submitted date */}
+                <p className="text-xs text-gray-400 text-right">
+                  Application submitted: {lawyerApplication.created_date ? new Date(lawyerApplication.created_date).toLocaleDateString() : '—'}
+                </p>
+              </>
+            )}
+          </div>
+          }
+
           {activeTab === 'agreement' &&
           <TMLCard variant="elevated">
               <TMLCardHeader>
