@@ -244,6 +244,73 @@ export default function Groups() {
               })}
             </div>
           )}
+          {/* Discover Circles */}
+          <div className="mt-12">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">Discover Circles</h2>
+            </div>
+            <div className="relative mb-6">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search discoverable circles by name, description, or tag..."
+                value={discoverSearch}
+                onChange={e => setDiscoverSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/30"
+              />
+            </div>
+
+            {discoverableCircles.length === 0 ? (
+              <div className="text-center py-10 text-gray-500 bg-white rounded-xl border border-gray-200">
+                <Globe className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                <p className="font-medium">No discoverable circles found</p>
+                <p className="text-sm mt-1">Try a different search term</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {discoverableCircles.map((circle, index) => (
+                  <motion.div
+                    key={circle.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                  >
+                    <Link to={`${createPageUrl('GroupDetail')}?id=${circle.id}`}>
+                      <TMLCard hover className="h-full">
+                        <TMLCardHeader>
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#a47864] to-[#7d5a4a] flex items-center justify-center">
+                              <Globe className="w-6 h-6 text-white" />
+                            </div>
+                            <TMLBadge variant="default" size="sm">Open</TMLBadge>
+                          </div>
+                          <TMLCardTitle>{circle.name}</TMLCardTitle>
+                        </TMLCardHeader>
+                        <TMLCardContent>
+                          <p className="text-gray-600 mb-4 line-clamp-2 text-sm">
+                            {circle.description || 'Discoverable legal community'}
+                          </p>
+                          <div className="flex items-center gap-1 text-sm text-gray-500">
+                            <Users className="w-4 h-4" />
+                            <span>{circle.member_count || 0} members</span>
+                          </div>
+                          {circle.tags && circle.tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-3">
+                              {circle.tags.slice(0, 3).map(tag => (
+                                <span key={tag} className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded">
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </TMLCardContent>
+                      </TMLCard>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </main>
     </div>
