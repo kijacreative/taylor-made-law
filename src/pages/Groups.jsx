@@ -13,7 +13,8 @@ import {
   Loader2,
   Shield,
   Sparkles,
-  Search
+  Search,
+  Clock
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
