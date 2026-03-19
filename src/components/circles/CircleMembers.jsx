@@ -357,8 +357,9 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
       </div>
     </div>
 
-    {viewingMember && (
-      <MemberProfileModal member={viewingMember} onClose={() => setViewingMember(null)} />
-    )}
+      {viewingMember && (
+        <MemberProfileModal member={viewingMember} onClose={() => setViewingMember(null)} />
+      )}
+    </>
   );
 }
