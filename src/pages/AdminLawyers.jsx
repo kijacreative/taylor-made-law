@@ -33,7 +33,6 @@ const APP_STATUS_CONFIG = {
   rejected: { label: 'Rejected',       bg: 'bg-red-50',     text: 'text-red-700' },
 };
 
-const ATTORNEY_TABS = ['pending', 'invited', 'approved', 'disabled'];
 const APP_TABS = [
   { value: 'pending',  label: 'Pending' },
   { value: 'approved', label: 'Approved' },
