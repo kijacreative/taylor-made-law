@@ -60,7 +60,7 @@ export default function CaseExchange() {
     checkAuth();
   }, []);
 
-  const isApproved = user?.user_status === 'approved' || (!user?.user_status && lawyerProfile?.status === 'approved');
+  const isApproved = user?.user_status === 'approved' || user?.user_status === 'active' || lawyerProfile?.status === 'approved';
   const isPending = !isApproved;
 
   // Server-side enforced case fetch
