@@ -340,7 +340,7 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
                 <p className="text-sm text-gray-500 truncate">{member.user_email}</p>
               </div>
               {isAdmin && !isMe && (
-                <div className="flex gap-1">
+                <div className="flex gap-1" onClick={e => e.stopPropagation()}>
                   {!memberIsAdmin && (
                     <button onClick={() => handlePromote(member)} className="p-1.5 rounded-lg text-gray-400 hover:text-[#3a164d] hover:bg-[#3a164d]/5 transition-colors" title="Promote to admin">
                       <Shield className="w-4 h-4" />
