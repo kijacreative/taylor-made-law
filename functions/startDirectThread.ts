@@ -65,6 +65,7 @@ Deno.serve(async (req) => {
       user_id: user.id,
       user_email: user.email,
       user_name: user.full_name || myProfile.full_name || user.email,
+      full_name: myProfile.full_name,
       is_hidden: false
     });
     await base44.asServiceRole.entities.DirectMessageParticipant.create({
@@ -72,6 +73,7 @@ Deno.serve(async (req) => {
       user_id: recipient_user_id,
       user_email: recipientUser?.email || '',
       user_name: recipientUser?.full_name || recipientProfile.full_name || '',
+      full_name: recipientProfile.full_name,
       is_hidden: false
     });
 

@@ -32,6 +32,7 @@ Deno.serve(async (req) => {
       thread_id,
       sender_user_id: user.id,
       sender_name: user.full_name || myProfile.full_name || user.email,
+      sender_full_name: myProfile.full_name,
       sender_email: user.email,
       body: body.trim(),
       has_attachments: false,
