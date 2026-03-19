@@ -70,9 +70,9 @@ export default function AdminApplications() {
     enabled: !!user,
   });
 
-  const profileByEmail = useMemo(() => {
+  const profileByName = useMemo(() => {
     const map = {};
-    lawyerProfiles.forEach(p => { if (p.user_id) map[p.user_id] = p; });
+    lawyerProfiles.forEach(p => { if (p.full_name) map[p.full_name] = p; });
     return map;
   }, [lawyerProfiles]);
 
