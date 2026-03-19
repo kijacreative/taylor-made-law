@@ -65,10 +65,10 @@ export default function Groups() {
     enabled: !!user?.id,
   });
 
-  // Get the actual groups
+  // Get the actual groups (only active circles)
   const { data: allCircles = [] } = useQuery({
     queryKey: ['legalCircles'],
-    queryFn: () => base44.entities.LegalCircle.list(),
+    queryFn: () => base44.entities.LegalCircle.filter({ is_active: true }),
     enabled: !!user,
   });
 
