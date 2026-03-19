@@ -327,7 +327,7 @@ export default function JoinLawyerNetwork() {
 
           <p className="text-center text-sm text-gray-500 mt-6">
             Already have an account?{' '}
-            <a href="/login" className="text-[#3a164d] font-semibold hover:underline">Sign in</a>
+            <a href="/LawyerLogin" className="text-[#3a164d] font-semibold hover:underline">Sign in</a>
           </p>
         </div>
       </div>
