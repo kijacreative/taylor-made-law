@@ -52,20 +52,11 @@ export default function GroupInvitations() {
 
   const handleAccept = async (invite) => {
     setActioning(a => ({ ...a, [invite.id]: 'accepting' }));
-    await base44.entities.LegalCircleInvitation.update(invite.id, {
-      status: 'accepted',
-      accepted_at: new Date().toISOString()
-    });
-    // Add as member
-    await base44.entities.LegalCircleMember.create({
+    // Call backend function to sync circle membership
+    await base44.functions.invoke('acceptCircleInvite', {
+      invitation_id: invite.id,
       circle_id: invite.circle_id,
-      user_id: user.id,
-      user_email: user.email,
-      user_name: user.full_name,
-      role: 'member',
-      status: 'active',
-      joined_at: new Date().toISOString(),
-      invited_by: invite.inviter_user_id
+      inviter_user_id: invite.inviter_user_id
     });
     queryClient.invalidateQueries({ queryKey: ['myInvites'] });
     queryClient.invalidateQueries({ queryKey: ['myGroupMemberships'] });
