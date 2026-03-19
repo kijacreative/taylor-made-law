@@ -75,12 +75,6 @@ const AdminSidebar = ({ user }) => {
       active: currentPath.includes('/AdminPopup')
     },
     { 
-      label: 'Resources', 
-      icon: FileText, 
-      path: 'AdminResources',
-      active: currentPath.includes('/AdminResource')
-    },
-    { 
       label: 'Legal Circles', 
       icon: Users, 
       path: 'AdminCircles',
