@@ -72,18 +72,26 @@ export default function GroupDetail() {
     queryKey: ['circleMembers', circleId],
     queryFn: async () => {
       const circleMembers = await base44.entities.LegalCircleMember.filter({ circle_id: circleId, status: 'active' }, '-joined_at', 100);
-      // Fetch lawyer profiles to get profile photos and full names
-      const lawyerProfiles = await base44.entities.LawyerProfile.list();
-      // Merge profile data with members
-      const enrichedMembers = circleMembers.map(member => {
-        const profile = lawyerProfiles.find(p => p.user_id === member.user_id);
-        return {
+      // Try to enrich with lawyer profiles, but don't block if it fails
+      try {
+        const userIds = circleMembers.map(m => m.user_id).filter(Boolean);
+        // Fetch profiles one by one for the members we have
+        const profilePromises = userIds.map(uid =>
+          base44.entities.LawyerProfile.filter({ user_id: uid }).then(r => r[0] || null).catch(() => null)
+        );
+        const profiles = await Promise.all(profilePromises);
+        return circleMembers.map((member, i) => ({
           ...member,
-          full_name: profile?.full_name || 'Attorney',
-          profile_photo_url: profile?.profile_photo_url || null
-        };
-      });
-      return enrichedMembers;
+          full_name: profiles[i]?.full_name || member.user_email || 'Attorney',
+          profile_photo_url: profiles[i]?.profile_photo_url || null,
+        }));
+      } catch {
+        return circleMembers.map(member => ({
+          ...member,
+          full_name: member.user_email || 'Attorney',
+          profile_photo_url: null,
+        }));
+      }
     },
     enabled: !!circleId && !!myMembership,
     retry: 2,
