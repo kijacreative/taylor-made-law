@@ -204,8 +204,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
       sender_user_id: user.id,
       sender_email: user.email,
       message_text: text || '',
-      has_attachments: filesToSend.length > 0,
-      is_deleted: false
+      has_attachments: filesToSend.length > 0
     });
 
     // Upload each file and create CircleFile records
