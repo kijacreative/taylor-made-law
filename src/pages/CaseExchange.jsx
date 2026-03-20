@@ -26,6 +26,7 @@ import TMLSelect from '@/components/ui/TMLSelect';
 import TMLInput from '@/components/ui/TMLInput';
 import { PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
 import SubmitCaseModal from '@/components/cases/SubmitCaseModal';
+import UpgradeModal from '@/components/membership/UpgradeModal';
 
 export default function CaseExchange() {
   const navigate = useNavigate();
@@ -34,6 +35,7 @@ export default function CaseExchange() {
   const [authLoading, setAuthLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const [filters, setFilters] = useState({
     search: '',
