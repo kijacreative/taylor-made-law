@@ -111,8 +111,14 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
     return () => unsubscribe();
   }, [circleId]);
 
+  // Smart scroll: only auto-scroll if user is near the bottom
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 120;
+    if (isNearBottom) {
+      bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }
   }, [messages]);
 
   const loadMessages = async () => {
