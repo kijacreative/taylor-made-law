@@ -333,6 +333,26 @@ export default function LawyerSettings() {
     }
   };
 
+  const handleSubscribe = async () => {
+    if (window.self !== window.top) {
+      alert('Checkout is only available from the published app. Please open the app directly.');
+      return;
+    }
+    setCheckoutLoading(true);
+    try {
+      const res = await base44.functions.invoke('createSubscriptionCheckout', {});
+      if (res.data?.url) {
+        window.location.href = res.data.url;
+      } else {
+        setError(res.data?.error || 'Failed to start checkout. Please try again.');
+      }
+    } catch (err) {
+      setError('Failed to start checkout. Please try again.');
+    } finally {
+      setCheckoutLoading(false);
+    }
+  };
+
   const handleResetPassword = async () => {
     if (!passwordForm.new_password || passwordForm.new_password !== passwordForm.confirm_password) {
       setError('Passwords do not match or are empty.');
