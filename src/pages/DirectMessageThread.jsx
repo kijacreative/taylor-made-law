@@ -75,6 +75,8 @@ export default function DirectMessageThreadPage() {
    const bottomRef = useRef(null);
    const inputRef = useRef(null);
    const fileInputRef = useRef(null);
+   const messagesContainerRef = useRef(null);
+   const userFullNamesRef = useRef({});
 
   useEffect(() => {
     const init = async () => {
