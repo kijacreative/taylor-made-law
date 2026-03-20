@@ -144,26 +144,24 @@ function SubmitCaseForm({ circleId, circle, user, onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    const status = circle.case_approval_required ? 'pending_approval' : 'available';
-    await base44.entities.LegalCircleCase.create({
+    const res = await base44.functions.invoke('submitCase', {
       circle_id: circleId,
       title: form.title,
       summary: form.summary,
       description: form.description,
       state: form.state,
       practice_area: form.practice_area,
-      estimated_value: form.estimated_value ? parseFloat(form.estimated_value) : null,
-      key_facts: form.key_facts ? form.key_facts.split('\n').filter(Boolean) : [],
+      estimated_value: form.estimated_value || null,
       client_first_name: form.client_first_name,
       client_last_name: form.client_last_name,
       client_email: form.client_email,
       client_phone: form.client_phone,
-      status,
-      submitted_by_user_id: user.id,
-      submitted_by_name: user.full_name,
-      published_at: new Date().toISOString()
     });
     setSubmitting(false);
+    if (res.data?.error) {
+      alert(res.data.error);
+      return;
+    }
     onSuccess();
   };
 
