@@ -27,6 +27,11 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Case is no longer available' }, { status: 409 });
     }
 
+    // Enforce paid membership gate
+    if (user.membership_status !== 'paid') {
+      return Response.json({ error: 'A paid membership ($50/month) is required to accept cases.', code: 'MEMBERSHIP_REQUIRED' }, { status: 403 });
+    }
+
     // Verify user is approved
     const isApproved = user.user_status === 'approved';
     if (!isApproved) {
