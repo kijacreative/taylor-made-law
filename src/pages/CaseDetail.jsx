@@ -25,7 +25,6 @@ import TMLButton from '@/components/ui/TMLButton';
 import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
 import TMLBadge from '@/components/ui/TMLBadge';
 import UpgradeModal from '@/components/membership/UpgradeModal';
-import { Crown } from 'lucide-react';
 
 export default function CaseDetail() {
   const navigate = useNavigate();
