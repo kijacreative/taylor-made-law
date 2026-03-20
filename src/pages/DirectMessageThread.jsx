@@ -133,7 +133,12 @@ export default function DirectMessageThreadPage() {
     }
   }, [messages]);
 
-  // Real-time subscription
+  // Keep ref in sync so subscription closure always has latest names
+  useEffect(() => {
+    userFullNamesRef.current = userFullNames;
+  }, [userFullNames]);
+
+  // Real-time subscription — stable deps, uses ref for userFullNames
   useEffect(() => {
     if (!threadId) return;
     const unsub = base44.entities.DirectMessage.subscribe((event) => {
@@ -143,21 +148,22 @@ export default function DirectMessageThreadPage() {
             if (prev.find(m => m.id === event.id)) return prev;
             return [...prev, { ...event.data, attachments: [] }];
           });
-          // Load sender's full name if not cached
-          if (event.data?.sender_user_id && !userFullNames[event.data.sender_user_id]) {
-            loadUserFullName(event.data.sender_user_id);
+          // Load sender's full name if not cached (use ref to avoid stale closure)
+          const senderId = event.data?.sender_user_id;
+          if (senderId && !userFullNamesRef.current[senderId]) {
+            loadUserFullName(senderId);
           }
-          // Mark read
-          base44.functions.invoke('getDirectThread', { thread_id: threadId }).then(res => {
-            queryClient.invalidateQueries({ queryKey: ['directInbox'] });
-          }).catch(() => {});
+          // Mark thread as read + refresh inbox
+          queryClient.invalidateQueries({ queryKey: ['directInbox'] });
         } else if (event.type === 'update') {
-          setMessages(prev => prev.map(m => m.id === event.id ? { ...event.data, attachments: m.attachments } : m));
+          setMessages(prev => prev.map(m =>
+            m.id === event.id ? { ...event.data, attachments: m.attachments } : m
+          ));
         }
       }
     });
     return () => unsub();
-  }, [threadId, userFullNames]);
+  }, [threadId, queryClient]);
 
   const loadUserFullName = async (userId) => {
     try {
