@@ -54,15 +54,25 @@ export default function DirectMessages() {
   });
   const lawyerProfile = profiles[0] || null;
 
-  const { data: inboxData, isLoading: inboxLoading, refetch } = useQuery({
+  const { data: inboxData, isLoading: inboxLoading } = useQuery({
     queryKey: ['directInbox', user?.id],
     queryFn: async () => {
       const res = await base44.functions.invoke('getDirectInbox', {});
       return res.data;
     },
     enabled: !!user && isApproved,
-    refetchInterval: 20000,
+    refetchInterval: 8000,
+    staleTime: 0,
   });
+
+  // Real-time subscription: refresh inbox whenever any DM changes
+  useEffect(() => {
+    if (!user || !isApproved) return;
+    const unsub = base44.entities.DirectMessage.subscribe(() => {
+      queryClient.invalidateQueries({ queryKey: ['directInbox', user.id] });
+    });
+    return () => unsub();
+  }, [user, isApproved, queryClient]);
 
   const threads = inboxData?.threads || [];
 
