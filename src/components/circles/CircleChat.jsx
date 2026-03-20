@@ -76,6 +76,8 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
    const inputRef = useRef(null);
    const fileInputRef = useRef(null);
    const queryClient = useQueryClient();
+   const userFullNamesRef = useRef({});
+   const messagesContainerRef = useRef(null);
 
   useEffect(() => {
     loadMessages();
