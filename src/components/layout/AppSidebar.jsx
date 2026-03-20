@@ -167,6 +167,7 @@ const AppSidebar = ({ user, lawyerProfile }) => {
               Restricted
             </div>
           )}
+          {!collapsed && <div className="mt-2"><NotificationBell user={user} collapsed={false} inline /></div>}
         </div>
       )}
 
