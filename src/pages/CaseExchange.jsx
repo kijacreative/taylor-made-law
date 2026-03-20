@@ -373,9 +373,18 @@ export default function CaseExchange() {
                                     <p className="text-2xl font-bold text-emerald-600">${caseItem.estimated_value.toLocaleString()}</p>
                                   </div>
                                 )}
-                                <TMLButton variant="primary" size="sm">
-                                  View Details <ArrowRight className="w-4 h-4 ml-1" />
-                                </TMLButton>
+                                {isPaidMember ? (
+                                  <TMLButton variant="primary" size="sm">
+                                    View Details <ArrowRight className="w-4 h-4 ml-1" />
+                                  </TMLButton>
+                                ) : (
+                                  <button
+                                    onClick={e => { e.preventDefault(); setShowUpgradeModal(true); }}
+                                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold bg-[#3a164d]/10 text-[#3a164d] hover:bg-[#3a164d]/20 transition-colors"
+                                  >
+                                    <Lock className="w-3.5 h-3.5" /> Upgrade to Accept
+                                  </button>
+                                )}
                               </div>
                             </div>
                           </TMLCardContent>
