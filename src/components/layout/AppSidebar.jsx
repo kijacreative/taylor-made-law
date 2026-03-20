@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { 
@@ -13,26 +13,52 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { useQuery } from '@tanstack/react-query';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
 const AppSidebar = ({ user, lawyerProfile }) => {
   const [collapsed, setCollapsed] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const location = useLocation();
   const currentPath = location.pathname;
-
   const isApprovedLawyer = lawyerProfile?.status === 'approved';
-  const { data: inboxData } = useQuery({
-    queryKey: ['directInbox', user?.id],
-    queryFn: async () => {
-      const res = await base44.functions.invoke('getDirectInbox', {});
-      return res.data;
-    },
-    enabled: !!user?.id && isApprovedLawyer,
-    refetchInterval: 30000,
-    staleTime: 15000,
-  });
-  const unreadCount = inboxData?.total_unread || 0;
+  // Track participant last_read_at per thread using a ref so subscription closure stays fresh
+  const lastReadRef = useRef({});
+
+  useEffect(() => {
+    if (!user?.id || !isApprovedLawyer) return;
+
+    // Initial load
+    const loadUnread = async () => {
+      const res = await base44.functions.invoke('getDirectInbox', {}).catch(() => null);
+      const count = res?.data?.total_unread || 0;
+      setUnreadCount(count);
+    };
+    loadUnread();
+
+    // Subscribe to new DMs — bump unread when a message arrives that isn't from the current user
+    const unsubMsg = base44.entities.DirectMessage.subscribe((event) => {
+      if (event.type === 'create' && event.data?.sender_user_id !== user.id) {
+        // Only count if not currently viewing that thread
+        const threadId = event.data?.thread_id;
+        const isViewingThread = window.location.pathname === `/app/messages/${threadId}`;
+        if (!isViewingThread) {
+          setUnreadCount(prev => prev + 1);
+        }
+      }
+    });
+
+    // Subscribe to participant updates — when last_read_at changes, re-fetch the count
+    const unsubPart = base44.entities.DirectMessageParticipant.subscribe((event) => {
+      if (event.type === 'update' && event.data?.user_id === user.id) {
+        loadUnread();
+      }
+    });
+
+    return () => {
+      unsubMsg();
+      unsubPart();
+    };
+  }, [user?.id, isApprovedLawyer]);
 
   const menuItems = [
     { 
