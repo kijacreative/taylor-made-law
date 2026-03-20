@@ -68,6 +68,14 @@ export default function NotificationBell({ user, collapsed }) {
     setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
   };
 
+  const handleNotifClick = async (notif) => {
+    await markRead(notif);
+    setOpen(false);
+    if (notif.link) {
+      navigate(notif.link);
+    }
+  };
+
   const formatTime = (dateStr) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
