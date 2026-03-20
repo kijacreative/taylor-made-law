@@ -96,6 +96,16 @@ export default function LawyerSettings() {
     setTimeout(() => setSuccess(null), 4000);
   };
 
+  // Handle Stripe redirect result
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('subscription') === 'success') {
+      setActiveTab('billing');
+      showSuccess('Subscription activated! Welcome to Premium Legal Access.');
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
   const [profileForm, setProfileForm] = useState({
     full_name: '',
     firm_name: '',
