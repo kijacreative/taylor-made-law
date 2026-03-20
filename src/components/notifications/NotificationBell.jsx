@@ -133,7 +133,7 @@ export default function NotificationBell({ user, collapsed }) {
               notifications.map(notif => (
                 <div
                   key={notif.id}
-                  onClick={() => { markRead(notif); setOpen(false); }}
+                  onClick={() => handleNotifClick(notif)}
                   className={`flex items-start gap-3 px-4 py-3 border-b border-gray-50 cursor-pointer transition-colors ${
                     !notif.is_read ? 'bg-[#3a164d]/5 hover:bg-[#3a164d]/10' : 'hover:bg-gray-50'
                   }`}
