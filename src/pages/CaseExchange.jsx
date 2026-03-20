@@ -17,6 +17,7 @@ import {
   Clock,
   BarChart3,
   Plus,
+  Crown,
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
