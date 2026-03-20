@@ -124,7 +124,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
   const loadMessages = async () => {
     setLoading(true);
     const msgs = await base44.entities.CircleMessage.filter(
-      { circle_id: circleId, is_deleted: false },
+      { circle_id: circleId },
       'created_date',
       100
     );
