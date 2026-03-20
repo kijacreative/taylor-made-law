@@ -328,7 +328,7 @@ export default function DirectMessageThreadPage() {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
+        <div ref={messagesContainerRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-1">
           {!threadData ? (
             <div className="flex justify-center pt-16">
               <Loader2 className="w-6 h-6 animate-spin text-[#3a164d]" />
