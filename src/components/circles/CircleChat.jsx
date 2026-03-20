@@ -79,19 +79,27 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
    const userFullNamesRef = useRef({});
    const messagesContainerRef = useRef(null);
 
+  // Keep ref in sync to avoid stale closure in subscription
+  useEffect(() => {
+    userFullNamesRef.current = userFullNames;
+  }, [userFullNames]);
+
   useEffect(() => {
     loadMessages();
+    // Stable subscription — no userFullNames in deps, uses ref instead
     const unsubscribe = base44.entities.CircleMessage.subscribe((event) => {
       if (event.data?.circle_id === circleId) {
         if (event.type === 'create') {
-          setMessages(prev => [...prev, event.data]);
-          // If has attachments, reload file map
+          setMessages(prev => {
+            if (prev.find(m => m.id === event.id)) return prev;
+            return [...prev, event.data];
+          });
           if (event.data?.has_attachments) {
             loadFilesForMessages([event.data]);
           }
-          // Load full name for new sender
-          if (event.data?.sender_user_id && !userFullNames[event.data.sender_user_id]) {
-            loadUserFullName(event.data.sender_user_id);
+          const senderId = event.data?.sender_user_id;
+          if (senderId && !userFullNamesRef.current[senderId]) {
+            loadUserFullName(senderId);
           }
         } else if (event.type === 'update') {
           setMessages(prev => prev.map(m => m.id === event.id ? event.data : m));
@@ -101,7 +109,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
       }
     });
     return () => unsubscribe();
-  }, [circleId, userFullNames]);
+  }, [circleId]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
