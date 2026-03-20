@@ -882,143 +882,55 @@ export default function LawyerSettings() {
                 <TMLCardContent>
                   <div className="flex items-center justify-between mb-4">
                     <div>
-                      <p className="text-gray-600">
-                        {lawyerProfile?.subscription_status === 'active' ?
-                      'Your membership is active' :
-                      lawyerProfile?.subscription_status === 'trial' ?
-                      'You are in your free trial period' :
-                      'Billing starts after approval'}
+                      <p className="font-semibold text-gray-900 text-lg">Premium Legal Access</p>
+                      <p className="text-gray-500 text-sm mt-0.5">
+                        {lawyerProfile?.subscription_status === 'active' ? 'Your membership is active — full access to all network features.' :
+                         lawyerProfile?.subscription_status === 'trial' ? 'You are in your free trial period.' :
+                         'Subscribe to unlock full access to the TML Network.'}
                       </p>
                     </div>
                     <TMLBadge
-                    variant={lawyerProfile?.subscription_status === 'active' ? 'success' : 'warning'}
-                    size="lg">
-                    
+                      variant={lawyerProfile?.subscription_status === 'active' ? 'success' : lawyerProfile?.subscription_status === 'trial' ? 'warning' : 'secondary'}
+                      size="lg">
                       {lawyerProfile?.subscription_status === 'active' ? 'Active' :
-                    lawyerProfile?.subscription_status === 'trial' ? 'Trial' : 'Pending'}
+                       lawyerProfile?.subscription_status === 'trial' ? 'Trial' :
+                       lawyerProfile?.subscription_status === 'past_due' ? 'Past Due' :
+                       lawyerProfile?.subscription_status === 'cancelled' ? 'Cancelled' : 'Inactive'}
                     </TMLBadge>
                   </div>
-                  <div className="border-t border-gray-100 pt-4">
-                    <p className="text-sm text-gray-500 mb-1">Membership Price</p>
-                    <p className="text-3xl font-bold text-gray-900">$50<span className="text-lg font-normal text-gray-500">/month</span></p>
+
+                  <div className="border border-gray-100 rounded-xl p-5 bg-gray-50 mb-4">
+                    <p className="text-sm text-gray-500 mb-1">Monthly Price</p>
+                    <p className="text-4xl font-bold text-gray-900">$50<span className="text-lg font-normal text-gray-500">/month</span></p>
+                    <ul className="mt-3 space-y-1.5 text-sm text-gray-600">
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> Full access to Case Exchange</li>
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> Legal Circles & Collaboration</li>
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> Direct Messaging with Attorneys</li>
+                      <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> Mass Tort Updates & Resources</li>
+                    </ul>
                   </div>
-                  {lawyerProfile?.free_trial_months > 0 &&
-                <div className="mt-4 p-3 bg-emerald-50 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
+
+                  {lawyerProfile?.free_trial_months > 0 && lawyerProfile?.subscription_status !== 'active' &&
+                    <div className="mb-4 p-3 bg-emerald-50 text-emerald-700 rounded-lg text-sm flex items-center gap-2">
                       <CheckCircle2 className="w-4 h-4" />
                       You have {lawyerProfile.free_trial_months} free trial month{lawyerProfile.free_trial_months > 1 ? 's' : ''}!
                     </div>
-                }
-                </TMLCardContent>
-              </TMLCard>
-
-              {/* Payment Method */}
-              <TMLCard variant="elevated">
-                <TMLCardHeader>
-                  <TMLCardTitle className="flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-[#7e277e]" />
-                    Payment Method
-                  </TMLCardTitle>
-                </TMLCardHeader>
-                <TMLCardContent className="space-y-4">
-                  <TMLInput
-                  label="Cardholder Name"
-                  placeholder="e.g. Jane Smith"
-                  value={billingForm.cardholder_name}
-                  onChange={(e) => setBillingForm({ ...billingForm, cardholder_name: e.target.value })} />
-                
-                  <TMLInput
-                  label="Card Number"
-                  placeholder="1234 5678 9012 3456"
-                  maxLength={19}
-                  value={billingForm.card_number}
-                  onChange={(e) => {
-                    const v = e.target.value.replace(/\D/g, '').replace(/(.{4})/g, '$1 ').trim();
-                    setBillingForm({ ...billingForm, card_number: v });
-                  }} />
-                
-                  <div className="grid grid-cols-2 gap-4">
-                    <TMLInput
-                    label="Expiry Date"
-                    placeholder="MM / YY"
-                    maxLength={7}
-                    value={billingForm.expiry}
-                    onChange={(e) => {
-                      const v = e.target.value.replace(/\D/g, '').replace(/^(\d{2})(\d)/, '$1 / $2');
-                      setBillingForm({ ...billingForm, expiry: v });
-                    }} />
-                  
-                    <TMLInput
-                    label="CVV"
-                    placeholder="123"
-                    maxLength={4}
-                    value={billingForm.cvv}
-                    onChange={(e) => setBillingForm({ ...billingForm, cvv: e.target.value.replace(/\D/g, '') })} />
-                  
-                  </div>
-
-                  <div className="border-t border-gray-100 pt-4">
-                    <p className="text-sm font-medium text-gray-700 mb-3">Billing Address</p>
-                    <div className="space-y-3">
-                      <TMLInput
-                      label="Street Address"
-                      placeholder="e.g. 123 Main St, Suite 100"
-                      value={billingForm.billing_address}
-                      onChange={(e) => setBillingForm({ ...billingForm, billing_address: e.target.value })} />
-                    
-                      <div className="grid grid-cols-3 gap-3">
-                        <div className="col-span-1">
-                          <TMLInput
-                          label="City"
-                          placeholder="e.g. Austin"
-                          value={billingForm.billing_city}
-                          onChange={(e) => setBillingForm({ ...billingForm, billing_city: e.target.value })} />
-                        
-                        </div>
-                        <div>
-                          <TMLInput
-                          label="State"
-                          placeholder="TX"
-                          maxLength={2}
-                          value={billingForm.billing_state}
-                          onChange={(e) => setBillingForm({ ...billingForm, billing_state: e.target.value.toUpperCase() })} />
-                        
-                        </div>
-                        <div>
-                          <TMLInput
-                          label="ZIP Code"
-                          placeholder="78701"
-                          maxLength={5}
-                          value={billingForm.billing_zip}
-                          onChange={(e) => setBillingForm({ ...billingForm, billing_zip: e.target.value.replace(/\D/g, '') })} />
-                        
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 flex items-center gap-3">
-                    <TMLButton
-                    variant="primary"
-                    onClick={() => {
-                      setBillingSaved(true);
-                      showSuccess('Billing information saved!');
-                      setTimeout(() => setBillingSaved(false), 4000);
-                    }}>
-                    
-                      <Save className="w-4 h-4 mr-2" />
-                      Save Billing Info
-                    </TMLButton>
-                    {billingSaved &&
-                  <motion.span
-                    initial={{ opacity: 0, x: -8 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center gap-1.5 text-emerald-600 text-sm font-medium">
-                    
-                        <CheckCircle2 className="w-4 h-4" /> Saved!
-                      </motion.span>
                   }
-                  </div>
-                  <p className="text-xs text-gray-400">Your payment information is securely stored. Billing begins after approval and any trial period ends.</p>
+
+                  {lawyerProfile?.subscription_status !== 'active' && lawyerProfile?.subscription_status !== 'trial' ? (
+                    <TMLButton
+                      variant="primary"
+                      loading={checkoutLoading}
+                      onClick={handleSubscribe}>
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Subscribe Now — $50/month
+                    </TMLButton>
+                  ) : (
+                    <p className="text-sm text-gray-500">
+                      To manage or cancel your subscription, please contact{' '}
+                      <a href="mailto:support@taylormadelaw.com" className="text-[#7e277e] hover:underline">support@taylormadelaw.com</a>.
+                    </p>
+                  )}
                 </TMLCardContent>
               </TMLCard>
             </div>
