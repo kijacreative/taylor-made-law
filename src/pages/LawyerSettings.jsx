@@ -89,6 +89,7 @@ export default function LawyerSettings() {
     billing_zip: ''
   });
   const [billingSaved, setBillingSaved] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
 
   const showSuccess = (msg) => {
     setSuccess(msg);
