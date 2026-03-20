@@ -56,6 +56,26 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Notify the other participant(s) with a deep-link
+    const otherParts = await base44.asServiceRole.entities.DirectMessageParticipant.filter({ thread_id });
+    const senderName = myProfile.full_name || user.email;
+    const notifPreview = body.trim().length > 80 ? body.trim().slice(0, 80) + '…' : body.trim();
+    const notifyPromises = otherParts
+      .filter(p => p.user_id !== user.id)
+      .map(p =>
+        base44.asServiceRole.entities.CircleNotification.create({
+          user_id: p.user_id,
+          user_email: p.user_email,
+          type: 'new_message',
+          title: `New message from ${senderName}`,
+          body: notifPreview,
+          link: `/app/messages/${thread_id}`,
+          is_read: false,
+          reference_id: thread_id
+        }).catch(() => null)
+      );
+    await Promise.all(notifyPromises);
+
     // Audit
     base44.asServiceRole.entities.AuditLog.create({
       entity_type: 'DirectMessage',
