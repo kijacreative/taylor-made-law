@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, X, MessageSquare, Briefcase, Users, CheckCheck } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { createPageUrl } from '@/utils';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const typeIcon = (type) => {
   if (type === 'new_message') return <MessageSquare className="w-4 h-4 text-[#3a164d]" />;
