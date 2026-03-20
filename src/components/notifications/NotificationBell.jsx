@@ -13,6 +13,7 @@ export default function NotificationBell({ user, collapsed }) {
   const [notifications, setNotifications] = useState([]);
   const [open, setOpen] = useState(false);
   const panelRef = useRef(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (!user?.id) return;
