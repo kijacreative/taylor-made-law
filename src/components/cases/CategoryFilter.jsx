@@ -106,7 +106,7 @@ export default function CategoryFilter({ activeCategory, cases, onSelect }) {
   };
 
   return (
-    <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+    <div className="flex gap-4 overflow-x-auto pt-2 pb-2 scrollbar-hide">
       {CATEGORIES.map((cat) => {
         const isActive = activeCategory === cat.key;
         const count = countFor(cat.key);
