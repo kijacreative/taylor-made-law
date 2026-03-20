@@ -198,7 +198,13 @@ export default function CaseDetail() {
   const isAvailable = caseItem.status === 'published';
   const userApproved = user?.user_status === 'approved' || lawyerProfile?.status === 'approved';
   const agreementOk = !lawyerProfile || lawyerProfile.referral_agreement_accepted;
-  const canAccept = userApproved && agreementOk && isAvailable;
+  const isPaidMember = user?.membership_status === 'paid';
+  const canAccept = userApproved && agreementOk && isAvailable && isPaidMember;
+
+  const handleUpgrade = () => {
+    setShowUpgradeModal(false);
+    navigate(createPageUrl('LawyerSettings') + '?tab=billing');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
