@@ -121,16 +121,46 @@ export default function CaseExchange() {
                 {isApproved ? 'Browse and accept verified case referrals.' : 'Preview the marketplace — full access unlocks upon approval.'}
               </p>
             </div>
-            {isApproved && (
-              <TMLButton variant="primary" onClick={() => setShowSubmitModal(true)}>
-                <Plus className="w-4 h-4 mr-2" />
-                Submit a Case
-              </TMLButton>
-            )}
+            <div className="flex items-center gap-3">
+              {isApproved && isPaidMember && (
+                <TMLButton variant="primary" onClick={() => setShowSubmitModal(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Submit a Case
+                </TMLButton>
+              )}
+              {isApproved && !isPaidMember && (
+                <TMLButton variant="outline" onClick={() => setShowUpgradeModal(true)}>
+                  <Lock className="w-4 h-4 mr-2" />
+                  Post a Case
+                </TMLButton>
+              )}
+            </div>
           </div>
 
           {showSubmitModal && (
             <SubmitCaseModal user={user} onClose={() => setShowSubmitModal(false)} />
+          )}
+
+          {showUpgradeModal && (
+            <UpgradeModal onClose={() => setShowUpgradeModal(false)} onUpgrade={handleUpgrade} />
+          )}
+
+          {/* Free Member Banner */}
+          {isApproved && !isPaidMember && (
+            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
+              <div className="bg-gradient-to-r from-[#3a164d]/5 to-[#a47864]/5 border border-[#3a164d]/20 rounded-2xl p-5 flex items-center gap-4">
+                <div className="p-2.5 bg-[#3a164d]/10 rounded-xl shrink-0">
+                  <Crown className="w-5 h-5 text-[#3a164d]" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-[#3a164d] text-base">Upgrade to unlock full Case Exchange access</h3>
+                  <p className="text-gray-600 text-sm mt-0.5">Accept cases, post referrals, and access private circle case discussions — all for $50/month.</p>
+                </div>
+                <TMLButton variant="primary" size="sm" onClick={() => setShowUpgradeModal(true)}>
+                  Upgrade — $50/mo
+                </TMLButton>
+              </div>
+            </motion.div>
           )}
 
           {/* Pending Banner */}
