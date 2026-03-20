@@ -24,6 +24,11 @@ Deno.serve(async (req) => {
       client_phone,
     } = body;
 
+    // Enforce paid membership gate for all case submissions
+    if (user.membership_status !== 'paid') {
+      return Response.json({ error: 'A paid membership ($50/month) is required to post cases.', code: 'MEMBERSHIP_REQUIRED' }, { status: 403 });
+    }
+
     // If submitting to a circle, verify user is a member
     if (circle_id) {
       const memberships = await base44.entities.LegalCircleMember.filter({
