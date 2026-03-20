@@ -270,29 +270,47 @@ export default function CaseDetail() {
 
                 {/* Accept Button */}
                 {isAvailable && (
-                  <div className="flex items-center gap-4">
-                    <TMLButton 
-                      variant="primary" 
-                      size="lg"
-                      onClick={handleAcceptCase}
-                      loading={accepting}
-                      disabled={!canAccept}
-                    >
-                      <CheckCircle2 className="w-5 h-5 mr-2" />
-                      Accept This Case
-                    </TMLButton>
-                    
-                    {!canAccept && lawyerProfile && (
-                      <div className="flex items-center gap-2 text-amber-600">
-                        <AlertCircle className="w-5 h-5" />
-                        <span className="text-sm">
-                          {lawyerProfile.status !== 'approved' 
-                            ? 'Approval required to accept cases'
-                            : 'Accept referral agreement first'}
-                        </span>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    {isPaidMember ? (
+                      <>
+                        <TMLButton 
+                          variant="primary" 
+                          size="lg"
+                          onClick={handleAcceptCase}
+                          loading={accepting}
+                          disabled={!canAccept}
+                        >
+                          <CheckCircle2 className="w-5 h-5 mr-2" />
+                          Accept This Case
+                        </TMLButton>
+                        {!canAccept && lawyerProfile && (
+                          <div className="flex items-center gap-2 text-amber-600">
+                            <AlertCircle className="w-5 h-5" />
+                            <span className="text-sm">
+                              {lawyerProfile.status !== 'approved' 
+                                ? 'Approval required to accept cases'
+                                : 'Accept referral agreement first'}
+                            </span>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="flex items-center gap-4 flex-wrap">
+                        <TMLButton variant="primary" size="lg" onClick={() => setShowUpgradeModal(true)}>
+                          <Crown className="w-5 h-5 mr-2" />
+                          Upgrade to Accept Case
+                        </TMLButton>
+                        <div className="flex items-center gap-2 text-[#3a164d]/70">
+                          <Lock className="w-4 h-4" />
+                          <span className="text-sm font-medium">Paid membership required — $50/month</span>
+                        </div>
                       </div>
                     )}
                   </div>
+                )}
+
+                {showUpgradeModal && (
+                  <UpgradeModal onClose={() => setShowUpgradeModal(false)} onUpgrade={handleUpgrade} />
                 )}
                 
                 {!isAvailable && caseItem.status === 'accepted' && (
