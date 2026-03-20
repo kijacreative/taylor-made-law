@@ -112,11 +112,13 @@ export default function DirectMessageThreadPage() {
     // Load full names for all senders
     const uniqueSenders = [...new Set(msgs.map(m => m.sender_user_id))];
     for (const senderId of uniqueSenders) {
-      if (!userFullNames[senderId]) {
+      if (!userFullNamesRef.current[senderId]) {
         await loadUserFullName(senderId);
       }
     }
     queryClient.invalidateQueries({ queryKey: ['directInbox'] });
+    // Always scroll to bottom on initial load
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
   };
 
   useEffect(() => {
