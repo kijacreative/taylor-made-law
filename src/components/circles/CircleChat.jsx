@@ -134,11 +134,13 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
     // Load full names for all senders
     const uniqueSenders = [...new Set(msgs.map(m => m.sender_user_id))];
     for (const senderId of uniqueSenders) {
-      if (!userFullNames[senderId]) {
+      if (!userFullNamesRef.current[senderId]) {
         await loadUserFullName(senderId);
       }
     }
     setLoading(false);
+    // Always scroll to bottom on initial load
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
   };
 
   const loadUserFullName = async (userId) => {
