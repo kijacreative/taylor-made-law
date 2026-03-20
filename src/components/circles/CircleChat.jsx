@@ -292,7 +292,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-1">
+      <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-4 space-y-1">
         {loading ? (
           <div className="flex items-center justify-center h-full">
             <Loader2 className="w-6 h-6 animate-spin text-[#3a164d]" />
