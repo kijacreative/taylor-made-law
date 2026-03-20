@@ -37,6 +37,7 @@ Deno.serve(async (req) => {
         type: 'new_message',
         title: `New message in ${circleName}`,
         body: `${senderName}: ${preview}`,
+        link: `/GroupDetail?id=${circle_id}`,
         is_read: false,
         reference_id: null
       }).catch(() => null)
