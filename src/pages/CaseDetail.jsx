@@ -32,6 +32,7 @@ export default function CaseDetail() {
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState(null);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
   const urlParams = new URLSearchParams(window.location.search);
   const caseId = urlParams.get('id');
