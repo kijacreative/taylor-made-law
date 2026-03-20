@@ -64,6 +64,12 @@ export default function CaseExchange() {
 
   const isApproved = user?.user_status === 'approved' || user?.user_status === 'active' || lawyerProfile?.status === 'approved';
   const isPending = !isApproved;
+  const isPaidMember = user?.membership_status === 'paid';
+
+  const handleUpgrade = () => {
+    setShowUpgradeModal(false);
+    navigate(createPageUrl('LawyerSettings') + '?tab=billing');
+  };
 
   // Server-side enforced case fetch
   const { data: caseData, isLoading: casesLoading } = useQuery({
