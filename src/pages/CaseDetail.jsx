@@ -16,7 +16,9 @@ import {
   Shield,
   FileText,
   User,
-  Loader2
+  Loader2,
+  Lock,
+  Crown
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
