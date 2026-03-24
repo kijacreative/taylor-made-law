@@ -34,12 +34,16 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'This attorney is already a member of this circle' }, { status: 400 });
     }
 
+    // Get inviter's full name from LawyerProfile
+    const inviterProfiles = await base44.asServiceRole.entities.LawyerProfile.filter({ user_id: user.id });
+    const inviterFullName = inviterProfiles[0]?.full_name || user.full_name || user.email;
+
     // Create the invitation
     const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
     const invitation = await base44.asServiceRole.entities.LegalCircleInvitation.create({
       circle_id,
       inviter_user_id: user.id,
-      inviter_name: user.full_name || user.email,
+      inviter_name: inviterFullName,
       invitee_email,
       invitee_name: invitee_name || '',
       token,
