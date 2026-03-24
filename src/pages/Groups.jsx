@@ -63,6 +63,8 @@ export default function Groups() {
       status: 'active'
     }),
     enabled: !!user?.id,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   // Get the actual groups (only active circles)
@@ -70,6 +72,8 @@ export default function Groups() {
     queryKey: ['legalCircles'],
     queryFn: () => base44.entities.LegalCircle.filter({ is_active: true }),
     enabled: !!user,
+    staleTime: 0,
+    refetchOnMount: true,
   });
 
   const myCircles = allCircles.filter(circle => 
