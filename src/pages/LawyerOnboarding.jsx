@@ -18,6 +18,7 @@ import TMLButton from '@/components/ui/TMLButton';
 import TMLInput from '@/components/ui/TMLInput';
 import TMLTextarea from '@/components/ui/TMLTextarea';
 import { Checkbox } from '@/components/ui/checkbox';
+import StripeCardSetup from '@/components/onboarding/StripeCardSetup';
 
 const STEPS = [
   { number: 1, label: 'Professional Profile', icon: User },
@@ -37,12 +38,9 @@ export default function LawyerOnboarding() {
   const [headshotUrl, setHeadshotUrl] = useState('');
   const [headshotUploading, setHeadshotUploading] = useState(false);
   const [referralAccepted, setReferralAccepted] = useState(false);
-  const [billing, setBilling] = useState({
-    account_holder: '',
-    bank_name: '',
-    account_type: 'checking',
-    last4: '',
-  });
+  const [paymentMethodId, setPaymentMethodId] = useState('');
+  const [stripePublishableKey, setStripePublishableKey] = useState('');
+  const [cardSaved, setCardSaved] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -101,13 +99,9 @@ export default function LawyerOnboarding() {
         profile_photo_url: headshotUrl || undefined,
         referral_agreement_accepted: true,
         referral_agreement_accepted_at: now,
-        billing_demo_plan: 'trial_6mo_then_49',
-        billing_demo_bank_name: billing.bank_name,
-        billing_demo_account_holder: billing.account_holder,
-        billing_demo_account_type: billing.account_type,
-        billing_demo_last4: billing.last4,
-        billing_demo_status: 'collected',
-        billing_demo_collected_at: now,
+        billing_stripe_payment_method_id: paymentMethodId,
+        billing_status: 'card_on_file',
+        billing_collected_at: now,
         profile_completed_at: now,
       });
 
@@ -153,7 +147,7 @@ export default function LawyerOnboarding() {
 
   const canProceedStep1 = profile.bio.trim().length >= 20;
   const canProceedStep2 = referralAccepted;
-  const canProceedStep3 = billing.account_holder.trim() && billing.bank_name.trim() && billing.last4.length === 4;
+  const canProceedStep3 = cardSaved;
 
   if (loading) {
     return (
@@ -325,66 +319,33 @@ export default function LawyerOnboarding() {
                 </div>
               )}
 
-              {/* Step 3: Billing Demo */}
+              {/* Step 3: Billing Setup */}
               {step === 3 && (
                 <div className="space-y-5">
                   <div>
                     <h2 className="text-xl font-bold text-gray-900 mb-1">Payment Setup</h2>
-                    <p className="text-gray-500 text-sm">Set up your membership plan to complete your account.</p>
+                    <p className="text-gray-500 text-sm">Add a card to your membership account. Your 6-month free trial starts now — you won't be charged until it ends.</p>
                   </div>
                   <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
                     <p className="text-sm font-semibold text-emerald-900 mb-1">Plan: 6-Month Free Trial → $49/month</p>
-                    <p className="text-sm text-emerald-700 mb-2">Your membership includes:</p>
-                    <ul className="text-sm text-emerald-700 space-y-0.5 list-disc list-inside">
+                    <ul className="text-sm text-emerald-700 space-y-0.5 list-disc list-inside mt-1">
                       <li>Access to the case marketplace</li>
                       <li>Participation in attorney circles</li>
-                      <li>Community discussions</li>
-                      <li>Educational resources</li>
+                      <li>Community discussions & educational resources</li>
                       <li>Network referrals</li>
                     </ul>
                   </div>
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-800">
-                    <p className="font-semibold mb-1">Demo Notice</p>
-                    <p>Billing setup is currently in demonstration mode. Stripe integration will be activated soon. <strong>No charges will be applied at this time.</strong></p>
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <TMLInput
-                      label="Account Holder Name"
-                      required
-                      value={billing.account_holder}
-                      onChange={e => setBilling({ ...billing, account_holder: e.target.value })}
-                      placeholder="Jane Smith"
-                    />
-                    <TMLInput
-                      label="Bank Name"
-                      required
-                      value={billing.bank_name}
-                      onChange={e => setBilling({ ...billing, bank_name: e.target.value })}
-                      placeholder="Chase Bank"
-                    />
-                  </div>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1.5">Account Type <span className="text-red-500">*</span></label>
-                      <select
-                        value={billing.account_type}
-                        onChange={e => setBilling({ ...billing, account_type: e.target.value })}
-                        className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d] text-sm transition-all"
-                      >
-                        <option value="checking">Checking</option>
-                        <option value="savings">Savings</option>
-                      </select>
+                  {cardSaved ? (
+                    <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
+                      <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
+                      <p className="text-sm font-medium text-green-800">Card saved successfully! Click "Complete Setup" to finish.</p>
                     </div>
-                    <TMLInput
-                      label="Last 4 Digits"
-                      required
-                      maxLength={4}
-                      value={billing.last4}
-                      onChange={e => setBilling({ ...billing, last4: e.target.value.replace(/\D/g, '').slice(0, 4) })}
-                      placeholder="1234"
-                      helperText="Last 4 digits of your account number"
+                  ) : (
+                    <StripeCardSetup
+                      publishableKey={stripePublishableKey}
+                      onSuccess={(pmId) => { setPaymentMethodId(pmId); setCardSaved(true); }}
                     />
-                  </div>
+                  )}
                 </div>
               )}
 
@@ -420,7 +381,7 @@ export default function LawyerOnboarding() {
                     onClick={handleComplete}
                     disabled={!canProceedStep3}
                   >
-                    Save Billing Details <CheckCircle2 className="w-4 h-4 ml-1" />
+                    Complete Setup <CheckCircle2 className="w-4 h-4 ml-1" />
                   </TMLButton>
                 )}
               </div>
