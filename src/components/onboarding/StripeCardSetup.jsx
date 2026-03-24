@@ -17,31 +17,12 @@ const CARD_STYLE = {
   }
 };
 
-function CardForm({ onSuccess }) {
+function CardForm({ clientSecret, onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
-  const [clientSecret, setClientSecret] = useState('');
-  const [resolvedStripe, setResolvedStripe] = useState(null);
-  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [cardholderName, setCardholderName] = useState('');
-
-  useEffect(() => {
-    const fetchIntent = async () => {
-      const res = await base44.functions.invoke('createSetupIntent', {});
-      if (res.data?.client_secret) {
-        setClientSecret(res.data.client_secret);
-        if (res.data.publishable_key) {
-          setResolvedStripe(await loadStripe(res.data.publishable_key));
-        }
-      } else {
-        setError(res.data?.error || 'Failed to initialize payment setup.');
-      }
-      setLoading(false);
-    };
-    fetchIntent();
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -63,14 +44,6 @@ function CardForm({ onSuccess }) {
       onSuccess(result.setupIntent.payment_method);
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-[#3a164d]" />
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -109,18 +82,47 @@ function CardForm({ onSuccess }) {
         disabled={!stripe || !cardholderName.trim()}
         className="w-full"
       >
-        Save Card & Continue <CheckCircle2 className="w-4 h-4 ml-1" />
+        Save Card <CheckCircle2 className="w-4 h-4 ml-1" />
       </TMLButton>
     </form>
   );
 }
 
-export default function StripeCardSetup({ publishableKey, onSuccess }) {
-  const [stripePromise] = useState(() => publishableKey ? loadStripe(publishableKey) : null);
+export default function StripeCardSetup({ onSuccess }) {
+  const [stripePromise, setStripePromise] = useState(null);
+  const [clientSecret, setClientSecret] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    const fetchIntent = async () => {
+      const res = await base44.functions.invoke('createSetupIntent', {});
+      if (res.data?.client_secret && res.data?.publishable_key) {
+        setClientSecret(res.data.client_secret);
+        setStripePromise(loadStripe(res.data.publishable_key));
+      } else {
+        setError(res.data?.error || 'Failed to initialize payment setup.');
+      }
+      setLoading(false);
+    };
+    fetchIntent();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Loader2 className="w-6 h-6 animate-spin text-[#3a164d]" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>;
+  }
 
   return (
-    <Elements stripe={stripePromise}>
-      <CardForm onSuccess={onSuccess} />
+    <Elements stripe={stripePromise} options={{ clientSecret }}>
+      <CardForm clientSecret={clientSecret} onSuccess={onSuccess} />
     </Elements>
   );
 }
