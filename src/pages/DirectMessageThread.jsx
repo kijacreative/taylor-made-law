@@ -98,7 +98,13 @@ export default function DirectMessageThreadPage() {
 
   const loadThread = async () => {
     if (!threadId) return;
-    const res = await base44.functions.invoke('getDirectThread', { thread_id: threadId });
+    let res;
+    try {
+      res = await base44.functions.invoke('getDirectThread', { thread_id: threadId });
+    } catch {
+      navigate('/app/messages');
+      return;
+    }
     if (res.data?.error) { navigate('/app/messages'); return; }
     setThreadData(res.data?.thread);
     const participant = res.data?.other_participant;
