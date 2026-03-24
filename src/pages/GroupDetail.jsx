@@ -94,10 +94,10 @@ export default function GroupDetail() {
         }));
       }
     },
-    enabled: !!circleId && !!myMembership,
+    enabled: !!circleId && !!user?.id,
     staleTime: 0,
     refetchOnMount: true,
-    retry: 2,
+    retry: 3,
     retryDelay: 1000,
   });
 
