@@ -96,14 +96,19 @@ export default function StripeCardSetup({ onSuccess }) {
 
   useEffect(() => {
     const fetchIntent = async () => {
-      const res = await base44.functions.invoke('createSetupIntent', {});
-      if (res.data?.client_secret && res.data?.publishable_key) {
-        setClientSecret(res.data.client_secret);
-        setStripePromise(loadStripe(res.data.publishable_key));
-      } else {
-        setError(res.data?.error || 'Failed to initialize payment setup.');
+      try {
+        const res = await base44.functions.invoke('createSetupIntent', {});
+        if (res.data?.client_secret && res.data?.publishable_key) {
+          setClientSecret(res.data.client_secret);
+          setStripePromise(loadStripe(res.data.publishable_key));
+        } else {
+          setError(res.data?.error || 'Failed to initialize payment setup.');
+        }
+      } catch (err) {
+        setError('Payment setup failed. Please contact support.');
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     fetchIntent();
   }, []);
