@@ -12,7 +12,7 @@ import { base44 } from '@/api/base44Client';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2, AlertCircle, Loader2, ArrowRight, ArrowLeft,
-  FileText, CreditCard, User, Upload, X
+  FileText, User, Upload, X
 } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLInput from '@/components/ui/TMLInput';
@@ -312,34 +312,6 @@ export default function LawyerOnboarding() {
                 </div>
               )}
 
-              {/* Step 3: Billing Setup */}
-              {step === 3 && (
-                <div className="space-y-5">
-                  <div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-1">Payment Setup</h2>
-                    <p className="text-gray-500 text-sm">Add a card to your membership account. Your 6-month free trial starts now — you won't be charged until it ends.</p>
-                  </div>
-                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-4">
-                    <p className="text-sm font-semibold text-emerald-900 mb-1">Plan: 6-Month Free Trial → $49/month</p>
-                    <ul className="text-sm text-emerald-700 space-y-0.5 list-disc list-inside mt-1">
-                      <li>Access to the case marketplace</li>
-                      <li>Participation in attorney circles</li>
-                      <li>Community discussions & educational resources</li>
-                      <li>Network referrals</li>
-                    </ul>
-                  </div>
-                  {cardSaved ? (
-                    <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-xl">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 shrink-0" />
-                      <p className="text-sm font-medium text-green-800">Card saved successfully! Click "Complete Setup" to finish.</p>
-                    </div>
-                  ) : (
-                    <StripeCardSetup
-                      onSuccess={(pmId) => { setPaymentMethodId(pmId); setCardSaved(true); }}
-                    />
-                  )}
-                </div>
-              )}
 
               {/* Error */}
               {error && (
