@@ -650,7 +650,7 @@ export default function LawyerSettings() {
                     <div className="space-y-2">
                       {profileForm.states_licensed.map((state) =>
                   <div key={state} className="flex items-center gap-3">
-                          <span className="text-xs font-semibold text-gray-600 w-8 shrink-0">{state}</span>
+                          <span className="text-xs font-semibold text-gray-600 w-8 shrink-0 pr-3">{state}</span>
                           <input
                       type="text"
                       placeholder={`Bar # for ${state}`}
