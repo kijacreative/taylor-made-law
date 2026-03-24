@@ -374,17 +374,19 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
                     <MessageCircle className="w-4 h-4" />
                   </button>
                 )}
-              {isAdmin && !isMe && (
-                  {!memberIsAdmin && (
-                    <button onClick={() => handlePromote(member)} className="p-1.5 rounded-lg text-gray-400 hover:text-[#3a164d] hover:bg-[#3a164d]/5 transition-colors" title="Promote to admin">
-                      <Shield className="w-4 h-4" />
+                {isAdmin && !isMe && (
+                  <>
+                    {!memberIsAdmin && (
+                      <button onClick={() => handlePromote(member)} className="p-1.5 rounded-lg text-gray-400 hover:text-[#3a164d] hover:bg-[#3a164d]/5 transition-colors" title="Promote to admin">
+                        <Shield className="w-4 h-4" />
+                      </button>
+                    )}
+                    <button onClick={() => handleRemove(member)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Remove member">
+                      <Trash2 className="w-4 h-4" />
                     </button>
-                  )}
-                  <button onClick={() => handleRemove(member)} className="p-1.5 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors" title="Remove member">
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
+                  </>
+                )}
+              </div>
             </div>
           );
         })}
