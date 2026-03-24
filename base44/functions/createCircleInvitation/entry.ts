@@ -58,6 +58,7 @@ Deno.serve(async (req) => {
         type: 'invite',
         title: `You've been invited to join a Legal Circle`,
         body: `${user.full_name || user.email} invited you to join "${circle_name || 'a circle'}" on TML Network.`,
+        link: '/GroupInvitations',
         is_read: false
       }).catch(() => {});
     }
