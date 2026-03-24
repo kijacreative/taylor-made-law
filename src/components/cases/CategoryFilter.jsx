@@ -5,7 +5,7 @@ const CATEGORIES = [
     key: '',
     label: 'All Cases',
     svg: (
-      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9">
         <rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" opacity="0.8"/>
         <rect x="22" y="6" width="12" height="12" rx="2" fill="currentColor" opacity="0.6"/>
         <rect x="6" y="22" width="12" height="12" rx="2" fill="currentColor" opacity="0.6"/>
@@ -19,7 +19,7 @@ const CATEGORIES = [
     key: 'Criminal',
     label: 'Criminal',
     svg: (
-      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9">
         <path d="M20 4L6 10v10c0 8.28 5.96 16.02 14 18 8.04-1.98 14-9.72 14-18V10L20 4z" fill="currentColor" opacity="0.85"/>
         <path d="M15 20l4 4 8-8" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
       </svg>
@@ -31,7 +31,7 @@ const CATEGORIES = [
     key: 'Family',
     label: 'Family',
     svg: (
-      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9">
         <circle cx="14" cy="12" r="5" fill="currentColor" opacity="0.9"/>
         <circle cx="26" cy="12" r="5" fill="currentColor" opacity="0.7"/>
         <path d="M4 32c0-5.52 4.48-10 10-10s10 4.48 10 10" fill="currentColor" opacity="0.9"/>
@@ -45,7 +45,7 @@ const CATEGORIES = [
     key: 'Estate',
     label: 'Estate',
     svg: (
-      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9">
         <path d="M20 4L8 14v22h24V14L20 4z" fill="currentColor" opacity="0.8"/>
         <rect x="15" y="22" width="10" height="14" rx="1" fill="white" opacity="0.7"/>
         <rect x="10" y="14" width="20" height="3" rx="1" fill="white" opacity="0.5"/>
@@ -58,7 +58,7 @@ const CATEGORIES = [
     key: 'Personal Injury',
     label: 'Personal Injury',
     svg: (
-      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9">
         <circle cx="20" cy="10" r="6" fill="currentColor" opacity="0.85"/>
         <path d="M12 36v-8l-4-6a2 2 0 013.2-2.4L14 23V16a2 2 0 014 0v8h4V16a2 2 0 014 0v7l2.8-3.4A2 2 0 0132 22l-4 6v8H12z" fill="currentColor" opacity="0.8"/>
       </svg>
@@ -70,7 +70,7 @@ const CATEGORIES = [
     key: 'Mass Torts',
     label: 'Mass Torts',
     svg: (
-      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9">
         <circle cx="12" cy="16" r="5" fill="currentColor" opacity="0.7"/>
         <circle cx="28" cy="16" r="5" fill="currentColor" opacity="0.7"/>
         <circle cx="20" cy="10" r="5" fill="currentColor" opacity="0.9"/>
@@ -84,7 +84,7 @@ const CATEGORIES = [
     key: 'Class Actions',
     label: 'Class Actions',
     svg: (
-      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-7 h-7">
+      <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-9 h-9">
         <rect x="8" y="8" width="24" height="24" rx="3" fill="currentColor" opacity="0.15" stroke="currentColor" strokeWidth="2"/>
         <path d="M14 20h12M20 14v12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
       </svg>
@@ -106,7 +106,7 @@ export default function CategoryFilter({ activeCategory, cases, onSelect }) {
   };
 
   return (
-    <div className="flex gap-4 overflow-x-auto pt-2 pb-2 scrollbar-hide">
+    <div className="grid grid-cols-3 gap-4">
       {CATEGORIES.map((cat) => {
         const isActive = activeCategory === cat.key;
         const count = countFor(cat.key);
@@ -115,17 +115,14 @@ export default function CategoryFilter({ activeCategory, cases, onSelect }) {
           <button
             key={cat.key}
             onClick={() => onSelect(cat.key)}
-            className={`flex flex-col items-center gap-2 min-w-[80px] group transition-all duration-200 ${isActive ? 'scale-105' : 'hover:scale-102'}`}
+            className={`flex flex-col items-center gap-2 group transition-all duration-200 ${isActive ? 'scale-105' : 'hover:scale-105'}`}
           >
             <div
-              className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-200 ${
-                isActive
-                  ? `bg-gradient-to-br ${cat.bg} shadow-lg ring-4 ring-white shadow-[${cat.color}]/30`
-                  : 'bg-white border-2 border-gray-200 group-hover:border-gray-300 group-hover:shadow-md'
+              className={`w-20 h-20 rounded-full flex items-center justify-center transition-all duration-200 bg-gradient-to-br ${cat.bg} shadow-md ${
+                isActive ? 'ring-4 ring-white ring-offset-2 shadow-lg' : 'group-hover:shadow-lg'
               }`}
-              style={isActive ? {} : {}}
             >
-              <div style={{ color: isActive ? 'white' : cat.color }}>
+              <div style={{ color: 'white' }}>
                 {cat.svg}
               </div>
             </div>
