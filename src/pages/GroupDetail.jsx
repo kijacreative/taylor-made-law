@@ -64,6 +64,8 @@ export default function GroupDetail() {
     enabled: !!circleId && !!user?.id,
     retry: 8,
     retryDelay: 1500,
+    staleTime: 0,
+    refetchOnMount: true,
   });
   const myMembership = myMemberships[0] || null;
   const isAdmin = myMembership?.role === 'admin' || myMembership?.role === 'moderator';
@@ -75,7 +77,6 @@ export default function GroupDetail() {
       // Try to enrich with lawyer profiles, but don't block if it fails
       try {
         const userIds = circleMembers.map(m => m.user_id).filter(Boolean);
-        // Fetch profiles one by one for the members we have
         const profilePromises = userIds.map(uid =>
           base44.entities.LawyerProfile.filter({ user_id: uid }).then(r => r[0] || null).catch(() => null)
         );
@@ -94,6 +95,8 @@ export default function GroupDetail() {
       }
     },
     enabled: !!circleId && !!myMembership,
+    staleTime: 0,
+    refetchOnMount: true,
     retry: 2,
     retryDelay: 1000,
   });
