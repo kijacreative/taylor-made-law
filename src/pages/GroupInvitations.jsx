@@ -50,6 +50,24 @@ export default function GroupInvitations() {
     enabled: !!user,
   });
 
+  // Fetch inviter profiles to get full names
+  const inviterUserIds = [...new Set(invites.map(i => i.inviter_user_id).filter(Boolean))];
+  const { data: inviterProfiles = [] } = useQuery({
+    queryKey: ['inviterProfiles', inviterUserIds.join(',')],
+    queryFn: async () => {
+      const results = await Promise.all(
+        inviterUserIds.map(uid => base44.entities.LawyerProfile.filter({ user_id: uid }).then(r => r[0] || null).catch(() => null))
+      );
+      return results.filter(Boolean);
+    },
+    enabled: inviterUserIds.length > 0,
+  });
+
+  const getInviterName = (invite) => {
+    const profile = inviterProfiles.find(p => p.user_id === invite.inviter_user_id);
+    return profile?.full_name || invite.inviter_name || 'Unknown';
+  };
+
   const handleAccept = async (invite) => {
     setActioning(a => ({ ...a, [invite.id]: 'accepting' }));
     // Call backend function to sync circle membership
@@ -128,7 +146,7 @@ export default function GroupInvitations() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-gray-900">{circle?.name || 'Legal Circle'}</h3>
-                            <p className="text-sm text-gray-500 mt-0.5">Invited by {invite.inviter_name}</p>
+                            <p className="text-sm text-gray-500 mt-0.5">Invited by {getInviterName(invite)}</p>
                             {invite.message && <p className="text-sm text-gray-600 mt-2 italic">"{invite.message}"</p>}
                             {circle?.description && <p className="text-sm text-gray-500 mt-1">{circle.description}</p>}
                           </div>
@@ -169,7 +187,7 @@ export default function GroupInvitations() {
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-medium text-gray-700">{circle?.name || 'Legal Circle'}</p>
-                            <p className="text-sm text-gray-400">From {invite.inviter_name}</p>
+                            <p className="text-sm text-gray-400">From {getInviterName(invite)}</p>
                           </div>
                           <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                             invite.status === 'accepted' ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
