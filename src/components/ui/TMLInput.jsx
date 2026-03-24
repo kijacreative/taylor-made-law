@@ -5,12 +5,11 @@ const TMLInput = React.forwardRef(function TMLInput(props, ref) {
   const { label, error, helperText, className, containerClassName, required, ...rest } = props;
   return (
     <div className={cn('space-y-1.5', containerClassName)}>
-      
-
-
-
-
-      
+      {label && (
+        <label className="block text-sm font-medium text-gray-700">
+          {label}{required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+      )}
       <input
         ref={ref}
         className={cn(
