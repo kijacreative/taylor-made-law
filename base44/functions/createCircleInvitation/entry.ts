@@ -34,7 +34,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'This attorney is already a member of this circle' }, { status: 400 });
     }
 
-    // Create the invitation using service role to bypass RLS
+    // Create the invitation
     const token = Math.random().toString(36).slice(2) + Date.now().toString(36);
     const invitation = await base44.asServiceRole.entities.LegalCircleInvitation.create({
       circle_id,
@@ -49,9 +49,9 @@ Deno.serve(async (req) => {
       expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
     });
 
-    // In-app notification (best effort)
+    // Fire-and-forget: in-app notification
     if (invitee_user_id) {
-      await base44.asServiceRole.entities.CircleNotification.create({
+      base44.asServiceRole.entities.CircleNotification.create({
         user_id: invitee_user_id,
         user_email: invitee_email,
         circle_id,
@@ -62,8 +62,8 @@ Deno.serve(async (req) => {
       }).catch(() => {});
     }
 
-    // Send email (best effort)
-    await base44.functions.invoke('sendCircleInviteEmail', {
+    // Fire-and-forget: email
+    base44.functions.invoke('sendCircleInviteEmail', {
       invitee_email,
       invitee_name,
       circle_name: circle_name || 'Legal Circle',
@@ -74,6 +74,7 @@ Deno.serve(async (req) => {
 
     return Response.json({ success: true, invitation_id: invitation.id });
   } catch (error) {
+    console.error('createCircleInvitation error:', error);
     return Response.json({ error: error.message }, { status: 500 });
   }
 });
