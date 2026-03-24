@@ -60,7 +60,7 @@ export default function GroupInvitations() {
     });
     queryClient.invalidateQueries({ queryKey: ['myInvites'] });
     queryClient.invalidateQueries({ queryKey: ['myGroupMemberships'] });
-    navigate(`${createPageUrl('GroupDetail')}?id=${invite.circle_id}`);
+    navigate(`/GroupDetail?id=${invite.circle_id}`);
   };
 
   const handleDecline = async (invite) => {
