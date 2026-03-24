@@ -21,6 +21,7 @@ function CardForm({ onSuccess }) {
   const stripe = useStripe();
   const elements = useElements();
   const [clientSecret, setClientSecret] = useState('');
+  const [resolvedStripe, setResolvedStripe] = useState(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
@@ -31,6 +32,9 @@ function CardForm({ onSuccess }) {
       const res = await base44.functions.invoke('createSetupIntent', {});
       if (res.data?.client_secret) {
         setClientSecret(res.data.client_secret);
+        if (res.data.publishable_key) {
+          setResolvedStripe(await loadStripe(res.data.publishable_key));
+        }
       } else {
         setError(res.data?.error || 'Failed to initialize payment setup.');
       }
