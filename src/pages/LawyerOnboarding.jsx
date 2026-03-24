@@ -18,12 +18,11 @@ import TMLButton from '@/components/ui/TMLButton';
 import TMLInput from '@/components/ui/TMLInput';
 import TMLTextarea from '@/components/ui/TMLTextarea';
 import { Checkbox } from '@/components/ui/checkbox';
-import StripeCardSetup from '@/components/onboarding/StripeCardSetup';
+
 
 const STEPS = [
   { number: 1, label: 'Professional Profile', icon: User },
   { number: 2, label: 'Referral Agreement', icon: FileText },
-  { number: 3, label: 'Billing Setup', icon: CreditCard },
 ];
 
 export default function LawyerOnboarding() {
@@ -38,8 +37,7 @@ export default function LawyerOnboarding() {
   const [headshotUrl, setHeadshotUrl] = useState('');
   const [headshotUploading, setHeadshotUploading] = useState(false);
   const [referralAccepted, setReferralAccepted] = useState(false);
-  const [paymentMethodId, setPaymentMethodId] = useState('');
-  const [cardSaved, setCardSaved] = useState(false);
+
 
   useEffect(() => {
     const init = async () => {
@@ -98,9 +96,6 @@ export default function LawyerOnboarding() {
         profile_photo_url: headshotUrl || undefined,
         referral_agreement_accepted: true,
         referral_agreement_accepted_at: now,
-        billing_stripe_payment_method_id: paymentMethodId,
-        billing_status: 'card_on_file',
-        billing_collected_at: now,
         profile_completed_at: now,
       });
 
@@ -146,7 +141,6 @@ export default function LawyerOnboarding() {
 
   const canProceedStep1 = profile.bio.trim().length >= 20;
   const canProceedStep2 = referralAccepted;
-  const canProceedStep3 = cardSaved;
 
   if (loading) {
     return (
@@ -363,21 +357,21 @@ export default function LawyerOnboarding() {
                   </TMLButton>
                 ) : <div />}
 
-                {step < 3 && (
+                {step < 2 && (
                   <TMLButton
                     variant="primary"
                     onClick={() => setStep(step + 1)}
-                    disabled={(step === 1 && !canProceedStep1) || (step === 2 && !canProceedStep2)}
+                    disabled={step === 1 && !canProceedStep1}
                   >
                     Continue <ArrowRight className="w-4 h-4 ml-1" />
                   </TMLButton>
                 )}
-                {step === 3 && (
+                {step === 2 && (
                   <TMLButton
                     variant="primary"
                     loading={saving}
                     onClick={handleComplete}
-                    disabled={!canProceedStep3}
+                    disabled={!canProceedStep2}
                   >
                     Complete Setup <CheckCircle2 className="w-4 h-4 ml-1" />
                   </TMLButton>
