@@ -112,7 +112,7 @@ function CardForm({ onSuccess }) {
 }
 
 export default function StripeCardSetup({ publishableKey, onSuccess }) {
-  const [stripePromise] = useState(() => loadStripe(publishableKey));
+  const [stripePromise] = useState(() => publishableKey ? loadStripe(publishableKey) : null);
 
   return (
     <Elements stripe={stripePromise}>
