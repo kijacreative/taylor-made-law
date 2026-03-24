@@ -102,9 +102,12 @@ export default function DirectMessageThreadPage() {
     if (res.data?.error) { navigate('/app/messages'); return; }
     setThreadData(res.data?.thread);
     const participant = res.data?.other_participant;
-    // Fetch full name from LawyerProfile
+    // Fetch full name from LawyerProfile and attach directly to participant
     if (participant?.user_id) {
-      await loadUserFullName(participant.user_id);
+      try {
+        const profiles = await base44.entities.LawyerProfile.filter({ user_id: participant.user_id });
+        if (profiles[0]?.full_name) participant.resolved_full_name = profiles[0].full_name;
+      } catch {}
     }
     setOtherParticipant(participant);
     const msgs = res.data?.messages || [];
