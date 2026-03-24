@@ -49,21 +49,21 @@ export default function GroupDetail() {
   });
   const lawyerProfile = profiles[0] || null;
 
-  const { data: circles = [], isLoading: circleLoading } = useQuery({
+  const { data: circles = [], isLoading: circleLoading, isFetching: circleFetching } = useQuery({
     queryKey: ['legalCircle', circleId],
     queryFn: () => base44.entities.LegalCircle.filter({ id: circleId }),
     enabled: !!circleId,
-    retry: 5,
-    retryDelay: 1000,
+    retry: 8,
+    retryDelay: 1500,
   });
   const circle = circles[0] || null;
 
-  const { data: myMemberships = [], isLoading: membershipLoading, isError: membershipError } = useQuery({
+  const { data: myMemberships = [], isLoading: membershipLoading, isFetching: membershipFetching } = useQuery({
     queryKey: ['myCircleMembership', circleId, user?.id],
     queryFn: () => base44.entities.LegalCircleMember.filter({ circle_id: circleId, user_id: user.id, status: 'active' }),
     enabled: !!circleId && !!user?.id,
-    retry: 2,
-    retryDelay: 1000,
+    retry: 8,
+    retryDelay: 1500,
   });
   const myMembership = myMemberships[0] || null;
   const isAdmin = myMembership?.role === 'admin' || myMembership?.role === 'moderator';
@@ -104,7 +104,10 @@ export default function GroupDetail() {
     navigate(createPageUrl('Groups'));
   };
 
-  if (loading || circleLoading || membershipLoading) {
+  const stillLoading = loading || circleLoading || membershipLoading ||
+    (!circle && circleFetching) || (!myMembership && membershipFetching);
+
+  if (stillLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" />
@@ -112,7 +115,7 @@ export default function GroupDetail() {
     );
   }
 
-  if (!circle || !myMembership) {
+  if (!circle || (!myMembership && !membershipFetching)) {
     return (
       <div className="min-h-screen bg-gray-50">
         <AppSidebar user={user} lawyerProfile={lawyerProfile} />
