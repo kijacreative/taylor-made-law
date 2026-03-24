@@ -71,9 +71,8 @@ export default function NotificationBell({ user, collapsed }) {
   const handleNotifClick = async (notif) => {
     await markRead(notif);
     setOpen(false);
-    if (notif.link) {
-      navigate(notif.link);
-    }
+    const link = notif.link || (notif.type === 'invite' ? '/GroupInvitations' : null);
+    if (link) navigate(link);
   };
 
   const formatTime = (dateStr) => {
