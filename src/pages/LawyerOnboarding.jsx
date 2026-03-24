@@ -39,7 +39,6 @@ export default function LawyerOnboarding() {
   const [headshotUploading, setHeadshotUploading] = useState(false);
   const [referralAccepted, setReferralAccepted] = useState(false);
   const [paymentMethodId, setPaymentMethodId] = useState('');
-  const [stripePublishableKey, setStripePublishableKey] = useState('');
   const [cardSaved, setCardSaved] = useState(false);
 
   useEffect(() => {
@@ -342,7 +341,6 @@ export default function LawyerOnboarding() {
                     </div>
                   ) : (
                     <StripeCardSetup
-                      publishableKey={stripePublishableKey}
                       onSuccess={(pmId) => { setPaymentMethodId(pmId); setCardSaved(true); }}
                     />
                   )}
