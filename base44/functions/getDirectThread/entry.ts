@@ -16,7 +16,10 @@ Deno.serve(async (req) => {
     if (!thread) return Response.json({ error: 'Thread not found' }, { status: 404 });
 
     const isAdmin = user.role === 'admin';
-    if (!isAdmin && !thread.participant_user_ids?.includes(user.id)) {
+    const isParticipant =
+      thread.participant_user_ids?.includes(user.id) ||
+      thread.participant_emails?.includes(user.email);
+    if (!isAdmin && !isParticipant) {
       return Response.json({ error: 'Access denied' }, { status: 403 });
     }
 
