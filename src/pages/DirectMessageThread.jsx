@@ -277,9 +277,7 @@ export default function DirectMessageThreadPage() {
     );
   }
 
-  const otherName = otherParticipant?.resolved_full_name || (otherParticipant?.user_id && userFullNames[otherParticipant.user_id])
-    ? userFullNames[otherParticipant.user_id]
-    : otherParticipant?.user_name || 'Attorney';
+  const otherName = otherParticipant?.resolved_full_name || userFullNames[otherParticipant?.user_id] || 'Attorney';
 
   return (
     <div className="min-h-screen bg-gray-50">
