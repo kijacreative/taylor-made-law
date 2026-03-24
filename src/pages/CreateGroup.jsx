@@ -17,7 +17,7 @@ export default function CreateGroup() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -53,7 +53,7 @@ export default function CreateGroup() {
   const { data: profiles = [] } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
     queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
-    enabled: !!user?.id,
+    enabled: !!user?.id
   });
 
   const lawyerProfile = profiles[0] || null;
@@ -64,9 +64,9 @@ export default function CreateGroup() {
 
     try {
       // Generate slug
-      const slug = formData.name.toLowerCase()
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/(^-|-$)/g, '');
+      const slug = formData.name.toLowerCase().
+      replace(/[^a-z0-9]+/g, '-').
+      replace(/(^-|-$)/g, '');
 
       // Create circle
       const circle = await base44.entities.LegalCircle.create({
@@ -80,7 +80,7 @@ export default function CreateGroup() {
         member_can_submit_cases: formData.member_can_submit_cases,
         member_can_accept_cases: formData.member_can_accept_cases,
         case_approval_required: formData.case_approval_required,
-        tags: formData.tags ? formData.tags.split(',').map(t => t.trim()) : [],
+        tags: formData.tags ? formData.tags.split(',').map((t) => t.trim()) : [],
         member_count: 1,
         is_active: true
       });
@@ -113,8 +113,8 @@ export default function CreateGroup() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" />
-      </div>
-    );
+      </div>);
+
   }
 
   return (
@@ -142,23 +142,23 @@ export default function CreateGroup() {
                     required
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g., California Personal Injury Network"
-                  />
+                    placeholder="e.g., California Personal Injury Network" />
+                  
                   
                   <TMLTextarea
                     label="Description"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Describe the purpose and focus of this circle..."
-                    rows={4}
-                  />
+                    rows={4} />
+                  
 
                   <TMLInput
                     label="Tags (comma-separated)"
                     value={formData.tags}
                     onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                    placeholder="e.g., Personal Injury, California, Mass Torts"
-                  />
+                    placeholder="e.g., Personal Injury, California, Mass Torts" />
+                  
                 </TMLCardContent>
               </TMLCard>
 
@@ -172,21 +172,21 @@ export default function CreateGroup() {
                     value={formData.group_type}
                     onChange={(e) => setFormData({ ...formData, group_type: e.target.value })}
                     options={[
-                      { value: 'private', label: 'Private' },
-                      { value: 'firm_based', label: 'Firm-Based' },
-                      { value: 'peer_based', label: 'Peer Network' }
-                    ]}
-                  />
+                    { value: 'private', label: 'Private' },
+                    { value: 'firm_based', label: 'Firm-Based' },
+                    { value: 'peer_based', label: 'Peer Network' }]
+                    } />
+                  
 
                   <TMLSelect
                     label="Visibility"
                     value={formData.visibility}
                     onChange={(e) => setFormData({ ...formData, visibility: e.target.value })}
                     options={[
-                      { value: 'hidden', label: 'Hidden - Invite only, not discoverable' },
-                      { value: 'discoverable', label: 'Discoverable - Others can find it, but need invite to join' }
-                    ]}
-                  />
+                    { value: 'hidden', label: 'Hidden - Invite only, not discoverable' },
+                    { value: 'discoverable', label: 'Discoverable - Others can find it, but need invite to join' }]
+                    } />
+                  
 
                   <div className="space-y-3">
                     <label className="flex items-center gap-3 cursor-pointer">
@@ -194,8 +194,8 @@ export default function CreateGroup() {
                         type="checkbox"
                         checked={formData.case_sharing_enabled}
                         onChange={(e) => setFormData({ ...formData, case_sharing_enabled: e.target.checked })}
-                        className="w-4 h-4 text-[#3a164d] rounded focus:ring-[#3a164d]"
-                      />
+                        className="w-4 h-4 text-[#3a164d] rounded focus:ring-[#3a164d]" />
+                      
                       <div>
                         <p className="font-medium text-gray-900">Enable Case Sharing</p>
                         <p className="text-sm text-gray-600">Allow members to share and accept cases within this circle</p>
@@ -207,8 +207,8 @@ export default function CreateGroup() {
                         type="checkbox"
                         checked={formData.require_admin_approval}
                         onChange={(e) => setFormData({ ...formData, require_admin_approval: e.target.checked })}
-                        className="w-4 h-4 text-[#3a164d] rounded focus:ring-[#3a164d]"
-                      />
+                        className="w-4 h-4 text-[#3a164d] rounded focus:ring-[#3a164d]" />
+                      
                       <div>
                         <p className="font-medium text-gray-900">Require Admin Approval</p>
                         <p className="text-sm text-gray-600">New member requests must be approved by admins</p>
@@ -218,19 +218,19 @@ export default function CreateGroup() {
                 </TMLCardContent>
               </TMLCard>
 
-              {formData.case_sharing_enabled && (
-                <TMLCard>
+              {formData.case_sharing_enabled &&
+              <TMLCard>
                   <TMLCardHeader>
                     <TMLCardTitle>Case Sharing Permissions</TMLCardTitle>
                   </TMLCardHeader>
                   <TMLCardContent className="space-y-3">
                     <label className="flex items-center gap-3 cursor-pointer">
                       <input
-                        type="checkbox"
-                        checked={formData.member_can_submit_cases}
-                        onChange={(e) => setFormData({ ...formData, member_can_submit_cases: e.target.checked })}
-                        className="w-4 h-4 text-[#3a164d] rounded focus:ring-[#3a164d]"
-                      />
+                      type="checkbox"
+                      checked={formData.member_can_submit_cases}
+                      onChange={(e) => setFormData({ ...formData, member_can_submit_cases: e.target.checked })}
+                      className="w-4 h-4 text-[#3a164d] rounded focus:ring-[#3a164d]" />
+                    
                       <div>
                         <p className="font-medium text-gray-900">Members Can Submit Cases</p>
                         <p className="text-sm text-gray-600">Allow all members to submit cases to the group</p>
@@ -239,32 +239,32 @@ export default function CreateGroup() {
 
                     <label className="flex items-center gap-3 cursor-pointer">
                       <input
-                        type="checkbox"
-                        checked={formData.member_can_accept_cases}
-                        onChange={(e) => setFormData({ ...formData, member_can_accept_cases: e.target.checked })}
-                        className="w-4 h-4 text-[#3a164d] rounded focus:ring-[#3a164d]"
-                      />
+                      type="checkbox"
+                      checked={formData.member_can_accept_cases}
+                      onChange={(e) => setFormData({ ...formData, member_can_accept_cases: e.target.checked })}
+                      className="w-4 h-4 text-[#3a164d] rounded focus:ring-[#3a164d]" />
+                    
                       <div>
                         <p className="font-medium text-gray-900">Members Can Accept Cases</p>
                         <p className="text-sm text-gray-600">Allow all members to accept available cases</p>
                       </div>
                     </label>
 
-                    <label className="flex items-center gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.case_approval_required}
-                        onChange={(e) => setFormData({ ...formData, case_approval_required: e.target.checked })}
-                        className="w-4 h-4 text-[#3a164d] rounded focus:ring-[#3a164d]"
-                      />
-                      <div>
-                        <p className="font-medium text-gray-900">Case Approval Required</p>
-                        <p className="text-sm text-gray-600">Submitted cases need admin approval before being visible</p>
-                      </div>
-                    </label>
+                    
+
+
+
+
+
+
+
+
+
+
+                  
                   </TMLCardContent>
                 </TMLCard>
-              )}
+              }
 
               <div className="flex justify-end gap-3">
                 <Link to={createPageUrl('Groups')}>
@@ -281,6 +281,6 @@ export default function CreateGroup() {
           </form>
         </div>
       </main>
-    </div>
-  );
+    </div>);
+
 }
