@@ -277,7 +277,7 @@ export default function DirectMessageThreadPage() {
     );
   }
 
-  const otherName = (otherParticipant?.user_id && userFullNames[otherParticipant.user_id])
+  const otherName = otherParticipant?.resolved_full_name || (otherParticipant?.user_id && userFullNames[otherParticipant.user_id])
     ? userFullNames[otherParticipant.user_id]
     : otherParticipant?.user_name || 'Attorney';
 
