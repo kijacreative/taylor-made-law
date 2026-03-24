@@ -384,7 +384,6 @@ export default function LawyerSettings() {
   const tabs = [
   { id: 'account', label: 'Account', icon: User },
   { id: 'profile', label: 'Profile', icon: Building2 },
-  { id: 'application', label: 'Application', icon: FileText },
   { id: 'agreement', label: 'Referral Agreement', icon: Shield },
   { id: 'billing', label: 'Billing', icon: CreditCard }];
 
