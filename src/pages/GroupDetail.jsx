@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
@@ -49,7 +49,7 @@ export default function GroupDetail() {
   });
   const lawyerProfile = profiles[0] || null;
 
-  const { data: circles = [], isLoading: circleLoading, isFetching: circleFetching } = useQuery({
+  const { data: circles = [], isLoading: circleLoading, isFetching: circleFetching, refetch: refetchCircle } = useQuery({
     queryKey: ['legalCircle', circleId],
     queryFn: () => base44.entities.LegalCircle.filter({ id: circleId }),
     enabled: !!circleId,
@@ -101,6 +101,15 @@ export default function GroupDetail() {
     retryDelay: 1000,
   });
 
+  // When membership loads (e.g. right after accepting an invite), refetch the circle
+  // because the RLS `is_group_member` condition may not have propagated yet
+  useEffect(() => {
+    if (myMembership && !circle && !circleLoading) {
+      const timer = setTimeout(() => refetchCircle(), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [myMembership?.id]);
+
   const handleLeave = async () => {
     if (!window.confirm('Are you sure you want to leave this circle?')) return;
     await base44.entities.LegalCircleMember.update(myMembership.id, { status: 'removed' });
@@ -118,7 +127,7 @@ export default function GroupDetail() {
     );
   }
 
-  if (!circle || (!myMembership && !membershipFetching)) {
+  if (!myMembership && !membershipFetching && !membershipLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
         <AppSidebar user={user} lawyerProfile={lawyerProfile} />

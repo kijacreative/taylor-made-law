@@ -18,8 +18,8 @@ Deno.serve(async (req) => {
       accepted_at: new Date().toISOString()
     });
 
-    // Add user as circle member
-    await base44.entities.LegalCircleMember.create({
+    // Add user as circle member — use service role to bypass is_group_member RLS
+    await base44.asServiceRole.entities.LegalCircleMember.create({
       circle_id,
       user_id: user.id,
       user_email: user.email,

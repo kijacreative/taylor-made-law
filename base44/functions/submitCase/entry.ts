@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
         status: 'pending_approval'
       };
 
-      const result = await base44.entities.LegalCircleCase.create(caseData);
+      const result = await base44.asServiceRole.entities.LegalCircleCase.create(caseData);
       return Response.json({ success: true, case: result });
     } else {
       // Submit to main Case exchange

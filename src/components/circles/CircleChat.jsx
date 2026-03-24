@@ -72,6 +72,8 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
    const [fileMap, setFileMap] = useState({});
    // Map of user_id -> full_name from LawyerProfile
    const [userFullNames, setUserFullNames] = useState({});
+   // Map of user_id -> profile_photo_url
+   const [userPhotos, setUserPhotos] = useState({});
    const bottomRef = useRef(null);
    const inputRef = useRef(null);
    const fileInputRef = useRef(null);
@@ -145,8 +147,12 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
 
   const loadUserFullName = async (userId) => {
     const profiles = await base44.entities.LawyerProfile.filter({ user_id: userId });
-    const fullName = profiles[0]?.full_name || 'Attorney';
+    const profile = profiles[0];
+    const fullName = profile?.full_name || 'Attorney';
     setUserFullNames(prev => ({ ...prev, [userId]: fullName }));
+    if (profile?.profile_photo_url) {
+      setUserPhotos(prev => ({ ...prev, [userId]: profile.profile_photo_url }));
+    }
   };
 
   const loadFilesForMessages = async (msgs) => {
@@ -309,8 +315,14 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
             return (
               <div key={msg.id} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''} ${msg.showHeader ? 'mt-4' : 'mt-0.5'}`}>
                 {msg.showHeader && (
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${isMe ? 'bg-[#3a164d]' : 'bg-[#a47864]'}`}>
-                    {msg.sender_name?.charAt(0)?.toUpperCase() || '?'}
+                  <div className="w-8 h-8 rounded-full shrink-0 overflow-hidden">
+                    {userPhotos[msg.sender_user_id] ? (
+                      <img src={userPhotos[msg.sender_user_id]} alt="" className="w-full h-full object-cover rounded-full" />
+                    ) : (
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold ${isMe ? 'bg-[#3a164d]' : 'bg-[#a47864]'}`}>
+                        {(isMe ? (userFullNames[user.id] || user.full_name) : userFullNames[msg.sender_user_id])?.charAt(0)?.toUpperCase() || '?'}
+                      </div>
+                    )}
                   </div>
                 )}
                 {!msg.showHeader && <div className="w-8 shrink-0" />}

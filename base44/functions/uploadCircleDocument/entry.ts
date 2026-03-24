@@ -27,9 +27,9 @@ Deno.serve(async (req) => {
 
         // Upload file
         const fileBuffer = await file.arrayBuffer();
-        const fileArray = Array.from(new Uint8Array(fileBuffer));
+        const fileBlob = new Blob([fileBuffer], { type: file.type || 'application/octet-stream' });
         
-        const uploadResponse = await base44.integrations.Core.UploadFile({ file: fileArray });
+        const uploadResponse = await base44.integrations.Core.UploadFile({ file: fileBlob });
         const fileUrl = uploadResponse.file_url;
 
         // Create document record

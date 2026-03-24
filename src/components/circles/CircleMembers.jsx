@@ -2,11 +2,21 @@ import React, { useState, useRef, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import MemberProfileModal from './MemberProfileModal';
-import { UserPlus, Shield, Trash2, Mail, Search, Loader2, CheckCircle, Users, ExternalLink, X, Clock } from 'lucide-react';
+import { UserPlus, Shield, Trash2, Mail, Search, Loader2, CheckCircle, Users, ExternalLink, X, Clock, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLBadge from '@/components/ui/TMLBadge';
 
 export default function CircleMembers({ circleId, members, user, isAdmin, circleName }) {
+  const navigate = useNavigate();
+
+  const handleDM = async (member) => {
+    if (member.user_id === user.id) return;
+    const res = await base44.functions.invoke('startDirectThread', { recipient_user_id: member.user_id });
+    if (res.data?.thread_id) {
+      navigate(`/app/messages/${res.data.thread_id}`);
+    }
+  };
   const [showInvite, setShowInvite] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
@@ -358,8 +368,13 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
                 </div>
                 <p className="text-sm text-gray-500 truncate">{member.user_email}</p>
               </div>
+              <div className="flex gap-1" onClick={e => e.stopPropagation()}>
+                {!isMe && (
+                  <button onClick={() => handleDM(member)} className="p-1.5 rounded-lg text-gray-400 hover:text-[#3a164d] hover:bg-[#3a164d]/5 transition-colors" title="Send direct message">
+                    <MessageCircle className="w-4 h-4" />
+                  </button>
+                )}
               {isAdmin && !isMe && (
-                <div className="flex gap-1" onClick={e => e.stopPropagation()}>
                   {!memberIsAdmin && (
                     <button onClick={() => handlePromote(member)} className="p-1.5 rounded-lg text-gray-400 hover:text-[#3a164d] hover:bg-[#3a164d]/5 transition-colors" title="Promote to admin">
                       <Shield className="w-4 h-4" />

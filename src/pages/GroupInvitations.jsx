@@ -78,6 +78,8 @@ export default function GroupInvitations() {
     });
     queryClient.invalidateQueries({ queryKey: ['myInvites'] });
     queryClient.invalidateQueries({ queryKey: ['myGroupMemberships'] });
+    // Small delay to let membership propagate before loading circle page
+    await new Promise(r => setTimeout(r, 600));
     navigate(`/GroupDetail?id=${invite.circle_id}`);
   };
 
