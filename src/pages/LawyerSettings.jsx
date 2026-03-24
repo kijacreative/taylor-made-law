@@ -182,8 +182,21 @@ export default function LawyerSettings() {
         years_experience: lawyerProfile.years_experience?.toString() || '',
         profile_photo_url: lawyerProfile.profile_photo_url || ''
       });
+    } else if (lawyerApplication && !profileLoading) {
+      // No profile yet — seed from application data so the form is prefilled
+      setProfileForm(prev => ({
+        ...prev,
+        full_name: prev.full_name || lawyerApplication.full_name || '',
+        firm_name: prev.firm_name || lawyerApplication.firm_name || '',
+        bar_numbers: (Object.keys(prev.bar_numbers || {}).length > 0 ? prev.bar_numbers : lawyerApplication.bar_numbers) || {},
+        phone: prev.phone || lawyerApplication.phone || '',
+        bio: prev.bio || lawyerApplication.bio || '',
+        states_licensed: prev.states_licensed?.length > 0 ? prev.states_licensed : lawyerApplication.states_licensed || [],
+        practice_areas: prev.practice_areas?.length > 0 ? prev.practice_areas : lawyerApplication.practice_areas || [],
+        years_experience: prev.years_experience || lawyerApplication.years_experience?.toString() || '',
+      }));
     }
-  }, [lawyerProfile]);
+  }, [lawyerProfile, lawyerApplication, profileLoading]);
 
   const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];

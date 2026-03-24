@@ -127,7 +127,7 @@ export default function GroupDetail() {
     );
   }
 
-  if (!myMembership && !membershipFetching && !membershipLoading) {
+  if ((!circle && !circleLoading && !circleFetching) || (!myMembership && !membershipFetching && !membershipLoading)) {
     return (
       <div className="min-h-screen bg-gray-50">
         <AppSidebar user={user} lawyerProfile={lawyerProfile} />
