@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation, Navigate, Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { listPublishedPosts } from '@/services/content';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { Calendar, Clock, ArrowLeft, FileText, Download, User, Tag } from 'lucide-react';
@@ -15,7 +15,7 @@ export default function PublicBlogDetail() {
   const { data: post, isLoading, error } = useQuery({
     queryKey: ['publicBlogPost', slug],
     queryFn: async () => {
-      const posts = await base44.entities.BlogPost.filter({ status: 'published' });
+      const posts = await listPublishedPosts();
       const found = posts.find(p => p.slug === slug || p.id === slug);
       if (!found) throw new Error('Post not found');
       return found;

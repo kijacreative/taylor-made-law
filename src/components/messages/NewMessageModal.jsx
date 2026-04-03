@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { searchNetworkAttorneys } from '@/services/lawyers';
 import { Search, X, Loader2, User } from 'lucide-react';
 
 export default function NewMessageModal({ currentUserId, onSelect, onClose }) {
@@ -14,7 +14,7 @@ export default function NewMessageModal({ currentUserId, onSelect, onClose }) {
     if (q.trim().length < 2) { setResults([]); return; }
     setSearching(true);
     try {
-      const res = await base44.functions.invoke('searchNetworkAttorneys', { query: q });
+      const res = await searchNetworkAttorneys(q);
       setResults(res.data?.results || []);
     } catch {
       setResults([]);

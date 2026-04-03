@@ -8,7 +8,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { isAuthenticated, me, logout, updateMe, getProfile } from '@/services/auth';
+import { createProfile, updateProfile } from '@/services/lawyers';
+import { createAuditLog, createConsentLog } from '@/services/admin';
+import { uploadFile } from '@/services/storage';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2, AlertCircle, Loader2, ArrowRight, ArrowLeft,
@@ -42,11 +45,11 @@ export default function LawyerOnboarding() {
   useEffect(() => {
     const init = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
+        const isAuth = await isAuthenticated();
         if (!isAuth) { navigate('/login'); return; }
-        const userData = await base44.auth.me();
+        const userData = await me();
         if (userData.user_status === 'disabled') {
-          await base44.auth.logout();
+          await logout();
           navigate('/login');
           return;
         }
@@ -61,9 +64,9 @@ export default function LawyerOnboarding() {
         // Pre-fill bio from LawyerProfile (which stores bio from signup application)
         let prefillBio = userData.bio || '';
         try {
-          const profiles = await base44.entities.LawyerProfile.filter({ user_id: userData.id });
-          if (profiles && profiles.length > 0 && profiles[0].bio) {
-            prefillBio = profiles[0].bio;
+          const prefillProfile = await getProfile(userData.id);
+          if (prefillProfile && prefillProfile.bio) {
+            prefillBio = prefillProfile.bio;
           }
         } catch {}
         setProfile({
@@ -89,7 +92,7 @@ export default function LawyerOnboarding() {
       const now = new Date().toISOString();
 
       // Update User entity with all onboarding data + mark complete
-      await base44.auth.updateMe({
+      await updateMe({
         bio: profile.bio,
         website: profile.website,
         office_address: profile.office_address,
@@ -100,7 +103,8 @@ export default function LawyerOnboarding() {
       });
 
       // Upsert LawyerProfile with referral agreement and base data
-      const profiles = await base44.entities.LawyerProfile.filter({ user_id: user.id }).catch(() => []);
+      const existingProfile = await getProfile(user.id).catch(() => null);
+      const profiles = existingProfile ? [existingProfile] : [];
       const profileData = {
         user_id: user.id,
         firm_name: user.firm_name || '',
@@ -116,13 +120,13 @@ export default function LawyerOnboarding() {
         referral_agreement_accepted_at: now,
       };
       if (profiles.length > 0) {
-        await base44.entities.LawyerProfile.update(profiles[0].id, profileData).catch(() => {});
+        await updateProfile(profiles[0].id, profileData).catch(() => {});
       } else {
-        await base44.entities.LawyerProfile.create(profileData).catch(() => {});
+        await createProfile(profileData).catch(() => {});
       }
 
       // Audit log
-      await base44.entities.AuditLog.create({
+      await createAuditLog({
         entity_type: 'User',
         entity_id: user.id,
         action: 'lawyer_onboarding_completed',
@@ -160,7 +164,7 @@ export default function LawyerOnboarding() {
           className="h-8"
         />
         <button
-          onClick={() => base44.auth.logout()}
+          onClick={() => logout()}
           className="text-sm text-gray-400 hover:text-gray-600 transition-colors"
         >
           Sign out
@@ -239,7 +243,7 @@ export default function LawyerOnboarding() {
                             if (!file) return;
                             setHeadshotUploading(true);
                             try {
-                              const { file_url } = await base44.integrations.Core.UploadFile({ file });
+                              const { file_url } = await uploadFile(file);
                               setHeadshotUrl(file_url);
                             } catch {
                               // silently fail — headshot is optional

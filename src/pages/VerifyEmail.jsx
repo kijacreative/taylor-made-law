@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { verifyOtp, resendOtp } from '@/services/auth';
 import { motion } from 'framer-motion';
 import { Mail, CheckCircle2, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
@@ -37,7 +37,7 @@ export default function VerifyEmail() {
 
     setLoading(true);
     try {
-      await base44.auth.verifyOtp({ email: email.trim(), otpCode: code.trim() });
+      await verifyOtp({ email: email.trim(), otpCode: code.trim() });
       setSuccess(true);
       setTimeout(() => navigate('/login?activated=1', { replace: true }), 1500);
     } catch (err) {
@@ -64,7 +64,7 @@ export default function VerifyEmail() {
     setError('');
     setResentMsg('');
     try {
-      await base44.auth.resendOtp(email.trim());
+      await resendOtp(email.trim());
       setResentMsg(`A new code has been sent to ${email.trim()}.`);
     } catch {
       setError('Failed to resend. Please contact support@taylormadelaw.com.');

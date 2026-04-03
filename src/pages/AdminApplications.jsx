@@ -7,7 +7,8 @@
  */
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { isAuthenticated, me } from '@/services/auth';
+import { listApplications, listProfiles, reviewLawyerApplication } from '@/services/lawyers';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -47,10 +48,10 @@ export default function AdminApplications() {
   const [disableReason, setDisableReason] = useState('');
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then(async (auth) => {
+    isAuthenticated().then(async (auth) => {
       if (!auth) { navigate('/login'); return; }
       try {
-        const u = await base44.auth.me();
+        const u = await me();
         if (u.role !== 'admin') { navigate('/LawyerDashboard'); return; }
         setUser(u);
       } catch { navigate('/login'); }
@@ -60,13 +61,13 @@ export default function AdminApplications() {
 
   const { data: applications = [], isLoading } = useQuery({
     queryKey: ['lawyerApplications'],
-    queryFn: () => base44.entities.LawyerApplication.list('-created_date', 100),
+    queryFn: () => listApplications('-created_date', 100),
     enabled: !!user,
   });
 
   const { data: lawyerProfiles = [] } = useQuery({
     queryKey: ['lawyerProfilesForApps'],
-    queryFn: () => base44.entities.LawyerProfile.list('-created_date', 200),
+    queryFn: () => listProfiles('-created_date', 200),
     enabled: !!user,
   });
 
@@ -97,7 +98,7 @@ export default function AdminApplications() {
   const runAction = async (action, appId, payload = {}) => {
     setActionLoading(prev => ({ ...prev, [appId]: action }));
     try {
-      const res = await base44.functions.invoke('reviewLawyerApplication', { action, application_id: appId, ...payload });
+      const res = await reviewLawyerApplication({ action, application_id: appId, ...payload });
       if (!res.data?.success) throw new Error(res.data?.error || 'Action failed');
       queryClient.invalidateQueries(['lawyerApplications']);
     } finally {

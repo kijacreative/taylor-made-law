@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { getCasesForLawyer } from '@/services/cases';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -41,13 +42,11 @@ export default function CaseExchange() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('LawyerLogin')); return; }
-        const userData = await base44.auth.me();
+        const userData = await getCurrentUser();
+        if (!userData) { navigate(createPageUrl('LawyerLogin')); return; }
         if (userData.role === 'admin') { navigate(createPageUrl('AdminDashboard')); return; }
         setUser(userData);
-        const profiles = await base44.entities.LawyerProfile.filter({ user_id: userData.id });
-        setLawyerProfile(profiles[0] || null);
+        setLawyerProfile(await getProfile(userData.id));
       } catch { navigate(createPageUrl('Home')); }
       finally { setAuthLoading(false); }
     };
@@ -66,7 +65,7 @@ export default function CaseExchange() {
   const { data: caseData, isLoading: casesLoading } = useQuery({
     queryKey: ['casesForLawyer', user?.id],
     queryFn: async () => {
-      const res = await base44.functions.invoke('getCasesForLawyer', {});
+      const res = await getCasesForLawyer();
       return res.data;
     },
     enabled: !!user,

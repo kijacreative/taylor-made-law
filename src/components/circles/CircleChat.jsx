@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { getProfileByUserId } from '@/services/lawyers';
+import { subscribeCircleMessages, filterCircleMessages, createCircleMessage, updateCircleMessage, filterCircleFiles, uploadCircleFile, notifyCircleMessage } from '@/services/circles';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Send, Paperclip, AlertTriangle, Trash2, Loader2,
@@ -89,7 +90,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
   useEffect(() => {
     loadMessages();
     // Stable subscription — no userFullNames in deps, uses ref instead
-    const unsubscribe = base44.entities.CircleMessage.subscribe((event) => {
+    const unsubscribe = subscribeCircleMessages((event) => {
       if (event.data?.circle_id === circleId) {
         if (event.type === 'create') {
           setMessages(prev => {
@@ -125,7 +126,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
 
   const loadMessages = async () => {
     setLoading(true);
-    const msgs = await base44.entities.CircleMessage.filter(
+    const msgs = await filterCircleMessages(
       { circle_id: circleId },
       'created_date',
       100
@@ -146,8 +147,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
   };
 
   const loadUserFullName = async (userId) => {
-    const profiles = await base44.entities.LawyerProfile.filter({ user_id: userId });
-    const profile = profiles[0];
+    const profile = await getProfileByUserId(userId);
     const fullName = profile?.full_name || 'Attorney';
     setUserFullNames(prev => ({ ...prev, [userId]: fullName }));
     if (profile?.profile_photo_url) {
@@ -158,7 +158,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
   const loadFilesForMessages = async (msgs) => {
     const msgIds = msgs.map(m => m.id);
     // Fetch all CircleFiles for this circle (filter by message_id)
-    const files = await base44.entities.CircleFile.filter(
+    const files = await filterCircleFiles(
       { circle_id: circleId, is_deleted: false },
       'created_date',
       500
@@ -205,7 +205,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
     setPendingFiles([]);
 
     // Create message first
-    const msg = await base44.entities.CircleMessage.create({
+    const msg = await createCircleMessage({
       circle_id: circleId,
       sender_user_id: user.id,
       sender_email: user.email,
@@ -223,7 +223,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
           fd.append('file', pending.file);
           fd.append('circle_id', circleId);
           fd.append('message_id', msg.id);
-          const res = await base44.functions.invoke('uploadCircleFile', fd);
+          const res = await uploadCircleFile(fd);
           if (res.data?.file) {
             uploadedFileIds.push(res.data.file.id);
             uploadedFiles.push(res.data.file);
@@ -234,7 +234,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
       }
       // Update message with file IDs
       if (uploadedFileIds.length > 0) {
-        await base44.entities.CircleMessage.update(msg.id, {
+        await updateCircleMessage(msg.id, {
           attachment_file_ids: uploadedFileIds
         });
       }
@@ -251,7 +251,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
 
     // Notify other members (fire and forget)
     if (text) {
-      base44.functions.invoke('notifyCircleMessage', {
+      notifyCircleMessage({
         circle_id: circleId,
         message_text: text,
         circle_name: circleName || 'Legal Circle'
@@ -264,7 +264,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
 
   const handleDelete = async (msg) => {
     if (!window.confirm('Remove this message?')) return;
-    await base44.entities.CircleMessage.update(msg.id, {
+    await updateCircleMessage(msg.id, {
       is_deleted: true,
       deleted_by: user.email
     });

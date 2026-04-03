@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { filterContentPosts } from '@/services/content';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -37,12 +38,11 @@ export default function Content() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
+        const userData = await getCurrentUser();
+        if (!userData) {
           navigate(createPageUrl('Home'));
           return;
         }
-        const userData = await base44.auth.me();
         setUser(userData);
       } catch (e) {
         navigate(createPageUrl('Home'));
@@ -56,7 +56,7 @@ export default function Content() {
   // Get lawyer profile
   const { data: profiles = [] } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
+    queryFn: () => getProfile(user.id).then(p => p ? [p] : []),
     enabled: !!user?.id,
   });
 
@@ -65,7 +65,7 @@ export default function Content() {
   // Get published content
   const { data: posts = [], isLoading: postsLoading } = useQuery({
     queryKey: ['contentPosts'],
-    queryFn: () => base44.entities.ContentPost.filter({ is_published: true }, filters.sort),
+    queryFn: () => filterContentPosts({ is_published: true }, filters.sort),
     enabled: !!user,
   });
 

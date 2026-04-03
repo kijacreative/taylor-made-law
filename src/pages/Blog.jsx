@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { listPublishedPosts } from '@/services/content';
 import { useQuery } from '@tanstack/react-query';
 import { Search, BookOpen, Loader2, X, Calendar, Clock, ArrowRight, FileText } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
@@ -80,7 +80,7 @@ export default function Blog() {
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['publicBlogPosts'],
-    queryFn: () => base44.entities.BlogPost.filter({ status: 'published' }, '-published_at'),
+    queryFn: () => listPublishedPosts(),
   });
 
   const isWhitePaper = section === 'whitepapers';

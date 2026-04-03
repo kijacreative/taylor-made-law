@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { filterMassTorts } from '@/services/content';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -39,12 +40,11 @@ export default function MassTorts() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
+        const userData = await getCurrentUser();
+        if (!userData) {
           navigate(createPageUrl('Home'));
           return;
         }
-        const userData = await base44.auth.me();
         setUser(userData);
       } catch (e) {
         navigate(createPageUrl('Home'));
@@ -58,7 +58,7 @@ export default function MassTorts() {
   // Get lawyer profile
   const { data: profiles = [] } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
+    queryFn: () => getProfile(user.id).then(p => p ? [p] : []),
     enabled: !!user?.id,
   });
 
@@ -67,7 +67,7 @@ export default function MassTorts() {
   // Get published mass torts
   const { data: massTorts = [], isLoading: massToursLoading } = useQuery({
     queryKey: ['massTorts'],
-    queryFn: () => base44.entities.MassTort.filter({ is_published: true }, filters.sort),
+    queryFn: () => filterMassTorts({ is_published: true }, filters.sort),
     enabled: !!user,
   });
 

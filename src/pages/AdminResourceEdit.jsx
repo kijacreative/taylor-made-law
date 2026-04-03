@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { me as getMe } from '@/services/auth';
+import { filterResources, createResource, updateResource } from '@/services/content';
+import { uploadFile } from '@/services/storage';
 import { ArrowLeft, Upload, Link2, Loader2, Star, X, Plus, FileDown } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 
@@ -44,12 +46,12 @@ export default function AdminResourceEdit() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get('id');
-    base44.auth.me().then(async u => {
+    getMe().then(async u => {
       if (!u || u.role !== 'admin') { navigate(createPageUrl('Home')); return; }
       setUser(u);
       if (id) {
         setEditingId(id);
-        const items = await base44.entities.Resource.filter({ id });
+        const items = await filterResources({ id });
         if (items?.[0]) setForm(f => ({ ...f, ...items[0] }));
       }
       setLoading(false);
@@ -65,7 +67,7 @@ export default function AdminResourceEdit() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await uploadFile(file);
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
     setForm(f => ({
       ...f, file_url,
@@ -80,7 +82,7 @@ export default function AdminResourceEdit() {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploadingPdf(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await uploadFile(file);
     setForm(f => ({ ...f, pdf_download_url: file_url, pdf_file_name: file.name }));
     setUploadingPdf(false);
   };
@@ -109,9 +111,9 @@ export default function AdminResourceEdit() {
     };
 
     if (editingId) {
-      await base44.entities.Resource.update(editingId, data);
+      await updateResource(editingId, data);
     } else {
-      await base44.entities.Resource.create(data);
+      await createResource(data);
     }
     setSaving(false);
     navigate(createPageUrl('AdminResources'));

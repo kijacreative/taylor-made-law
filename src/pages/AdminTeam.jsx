@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser } from '@/services/auth';
+import { listUsers, deleteUser } from '@/services/lawyers';
+import { sendEmail } from '@/services/admin';
+import { inviteAdminUser } from '@/services/admin';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -45,9 +48,8 @@ export default function AdminTeam() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('Home')); return; }
-        const userData = await base44.auth.me();
+        const userData = await getCurrentUser();
+        if (!userData) { navigate(createPageUrl('Home')); return; }
         if (userData.role !== 'admin') { navigate(createPageUrl('LawyerDashboard')); return; }
         setAuthUser(userData);
       } catch { navigate(createPageUrl('Home')); }
@@ -58,7 +60,7 @@ export default function AdminTeam() {
 
   const { data: allUsers = [], isLoading: usersLoading, refetch } = useQuery({
     queryKey: ['allAdminUsers'],
-    queryFn: () => base44.entities.User.list('-created_date'),
+    queryFn: () => listUsers('-created_date'),
     enabled: !!authUser,
   });
 
@@ -70,7 +72,7 @@ export default function AdminTeam() {
   const handlePasswordReset = async (u) => {
     setActionLoading(`reset-${u.id}`);
     try {
-      await base44.integrations.Core.SendEmail({
+      await sendEmail({
         to: u.email,
         subject: 'Reset your Taylor Made Law admin password',
         body: `Hi ${u.full_name || 'Admin'},\n\nA password reset was requested for your account. Please visit the platform and use the "Forgot Password" option to reset your password.\n\nIf you did not request this, please ignore this email.\n\nTaylor Made Law Admin Team`,
@@ -87,7 +89,7 @@ export default function AdminTeam() {
     if (!confirmDeleteUser) return;
     setActionLoading(`delete-${confirmDeleteUser.id}`);
     try {
-      await base44.entities.User.delete(confirmDeleteUser.id);
+      await deleteUser(confirmDeleteUser.id);
       notify(`User ${confirmDeleteUser.email} has been removed.`);
       refetch();
     } catch (err) {
@@ -102,7 +104,7 @@ export default function AdminTeam() {
     if (!inviteEmail.trim()) { notifyError('Email is required.'); return; }
     setSaving(true);
     try {
-      const res = await base44.functions.invoke('inviteAdminUser', { email: inviteEmail.trim().toLowerCase() });
+      const res = await inviteAdminUser({ email: inviteEmail.trim().toLowerCase() });
       if (res.data?.error) throw new Error(res.data.error);
       notify(`Admin invitation sent to ${inviteEmail.trim()}.`);
       setShowInviteModal(false);

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser } from '@/services/auth';
+import { filterLeads, updateLead, createCase } from '@/services/cases';
+import { createAuditLog, filterAuditLogs, sendEmail } from '@/services/admin';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -50,12 +52,11 @@ export default function AdminLeadDetail() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
+        const userData = await getCurrentUser();
+        if (!userData) {
           navigate(createPageUrl('Home'));
           return;
         }
-        const userData = await base44.auth.me();
         
         if (!['admin', 'senior_associate', 'junior_associate'].includes(userData.user_type) && userData.role !== 'admin') {
           navigate(createPageUrl('LawyerDashboard'));
@@ -76,7 +77,7 @@ export default function AdminLeadDetail() {
   const { data: lead, isLoading: leadLoading, refetch } = useQuery({
     queryKey: ['lead', leadId],
     queryFn: async () => {
-      const leads = await base44.entities.Lead.filter({ id: leadId });
+      const leads = await filterLeads({ id: leadId });
       return leads[0] || null;
     },
     enabled: !!leadId,
@@ -85,7 +86,7 @@ export default function AdminLeadDetail() {
   // Get audit logs for this lead
   const { data: auditLogs = [] } = useQuery({
     queryKey: ['leadAuditLogs', leadId],
-    queryFn: () => base44.entities.AuditLog.filter({ entity_type: 'Lead', entity_id: leadId }, '-created_date'),
+    queryFn: () => filterAuditLogs({ entity_type: 'Lead', entity_id: leadId }, '-created_date'),
     enabled: !!leadId,
   });
 
@@ -100,7 +101,7 @@ export default function AdminLeadDetail() {
   const isSeniorOrAdmin = ['admin', 'senior_associate'].includes(user?.user_type) || user?.role === 'admin';
 
   const createAuditLog = async (action, notes, beforeState, afterState) => {
-    await base44.entities.AuditLog.create({
+    await createAuditLog({
       entity_type: 'Lead',
       entity_id: leadId,
       action,
@@ -120,7 +121,7 @@ export default function AdminLeadDetail() {
     try {
       const beforeState = { internal_notes: lead.internal_notes, estimated_value: lead.estimated_value };
       
-      await base44.entities.Lead.update(leadId, {
+      await updateLead(leadId, {
         internal_notes: internalNotes,
         estimated_value: estimatedValue ? parseFloat(estimatedValue) : null
       });
@@ -160,7 +161,7 @@ export default function AdminLeadDetail() {
         updateData.senior_reviewed_at = new Date().toISOString();
       }
       
-      await base44.entities.Lead.update(leadId, updateData);
+      await updateLead(leadId, updateData);
       
       await createAuditLog(
         `status_change_${newStatus}`,
@@ -187,7 +188,7 @@ export default function AdminLeadDetail() {
     try {
       const beforeState = { status: lead.status };
       
-      await base44.entities.Lead.update(leadId, {
+      await updateLead(leadId, {
         status: 'rejected',
         rejection_reason: rejectionReason,
         senior_reviewer: user.email,
@@ -201,7 +202,7 @@ export default function AdminLeadDetail() {
       
       // Send rejection email
       try {
-        await base44.integrations.Core.SendEmail({
+        await sendEmail({
           to: lead.email,
           subject: 'Taylor Made Law - Update on Your Request',
           body: `
@@ -259,10 +260,10 @@ Taylor Made Law Team
         client_phone: lead.phone
       };
       
-      await base44.entities.Case.create(caseData);
+      await createCase(caseData);
       
       // Update lead status
-      await base44.entities.Lead.update(leadId, {
+      await updateLead(leadId, {
         status: 'published',
         senior_reviewer: user.email,
         senior_reviewed_at: new Date().toISOString()
@@ -287,7 +288,7 @@ Taylor Made Law Team
     setError(null);
     
     try {
-      await base44.entities.Lead.update(leadId, {
+      await updateLead(leadId, {
         status: 'routed_cochran',
         senior_reviewer: user.email,
         senior_reviewed_at: new Date().toISOString()
@@ -297,7 +298,7 @@ Taylor Made Law Team
       
       // Send email to Cochran with case information
       try {
-        await base44.integrations.Core.SendEmail({
+        await sendEmail({
           to: 'pburns@cochrantexas.com',
           subject: `New Case Referral - ${lead.practice_area} (${lead.state})`,
           body: `

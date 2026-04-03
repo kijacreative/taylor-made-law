@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { verifyEmailOtp, sendEmailOtp } from '@/services/onboarding';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLInput from '@/components/ui/TMLInput';
 
@@ -26,7 +26,7 @@ export default function EmailVerifyStep({ email, onVerified }) {
     setSendLoading(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('sendEmailOtp', { email });
+      const res = await sendEmailOtp({ email });
       if (res.data?.error) { setError(res.data.error); return; }
       setCodeSent(true);
       startCooldown();
@@ -45,7 +45,7 @@ export default function EmailVerifyStep({ email, onVerified }) {
     setVerifyLoading(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('verifyEmailOtp', { email, code });
+      const res = await verifyEmailOtp({ email, code });
       if (!res.data?.verified) {
         setError(res.data?.error || 'Invalid code. Please try again.');
         return;

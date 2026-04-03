@@ -1,6 +1,7 @@
 #env
 .env
 .env.*
+!.env.example
 
 # Logs
 logs
@@ -26,5 +27,22 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# SSH keys — never commit private keys
+*.pem
+id_*
+taylormadelaw
+ttaylormadelaw
+
+# Duplicate nested repo (legacy clone — see CLAUDE.md migration risks)
+taylor-made-law/
+
+# Claude Code local state
+.claude/
+
+# Migration pipeline output (data files + logs — not source code)
+scripts/migration/export/data/
+scripts/migration/transform/data/
+scripts/migration/logs/
 
 .env

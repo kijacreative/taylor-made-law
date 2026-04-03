@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { isAuthenticated, me, logout, redirectToLogin, verifyOtp, resendOtp } from '@/services/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, AlertCircle, Loader2, Mail, ArrowLeft, Shield } from 'lucide-react';
 
@@ -22,14 +22,14 @@ export default function AdminLogin() {
   const otpRefs = useRef([]);
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then(async (auth) => {
+    isAuthenticated().then(async (auth) => {
       if (auth) {
         try {
-          const userData = await base44.auth.me();
+          const userData = await me();
           if (userData.role === 'admin') {
             navigate(createPageUrl('AdminDashboard'), { replace: true });
           } else {
-            await base44.auth.logout();
+            await logout();
             setCheckingAuth(false);
           }
         } catch {
@@ -50,7 +50,7 @@ export default function AdminLogin() {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    base44.auth.redirectToLogin(createPageUrl('AdminDashboard'));
+    redirectToLogin(createPageUrl('AdminDashboard'));
   };
 
   const handleOtpChange = (index, value) => {
@@ -82,10 +82,10 @@ export default function AdminLogin() {
     if (code.length < 6) { setError('Please enter the full 6-digit code.'); return; }
     setLoading(true);
     try {
-      await base44.auth.verifyOtp({ email: email.toLowerCase().trim(), otpCode: code });
-      const userData = await base44.auth.me();
+      await verifyOtp({ email: email.toLowerCase().trim(), otpCode: code });
+      const userData = await me();
       if (userData.role !== 'admin') {
-        await base44.auth.logout();
+        await logout();
         setError('Access denied. This portal is for administrators only.');
         setStep('login');
         return;
@@ -104,7 +104,7 @@ export default function AdminLogin() {
     setResending(true);
     setError('');
     try {
-      await base44.auth.resendOtp(email.toLowerCase().trim());
+      await resendOtp(email.toLowerCase().trim());
       setResendCooldown(60);
     } catch {
       setError('Failed to resend code. Please try again.');

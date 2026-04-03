@@ -12,7 +12,8 @@ import {
   Users,
   MessageSquare
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { logout } from '@/services/auth';
+import { getDirectInbox, subscribeDirectMessages, subscribeDirectMessageParticipants } from '@/services/messaging';
 import NotificationBell from '@/components/notifications/NotificationBell';
 
 const AppSidebar = ({ user, lawyerProfile }) => {
@@ -29,14 +30,14 @@ const AppSidebar = ({ user, lawyerProfile }) => {
 
     // Initial load
     const loadUnread = async () => {
-      const res = await base44.functions.invoke('getDirectInbox', {}).catch(() => null);
+      const res = await getDirectInbox().catch(() => null);
       const count = res?.data?.total_unread || 0;
       setUnreadCount(count);
     };
     loadUnread();
 
     // Subscribe to new DMs — bump unread when a message arrives that isn't from the current user
-    const unsubMsg = base44.entities.DirectMessage.subscribe((event) => {
+    const unsubMsg = subscribeDirectMessages((event) => {
       if (event.type === 'create' && event.data?.sender_user_id !== user.id) {
         // Only count if not currently viewing that thread
         const threadId = event.data?.thread_id;
@@ -48,7 +49,7 @@ const AppSidebar = ({ user, lawyerProfile }) => {
     });
 
     // Subscribe to participant updates — when last_read_at changes, re-fetch the count
-    const unsubPart = base44.entities.DirectMessageParticipant.subscribe((event) => {
+    const unsubPart = subscribeDirectMessageParticipants((event) => {
       if (event.type === 'update' && event.data?.user_id === user.id) {
         loadUnread();
       }
@@ -102,7 +103,7 @@ const AppSidebar = ({ user, lawyerProfile }) => {
   ];
 
   const handleLogout = () => {
-    base44.auth.logout(createPageUrl('LawyerLogin'));
+    logout(createPageUrl('LawyerLogin'));
   };
 
   return (

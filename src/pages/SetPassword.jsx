@@ -8,7 +8,7 @@
  */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { resetPassword } from '@/services/auth';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
@@ -48,7 +48,7 @@ export default function SetPassword() {
 
     setLoading(true);
     try {
-      await base44.auth.resetPassword({ resetToken, newPassword: password });
+      await resetPassword({ resetToken, newPassword: password });
       setSuccess(true);
       setTimeout(() => navigate('/login', { replace: true }), 1800);
     } catch (err) {

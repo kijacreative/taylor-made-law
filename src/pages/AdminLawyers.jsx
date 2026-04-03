@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser } from '@/services/auth';
+import { listApplications, listUsers, updateUser, approveLawyer, approveLawyerApplication, rejectLawyerApplication, disableLawyer, reinstateLawyer, resendActivation, requestMoreInfo, generateLegacyReport, inviteAttorney } from '@/services/lawyers';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -91,9 +92,8 @@ export default function AdminLawyers() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('Home')); return; }
-        const userData = await base44.auth.me();
+        const userData = await getCurrentUser();
+        if (!userData) { navigate(createPageUrl('Home')); return; }
         if (userData.role !== 'admin') { navigate(createPageUrl('LawyerDashboard')); return; }
         setAuthUser(userData);
       } catch { navigate(createPageUrl('Home')); }
@@ -106,14 +106,14 @@ export default function AdminLawyers() {
 
   const { data: applications = [], isLoading: appsLoading, refetch: refetchApps } = useQuery({
     queryKey: ['lawyerApplications'],
-    queryFn: () => base44.entities.LawyerApplication.list('-created_date'),
+    queryFn: () => listApplications('-created_date'),
     enabled: !!authUser,
     refetchInterval: 30000,
   });
 
   const { data: allUsers = [], isLoading: usersLoading, refetch: refetchUsers } = useQuery({
     queryKey: ['allLawyerUsers'],
-    queryFn: () => base44.entities.User.list('-created_date'),
+    queryFn: () => listUsers('-created_date'),
     enabled: !!authUser,
   });
 
@@ -155,7 +155,7 @@ export default function AdminLawyers() {
   const handleAppApprove = async () => {
     setAppActionLoading(true);
     try {
-      const res = await base44.functions.invoke('approveLawyerApplication', {
+      const res = await approveLawyerApplication({
         application_id: selectedApp.id,
         free_trial_months: appFreeTrialMonths,
       });
@@ -174,7 +174,7 @@ export default function AdminLawyers() {
   const handleAppReject = async () => {
     setAppActionLoading(true);
     try {
-      const res = await base44.functions.invoke('rejectLawyerApplication', {
+      const res = await rejectLawyerApplication({
         application_id: selectedApp.id,
         rejection_reason: appRejectionReason,
       });
@@ -196,7 +196,7 @@ export default function AdminLawyers() {
     if (!approvingUser) return;
     setSaving(true);
     try {
-      const res = await base44.functions.invoke('approveLawyer', {
+      const res = await approveLawyer({
         user_id: approvingUser.id,
         free_trial_months: parseInt(freeTrialMonths) || 0
       });
@@ -212,7 +212,7 @@ export default function AdminLawyers() {
     if (!disablingUser) return;
     setSaving(true);
     try {
-      const res = await base44.functions.invoke('disableLawyer', { user_id: disablingUser.id, reason: disableReason });
+      const res = await disableLawyer({ user_id: disablingUser.id, reason: disableReason });
       if (res.data?.success) {
         showToast(`${disablingUser.full_name || disablingUser.email} disabled.`);
         setDisablingUser(null); setDisableReason(''); refetchUsers();
@@ -224,7 +224,7 @@ export default function AdminLawyers() {
   const handleReinstate = async (user) => {
     setSaving(true);
     try {
-      const res = await base44.functions.invoke('reinstateLawyer', { user_id: user.id, reinstate_to_status: 'pending' });
+      const res = await reinstateLawyer({ user_id: user.id, reinstate_to_status: 'pending' });
       if (res.data?.success) { showToast(`${user.full_name || user.email} reinstated.`); refetchUsers(); }
       else { showToast(res.data?.error || 'Failed to reinstate.', 'error'); }
     } catch (err) { showToast(err.response?.data?.error || err.message, 'error'); }
@@ -234,7 +234,7 @@ export default function AdminLawyers() {
   const handleResendActivation = async (user) => {
     setSaving(true);
     try {
-      const res = await base44.functions.invoke('resendActivation', { user_id: user.id });
+      const res = await resendActivation({ user_id: user.id });
       if (res.data?.success) { showToast(`Activation email resent to ${user.email}.`); }
       else { showToast(res.data?.error || 'Failed to resend.', 'error'); }
     } catch (err) { showToast(err.response?.data?.error || err.message, 'error'); }
@@ -247,7 +247,7 @@ export default function AdminLawyers() {
     if (!items.length && !moreInfoNotes) { showToast('Add at least one checklist item or a note.', 'error'); return; }
     setSaving(true);
     try {
-      const res = await base44.functions.invoke('requestMoreInfo', { user_id: moreInfoUser.id, checklist_items: items, admin_notes: moreInfoNotes });
+      const res = await requestMoreInfo({ user_id: moreInfoUser.id, checklist_items: items, admin_notes: moreInfoNotes });
       if (res.data?.success) {
         showToast(`More info request sent to ${moreInfoUser.email}.`);
         setMoreInfoUser(null); setMoreInfoItems(''); setMoreInfoNotes(''); refetchUsers();
@@ -260,7 +260,7 @@ export default function AdminLawyers() {
     if (!editingUser) return;
     setSaving(true);
     try {
-      await base44.entities.User.update(editingUser.id, editMembershipData);
+      await updateUser(editingUser.id, editMembershipData);
       showToast(`${editingUser.full_name || editingUser.email} updated successfully.`);
       setEditingUser(null);
       setEditMembershipData({});
@@ -274,7 +274,7 @@ export default function AdminLawyers() {
     if (!editingUser) return;
     setSaving(true);
     try {
-      const res = await base44.functions.invoke('disableLawyer', { user_id: editingUser.id, reason: 'Membership cancelled by admin.' });
+      const res = await disableLawyer({ user_id: editingUser.id, reason: 'Membership cancelled by admin.' });
       if (res.data?.success) {
         showToast(`${editingUser.full_name || editingUser.email}'s membership cancelled.`);
         setEditingUser(null);
@@ -287,7 +287,7 @@ export default function AdminLawyers() {
   const handleResetPassword = async (user) => {
     setSaving(true);
     try {
-      const res = await base44.functions.invoke('resendActivation', { user_id: user.id });
+      const res = await resendActivation({ user_id: user.id });
       if (res.data?.success) { showToast(`Password reset email sent to ${user.email}.`); }
       else { showToast(res.data?.error || 'Failed to send reset email.', 'error'); }
     } catch (err) { showToast(err.message || 'Error sending reset email.', 'error'); }
@@ -297,7 +297,7 @@ export default function AdminLawyers() {
   const handleGenerateReport = async () => {
     setGeneratingReport(true);
     try {
-      const res = await base44.functions.invoke('generateLegacyReport', {});
+      const res = await generateLegacyReport({});
       if (res.data?.success && res.data?.csv) {
         const blob = new Blob([res.data.csv], { type: 'text/csv' });
         const url = window.URL.createObjectURL(blob);
@@ -316,7 +316,7 @@ export default function AdminLawyers() {
     if (!inviteData.email) { showToast('Email is required', 'error'); return; }
     setSaving(true);
     try {
-      const res = await base44.functions.invoke('inviteAttorney', inviteData);
+      const res = await inviteAttorney(inviteData);
       if (res.data?.success) {
         showToast('Invitation sent successfully!');
         setShowInviteModal(false);

@@ -5,7 +5,9 @@
  */
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, inviteUser } from '@/services/auth';
+import { listApplications, updateApplication } from '@/services/lawyers';
+import { createAuditLog } from '@/services/admin';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -53,11 +55,10 @@ export default function AdminNetworkReview() {
   useEffect(() => {
     (async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate('/Home'); return; }
-        const me = await base44.auth.me();
-        if (me.role !== 'admin') { navigate('/LawyerDashboard'); return; }
-        setUser(me);
+        const currentUser = await getCurrentUser();
+        if (!currentUser) { navigate('/Home'); return; }
+        if (currentUser.role !== 'admin') { navigate('/LawyerDashboard'); return; }
+        setUser(currentUser);
       } catch { navigate('/Home'); }
       finally { setAuthLoading(false); }
     })();
@@ -65,7 +66,7 @@ export default function AdminNetworkReview() {
 
   const { data: applications = [], isLoading, refetch } = useQuery({
     queryKey: ['lawyerApplications'],
-    queryFn: () => base44.entities.LawyerApplication.list('-created_date', 200),
+    queryFn: () => listApplications('-created_date', 200),
     enabled: !!user,
     refetchInterval: 30000,
   });
@@ -94,16 +95,16 @@ export default function AdminNetworkReview() {
     setActionLoading(true);
     try {
       // Invite the user (admin-only, we are authenticated as admin here)
-      await base44.users.inviteUser(selected.email, 'user');
+      await inviteUser(selected.email, 'user');
 
       // Update application status
-      await base44.entities.LawyerApplication.update(selected.id, {
+      await updateApplication(selected.id, {
         status: 'approved',
         reviewed_by: user.email,
         reviewed_at: new Date().toISOString(),
       });
 
-      await base44.entities.AuditLog.create({
+      await createAuditLog({
         entity_type: 'LawyerApplication',
         entity_id: selected.id,
         action: 'application_approved',
@@ -127,14 +128,14 @@ export default function AdminNetworkReview() {
   const handleReject = async () => {
     setActionLoading(true);
     try {
-      await base44.entities.LawyerApplication.update(selected.id, {
+      await updateApplication(selected.id, {
         status: 'rejected',
         rejection_reason: rejectionReason,
         reviewed_by: user.email,
         reviewed_at: new Date().toISOString(),
       });
 
-      await base44.entities.AuditLog.create({
+      await createAuditLog({
         entity_type: 'LawyerApplication',
         entity_id: selected.id,
         action: 'application_rejected',

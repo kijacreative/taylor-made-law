@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ArrowRight, ArrowLeft, CheckCircle2, AlertCircle, Eye, EyeOff } from
 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { publicLawyerSignup } from '@/services/onboarding';
 import PublicNav from '@/components/layout/PublicNav';
 import PublicFooter from '@/components/layout/PublicFooter';
 import TMLButton from '@/components/ui/TMLButton';
@@ -115,7 +115,7 @@ export default function JoinLawyerNetwork() {
       const email = formData.email.trim().toLowerCase();
 
       // Call backend function via SDK invoke
-      const response = await base44.functions.invoke('publicLawyerSignup', {
+      const response = await publicLawyerSignup({
         full_name: formData.full_name,
         email,
         password: formData.password,

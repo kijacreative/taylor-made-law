@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, X, MessageSquare, Briefcase, Users, CheckCheck } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { subscribeCircleNotifications, filterNotifications, updateNotification } from '@/services/notifications';
 import { useNavigate } from 'react-router-dom';
 
 const typeIcon = (type) => {
@@ -19,7 +19,7 @@ export default function NotificationBell({ user, collapsed }) {
     if (!user?.id) return;
     loadNotifications();
 
-    const unsub = base44.entities.CircleNotification.subscribe((event) => {
+    const unsub = subscribeCircleNotifications((event) => {
       if (event.data?.user_id === user.id) {
         if (event.type === 'create') {
           setNotifications(prev => [event.data, ...prev]);
@@ -44,7 +44,7 @@ export default function NotificationBell({ user, collapsed }) {
   }, [open]);
 
   const loadNotifications = async () => {
-    const items = await base44.entities.CircleNotification.filter(
+    const items = await filterNotifications(
       { user_id: user.id },
       '-created_date',
       30
@@ -57,14 +57,14 @@ export default function NotificationBell({ user, collapsed }) {
   const markAllRead = async () => {
     const unread = notifications.filter(n => !n.is_read);
     await Promise.all(unread.map(n =>
-      base44.entities.CircleNotification.update(n.id, { is_read: true }).catch(() => null)
+      updateNotification(n.id, { is_read: true }).catch(() => null)
     ));
     setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
   };
 
   const markRead = async (notif) => {
     if (notif.is_read) return;
-    await base44.entities.CircleNotification.update(notif.id, { is_read: true }).catch(() => null);
+    await updateNotification(notif.id, { is_read: true }).catch(() => null);
     setNotifications(prev => prev.map(n => n.id === notif.id ? { ...n, is_read: true } : n));
   };
 

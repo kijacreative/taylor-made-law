@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { filterCircleFiles, uploadCircleFile, deleteCircleFile } from '@/services/circles';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   FolderOpen, Upload, Search, Download, Eye, Trash2, File,
@@ -81,7 +81,7 @@ export default function CircleResources({ circleId, user, isAdmin }) {
 
   const { data: allFiles = [], isLoading } = useQuery({
     queryKey: ['circleFiles', circleId],
-    queryFn: () => base44.entities.CircleFile.filter({ circle_id: circleId, is_deleted: false }, '-created_date', 200),
+    queryFn: () => filterCircleFiles({ circle_id: circleId, is_deleted: false }),
     enabled: !!circleId,
     refetchInterval: 15000
   });
@@ -107,7 +107,7 @@ export default function CircleResources({ circleId, user, isAdmin }) {
       const fd = new FormData();
       fd.append('file', file);
       fd.append('circle_id', circleId);
-      const res = await base44.functions.invoke('uploadCircleFile', fd);
+      const res = await uploadCircleFile(fd);
       if (res.data?.error) throw new Error(res.data.error);
       queryClient.invalidateQueries({ queryKey: ['circleFiles', circleId] });
     } catch (err) {
@@ -121,7 +121,7 @@ export default function CircleResources({ circleId, user, isAdmin }) {
   const handleDelete = async (file) => {
     if (!window.confirm(`Delete "${file.file_name}"? This cannot be undone.`)) return;
     try {
-      await base44.functions.invoke('deleteCircleFile', { file_id: file.id });
+      await deleteCircleFile({ file_id: file.id });
       queryClient.invalidateQueries({ queryKey: ['circleFiles', circleId] });
     } catch (err) {
       alert('Failed to delete file.');

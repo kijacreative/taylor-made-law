@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { base44 } from '@/api/base44Client';
+import { createSetupIntent } from '@/services/onboarding';
 import { Loader2, CheckCircle2, Lock } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
 
@@ -97,7 +97,7 @@ export default function StripeCardSetup({ onSuccess }) {
   useEffect(() => {
     const fetchIntent = async () => {
       try {
-        const res = await base44.functions.invoke('createSetupIntent', {});
+        const res = await createSetupIntent({});
         if (res.data?.client_secret && res.data?.publishable_key) {
           setClientSecret(res.data.client_secret);
           setStripePromise(loadStripe(res.data.publishable_key));

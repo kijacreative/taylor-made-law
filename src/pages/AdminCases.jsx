@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser } from '@/services/auth';
+import { listCases, createCase, updateCase } from '@/services/cases';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -63,12 +64,11 @@ export default function AdminCases() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
+        const userData = await getCurrentUser();
+        if (!userData) {
           navigate(createPageUrl('Home'));
           return;
         }
-        const userData = await base44.auth.me();
 
         if (!['admin', 'senior_associate', 'junior_associate'].includes(userData.user_type) && userData.role !== 'admin') {
           navigate(createPageUrl('LawyerDashboard'));
@@ -88,7 +88,7 @@ export default function AdminCases() {
   // Get cases
   const { data: cases = [], isLoading: casesLoading, refetch } = useQuery({
     queryKey: ['allCases'],
-    queryFn: () => base44.entities.Case.list('-created_date'),
+    queryFn: () => listCases(),
     enabled: !!user
   });
 
@@ -135,7 +135,7 @@ export default function AdminCases() {
     setSaving(true);
 
     try {
-      await base44.entities.Case.update(caseItem.id, {
+      await updateCase(caseItem.id, {
         is_trending: !caseItem.is_trending
       });
 
@@ -154,7 +154,7 @@ export default function AdminCases() {
     setSaving(true);
 
     try {
-      await base44.entities.Case.update(caseItem.id, {
+      await updateCase(caseItem.id, {
         status: 'withdrawn'
       });
 
@@ -186,7 +186,7 @@ export default function AdminCases() {
         published_by: user.email
       };
 
-      await base44.entities.Case.create(caseData);
+      await createCase(caseData);
 
       setSuccess('Case created and published!');
       setShowCreateModal(false);
@@ -221,7 +221,7 @@ export default function AdminCases() {
 
     setSaving(true);
     try {
-      await base44.entities.Case.update(viewingCase.id, {
+      await updateCase(viewingCase.id, {
         description: viewingCase.description,
         estimated_value: viewingCase.estimated_value ? parseFloat(viewingCase.estimated_value) : null,
         lawyer_notes: viewingCase.lawyer_notes

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { filterBlogPosts, listPublishedPosts } from '@/services/content';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Calendar, Clock, Share2, Check, Loader2, Tag, BookOpen } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
@@ -30,13 +31,12 @@ export default function LawyerBlogDetail() {
   useEffect(() => {
     const check = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('LawyerLogin')); return; }
-        const me = await base44.auth.me();
+        const me = await getCurrentUser();
+        if (!me) { navigate(createPageUrl('LawyerLogin')); return; }
         if (me.role === 'admin') { navigate(createPageUrl('AdminDashboard')); return; }
         setUser(me);
-        const profiles = await base44.entities.LawyerProfile.filter({ user_id: me.id });
-        if (profiles[0]) setLawyerProfile(profiles[0]);
+        const profile = await getProfile(me.id);
+        if (profile) setLawyerProfile(profile);
       } catch { navigate(createPageUrl('LawyerLogin')); }
       finally { setAuthLoading(false); }
     };
@@ -46,7 +46,7 @@ export default function LawyerBlogDetail() {
   const { data: post, isLoading: postLoading } = useQuery({
     queryKey: ['blogPost', slug],
     queryFn: async () => {
-      const posts = await base44.entities.BlogPost.filter({ slug, status: 'published' });
+      const posts = await filterBlogPosts({ slug, status: 'published' });
       return posts[0] || null;
     },
     enabled: !!user && !!slug,
@@ -54,7 +54,7 @@ export default function LawyerBlogDetail() {
 
   const { data: allPosts = [] } = useQuery({
     queryKey: ['publishedBlogPostsForRelated'],
-    queryFn: () => base44.entities.BlogPost.filter({ status: 'published' }, '-published_at'),
+    queryFn: () => listPublishedPosts(),
     enabled: !!user && !!post,
   });
 

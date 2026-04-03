@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { sendEmail, createAuditLog } from '@/services/admin';
 import { motion } from 'framer-motion';
 import { Mail, ArrowLeft, CheckCircle2, Loader2 } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
@@ -25,7 +25,7 @@ export default function ForgotPassword() {
       // For now, we'll send an email with a reset link
       const resetLink = `${window.location.origin}${createPageUrl('ResetPassword')}?token=${resetToken}&email=${encodeURIComponent(email)}`;
 
-      await base44.integrations.Core.SendEmail({
+      await sendEmail({
         to: email,
         subject: 'Reset Your Taylor Made Law Password',
         body: `
@@ -51,7 +51,7 @@ Need help? Contact us at support@taylormadelaw.com
 
       // Log password reset request
       try {
-        await base44.entities.AuditLog.create({
+        await createAuditLog({
           entity_type: 'User',
           entity_id: email,
           action: 'password_reset_requested',

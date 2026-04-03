@@ -16,7 +16,9 @@ import {
   FileText,
   Shield } from
 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { createLead, sendApplicationEmails } from '@/services/cases';
+import { createAuditLog, createConsentLog, createInvitation } from '@/services/admin';
+import { listUsers } from '@/services/lawyers';
 import PublicNav from '@/components/layout/PublicNav';
 import PublicFooter from '@/components/layout/PublicFooter';
 import TMLButton from '@/components/ui/TMLButton';
@@ -154,10 +156,10 @@ export default function FindLawyer() {
         source: 'website'
       };
 
-      const lead = await base44.entities.Lead.create(leadData);
+      const lead = await createLead(leadData);
 
       // Create consent log
-      await base44.entities.ConsentLog.create({
+      await createConsentLog({
         entity_type: 'Lead',
         entity_id: lead.id,
         consent_type: 'intake_terms',
@@ -168,7 +170,7 @@ export default function FindLawyer() {
 
       // Send confirmation email to client (via backend function to bypass auth restriction)
       try {
-        await base44.functions.invoke('sendApplicationEmails', {
+        await sendApplicationEmails( {
           to: formData.email,
           from_name: 'Taylor Made Law',
           subject: 'We Received Your Request — Taylor Made Law',
@@ -224,7 +226,7 @@ export default function FindLawyer() {
 
       // Audit log for email send
       try {
-        await base44.entities.AuditLog.create({
+        await createAuditLog({
           entity_type: 'Lead',
           entity_id: lead.id,
           action: 'confirmation_email_sent',
@@ -236,11 +238,11 @@ export default function FindLawyer() {
 
       // Send alert email to all admin accounts
       try {
-        const allUsers = await base44.entities.User.list();
+        const allUsers = await listUsers();
         const adminUsers = allUsers.filter((u) => u.role === 'admin');
 
         for (const admin of adminUsers) {
-          await base44.functions.invoke('sendApplicationEmails', {
+          await sendApplicationEmails( {
             to: admin.email,
             from_name: 'Taylor Made Law Alerts',
             subject: `🔔 New Lead: ${formData.first_name} ${formData.last_name} — ${formData.practice_area}`,
@@ -298,7 +300,7 @@ export default function FindLawyer() {
       if (formData.invite_attorney_email) {
         const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
 
-        await base44.entities.Invitation.create({
+        await createInvitation({
           inviter_email: formData.email,
           inviter_name: `${formData.first_name} ${formData.last_name}`,
           invitee_email: formData.invite_attorney_email,
@@ -312,7 +314,7 @@ export default function FindLawyer() {
 
         // Send invitation email
         try {
-          await base44.functions.invoke('sendApplicationEmails', {
+          await sendApplicationEmails( {
             to: formData.invite_attorney_email,
             subject: "You've Been Invited to Join Taylor Made Law",
             body: `<p>Hello${formData.invite_attorney_name ? ' ' + formData.invite_attorney_name : ''},</p><p>${formData.first_name} ${formData.last_name} has invited you to join the Taylor Made Law attorney network.</p><p><a href="${window.location.origin}${createPageUrl('ForLawyers')}">Apply now →</a></p><p>Best regards,<br/>Taylor Made Law Team</p>`

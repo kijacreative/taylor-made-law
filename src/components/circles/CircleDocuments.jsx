@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { filterDocuments, getDocumentHistory, requestDocumentSignatures, uploadCircleDocument } from '@/services/circles';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import {
@@ -16,7 +16,7 @@ function VersionHistoryModal({ documentId, onClose }) {
   const { data, isLoading } = useQuery({
     queryKey: ['documentHistory', documentId],
     queryFn: async () => {
-      const res = await base44.functions.invoke('getDocumentHistory', { document_id: documentId });
+      const res = await getDocumentHistory({ document_id: documentId });
       return res.data;
     },
   });
@@ -189,7 +189,7 @@ function SignatureRequestModal({ documentId, onClose }) {
         throw new Error('Please enter at least one signer email');
       }
 
-      const res = await base44.functions.invoke('requestDocumentSignatures', {
+      const res = await requestDocumentSignatures({
         document_id: documentId,
         signers: signerEmails,
         deadline_days: deadlineDays
@@ -293,7 +293,7 @@ export default function CircleDocuments({ circleId, user, isAdmin }) {
 
   const { data: documents = [], isLoading } = useQuery({
     queryKey: ['circleDocuments', circleId],
-    queryFn: () => base44.entities.CircleDocument.filter({ circle_id: circleId }, '-created_date', 100),
+    queryFn: () => filterDocuments({ circle_id: circleId }),
     enabled: !!circleId,
     refetchInterval: 10000
   });
@@ -310,7 +310,7 @@ export default function CircleDocuments({ circleId, user, isAdmin }) {
       fd.append('title', file.name.replace(/\.[^/.]+$/, ''));
       fd.append('document_type', 'other');
 
-      const res = await base44.functions.invoke('uploadCircleDocument', fd);
+      const res = await uploadCircleDocument(fd);
       if (res.data?.error) throw new Error(res.data.error);
 
       queryClient.invalidateQueries({ queryKey: ['circleDocuments', circleId] });

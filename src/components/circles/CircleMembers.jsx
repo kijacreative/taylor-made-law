@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import { filterInvitations, updateInvitation, updateMember, createCircleInvitation, sendCircleInviteEmail } from '@/services/circles';
+import { searchNetworkAttorneys } from '@/services/lawyers';
+import { startDirectThread } from '@/services/messaging';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import MemberProfileModal from './MemberProfileModal';
 import { UserPlus, Shield, Trash2, Mail, Search, Loader2, CheckCircle, Users, ExternalLink, X, Clock, MessageCircle } from 'lucide-react';
@@ -12,7 +14,7 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
 
   const handleDM = async (member) => {
     if (member.user_id === user.id) return;
-    const res = await base44.functions.invoke('startDirectThread', { recipient_user_id: member.user_id });
+    const res = await startDirectThread(member.user_id);
     if (res.data?.thread_id) {
       navigate(`/app/messages/${res.data.thread_id}`);
     }
@@ -35,7 +37,7 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
 
   const { data: pendingInvites = [], refetch: refetchInvites } = useQuery({
     queryKey: ['circlePendingInvites', circleId],
-    queryFn: () => base44.entities.LegalCircleInvitation.filter({ circle_id: circleId, status: 'pending' }),
+    queryFn: () => filterInvitations({ circle_id: circleId, status: 'pending' }),
     enabled: !!circleId,
   });
 
@@ -48,7 +50,7 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
     searchTimeout.current = setTimeout(async () => {
       setSearching(true);
       try {
-        const res = await base44.functions.invoke('searchNetworkAttorneys', { query: searchQuery });
+        const res = await searchNetworkAttorneys(searchQuery);
         setSearchResults(res.data?.results || []);
       } catch {
         setSearchResults([]);
@@ -83,7 +85,7 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
     setInviting(true);
     setInviteResult(null);
     try {
-      const res = await base44.functions.invoke('createCircleInvitation', {
+      const res = await createCircleInvitation({
         circle_id: circleId,
         invitee_email: selectedAttorney.email,
         invitee_name: selectedAttorney.name,
@@ -113,7 +115,7 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
     setInviting(true);
     setInviteResult(null);
     try {
-      await base44.functions.invoke('sendCircleInviteEmail', {
+      await sendCircleInviteEmail({
         invitee_email: externalEmail,
         invitee_name: externalName,
         circle_name: circleName || 'Legal Circle',
@@ -135,13 +137,13 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
 
   const handleRemove = async (member) => {
     if (!window.confirm(`Remove ${member.user_name} from the circle?`)) return;
-    await base44.entities.LegalCircleMember.update(member.id, { status: 'removed' });
+    await updateMember(member.id, { status: 'removed' });
     queryClient.invalidateQueries({ queryKey: ['circleMembers', circleId] });
   };
 
   const handlePromote = async (member) => {
     if (!window.confirm(`Promote ${member.user_name} to circle admin?`)) return;
-    await base44.entities.LegalCircleMember.update(member.id, { role: 'admin' });
+    await updateMember(member.id, { role: 'admin' });
     queryClient.invalidateQueries({ queryKey: ['circleMembers', circleId] });
   };
 
@@ -417,7 +419,7 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
               {isAdmin && (
                 <button
                   onClick={async () => {
-                    await base44.entities.LegalCircleInvitation.update(invite.id, { status: 'declined' });
+                    await updateInvitation(invite.id, { status: 'declined' });
                     queryClient.invalidateQueries({ queryKey: ['circlePendingInvites', circleId] });
                   }}
                   className="p-1.5 rounded-lg text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors"

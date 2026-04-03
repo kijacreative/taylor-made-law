@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { login } from '@/services/auth';
+import { activateAccount, resendActivation } from '@/services/onboarding';
 import { motion } from 'framer-motion';
 import { Loader2, CheckCircle2, AlertCircle, Eye, EyeOff, Mail } from 'lucide-react';
 import PublicNav from '@/components/layout/PublicNav';
@@ -53,7 +54,7 @@ export default function Activate() {
   const handleResendActivation = async () => {
     setResending(true);
     try {
-      await base44.functions.invoke('resendActivation', { email: expiredEmail });
+      await resendActivation({ email: expiredEmail });
       setResendSuccess(true);
     } catch {
       setError('Failed to resend. Please contact support@taylormadelaw.com');
@@ -93,7 +94,7 @@ export default function Activate() {
 
     setActivating(true);
     try {
-      const response = await base44.functions.invoke('activateAccount', {
+      const response = await activateAccount({
         token,
         password: formData.password,
       });
@@ -101,7 +102,7 @@ export default function Activate() {
       if (response.data?.success) {
         // Try auto-login
         try {
-          await base44.auth.loginViaEmailPassword(response.data.email, formData.password);
+          await login(response.data.email, formData.password);
           navigate(createPageUrl('LawyerDashboard'), { replace: true });
         } catch {
           // Auto-login failed (email may need verification) — show success and redirect to login

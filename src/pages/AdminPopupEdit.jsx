@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser } from '@/services/auth';
+import { filterPopups, createPopup, updatePopup } from '@/services/notifications';
+import { uploadFile } from '@/services/storage';
 import {
   ArrowLeft, Save, Upload, X, Loader2, CheckCircle2, AlertCircle, Image as ImageIcon
 } from 'lucide-react';
@@ -54,14 +56,13 @@ export default function AdminPopupEdit() {
   useEffect(() => {
     const init = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('Home')); return; }
-        const me = await base44.auth.me();
+        const me = await getCurrentUser();
+        if (!me) { navigate(createPageUrl('Home')); return; }
         if (me.role !== 'admin') { navigate(createPageUrl('LawyerDashboard')); return; }
         setUser(me);
 
         if (!isNew && popupId) {
-          const items = await base44.entities.Popup.filter({ id: popupId });
+          const items = await filterPopups({ id: popupId });
           if (items[0]) {
             const p = items[0];
             setForm({
@@ -109,11 +110,11 @@ export default function AdminPopupEdit() {
     };
     try {
       if (isNew) {
-        const created = await base44.entities.Popup.create(payload);
+        const created = await createPopup(payload);
         showToast('Pop-up created!');
         navigate(createPageUrl('AdminPopupEdit') + `?id=${created.id}`, { replace: true });
       } else {
-        await base44.entities.Popup.update(popupId, payload);
+        await updatePopup(popupId, payload);
         showToast('Changes saved.');
       }
     } catch (err) {
@@ -127,7 +128,7 @@ export default function AdminPopupEdit() {
     const file = e.target.files[0];
     if (!file) return;
     setUploadingImage(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await uploadFile(file);
     set('image_url', file_url);
     setUploadingImage(false);
   };

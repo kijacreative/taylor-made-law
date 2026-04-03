@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { getDirectInbox, startDirectThread, subscribeDirectMessages } from '@/services/messaging';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { MessageSquare, Search, Plus, Loader2, Lock, ChevronRight } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
@@ -31,12 +32,11 @@ export default function DirectMessages() {
   useEffect(() => {
     const init = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate('/login'); return; }
-        const userData = await base44.auth.me();
+        const userData = await getCurrentUser();
+        if (!userData) { navigate('/login'); return; }
         setUser(userData);
         // Check approved status
-        const profiles = await base44.entities.LawyerProfile.filter({ user_id: userData.id });
+        const profiles = [await getProfile(userData.id)].filter(Boolean);
         setIsApproved(profiles[0]?.status === 'approved');
       } catch {
         navigate('/login');
@@ -49,7 +49,7 @@ export default function DirectMessages() {
 
   const { data: profiles = [] } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
+    queryFn: () => getProfile(user.id).then(p => p ? [p] : []),
     enabled: !!user?.id,
   });
   const lawyerProfile = profiles[0] || null;
@@ -57,7 +57,7 @@ export default function DirectMessages() {
   const { data: inboxData, isLoading: inboxLoading } = useQuery({
     queryKey: ['directInbox', user?.id],
     queryFn: async () => {
-      const res = await base44.functions.invoke('getDirectInbox', {});
+      const res = await getDirectInbox();
       return res.data;
     },
     enabled: !!user && isApproved,
@@ -68,7 +68,7 @@ export default function DirectMessages() {
   // Real-time subscription: refresh inbox whenever any DM changes
   useEffect(() => {
     if (!user || !isApproved) return;
-    const unsub = base44.entities.DirectMessage.subscribe(() => {
+    const unsub = subscribeDirectMessages(() => {
       queryClient.invalidateQueries({ queryKey: ['directInbox', user.id] });
     });
     return () => unsub();
@@ -88,7 +88,7 @@ export default function DirectMessages() {
   const handleNewMessageStart = async (recipientUserId) => {
     setShowNewMessage(false);
     try {
-      const res = await base44.functions.invoke('startDirectThread', { recipient_user_id: recipientUserId });
+      const res = await startDirectThread(recipientUserId);
       if (res.data?.thread_id) {
         queryClient.invalidateQueries({ queryKey: ['directInbox'] });
         navigate(`/app/messages/${res.data.thread_id}`);

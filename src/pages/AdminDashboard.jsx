@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser } from '@/services/auth';
+import { listLeads, listCases } from '@/services/cases';
+import { listProfiles } from '@/services/lawyers';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -32,12 +34,11 @@ export default function AdminDashboard() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
+        const userData = await getCurrentUser();
+        if (!userData) {
           navigate(createPageUrl('Home'));
           return;
         }
-        const userData = await base44.auth.me();
 
         // Only allow admin/associate users
         if (!['admin', 'senior_associate', 'junior_associate'].includes(userData.user_type) && userData.role !== 'admin') {
@@ -58,21 +59,21 @@ export default function AdminDashboard() {
   // Get leads
   const { data: leads = [] } = useQuery({
     queryKey: ['allLeads'],
-    queryFn: () => base44.entities.Lead.list('-created_date'),
+    queryFn: () => listLeads(),
     enabled: !!user
   });
 
   // Get cases
   const { data: cases = [] } = useQuery({
     queryKey: ['allCases'],
-    queryFn: () => base44.entities.Case.list('-created_date'),
+    queryFn: () => listCases(),
     enabled: !!user
   });
 
   // Get lawyers
   const { data: lawyers = [] } = useQuery({
     queryKey: ['allLawyers'],
-    queryFn: () => base44.entities.LawyerProfile.list('-created_date'),
+    queryFn: () => listProfiles(),
     enabled: !!user
   });
 

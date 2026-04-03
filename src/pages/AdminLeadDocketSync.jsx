@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser } from '@/services/auth';
+import { listLeads, retrySyncLead } from '@/services/cases';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -59,12 +60,11 @@ export default function AdminLeadDocketSync() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
+        const userData = await getCurrentUser();
+        if (!userData) {
           navigate(createPageUrl('Home'));
           return;
         }
-        const userData = await base44.auth.me();
 
         if (!['admin', 'senior_associate', 'junior_associate'].includes(userData.user_type) && userData.role !== 'admin') {
           navigate(createPageUrl('LawyerDashboard'));
@@ -84,7 +84,7 @@ export default function AdminLeadDocketSync() {
   // Get leads
   const { data: leads = [], isLoading: leadsLoading } = useQuery({
     queryKey: ['allLeads'],
-    queryFn: () => base44.entities.Lead.list('-created_date'),
+    queryFn: () => listLeads(),
     enabled: !!user,
   });
 
@@ -106,7 +106,7 @@ export default function AdminLeadDocketSync() {
   const handleRetrySync = async (leadId) => {
     setRetryingIds((prev) => new Set([...prev, leadId]));
     try {
-      const res = await base44.functions.invoke('retrySyncLead', { lead_id: leadId });
+      const res = await retrySyncLead({ lead_id: leadId });
       if (res.data?.error) {
         throw new Error(res.data.error);
       }

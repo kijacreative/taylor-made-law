@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { listPublishedPosts } from '@/services/content';
 import { useQuery } from '@tanstack/react-query';
 import { Search, BookOpen, Grid, List, Loader2, X } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
@@ -22,13 +23,12 @@ export default function LawyerBlog() {
   useEffect(() => {
     const check = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('LawyerLogin')); return; }
-        const me = await base44.auth.me();
+        const me = await getCurrentUser();
+        if (!me) { navigate(createPageUrl('LawyerLogin')); return; }
         if (me.role === 'admin') { navigate(createPageUrl('AdminDashboard')); return; }
         setUser(me);
-        const profiles = await base44.entities.LawyerProfile.filter({ user_id: me.id });
-        if (profiles[0]) setLawyerProfile(profiles[0]);
+        const profile = await getProfile(me.id);
+        if (profile) setLawyerProfile(profile);
       } catch { navigate(createPageUrl('LawyerLogin')); }
       finally { setAuthLoading(false); }
     };
@@ -37,7 +37,7 @@ export default function LawyerBlog() {
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ['publishedBlogPosts'],
-    queryFn: () => base44.entities.BlogPost.filter({ status: 'published' }, '-published_at'),
+    queryFn: () => listPublishedPosts(),
     enabled: !!user,
   });
 

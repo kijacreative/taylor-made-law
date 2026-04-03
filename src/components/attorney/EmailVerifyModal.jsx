@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { verifyEmailOtp, sendEmailOtp } from '@/services/onboarding';
 import TMLButton from '@/components/ui/TMLButton';
 
 export default function EmailVerifyModal({ email, onVerified, onClose }) {
@@ -55,7 +55,7 @@ export default function EmailVerifyModal({ email, onVerified, onClose }) {
     setVerifying(true);
     setError('');
     try {
-      const res = await base44.functions.invoke('verifyEmailOtp', { email, code: codeStr });
+      const res = await verifyEmailOtp({ email, code: codeStr });
       if (res.data?.verified) {
         onVerified();
       } else {
@@ -77,7 +77,7 @@ export default function EmailVerifyModal({ email, onVerified, onClose }) {
     setResending(true);
     setError('');
     try {
-      await base44.functions.invoke('sendEmailOtp', { email });
+      await sendEmailOtp({ email });
       setCooldown(30);
       setCode(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();

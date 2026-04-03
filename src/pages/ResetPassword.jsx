@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { createAuditLog } from '@/services/admin';
 import { motion } from 'framer-motion';
 import { Lock, Eye, EyeOff, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
@@ -63,7 +63,7 @@ export default function ResetPassword() {
       
       // Log password reset
       try {
-        await base44.entities.AuditLog.create({
+        await createAuditLog({
           entity_type: 'User',
           entity_id: email,
           action: 'password_reset_completed',

@@ -1,13 +1,13 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
+import { getProfileByUserId } from '@/services/lawyers';
 import { X, MapPin, Briefcase, Phone, Mail, Star, Loader2 } from 'lucide-react';
 import TMLBadge from '@/components/ui/TMLBadge';
 
 export default function MemberProfileModal({ member, onClose }) {
   const { data: profiles = [], isLoading } = useQuery({
     queryKey: ['lawyerProfileByUserId', member.user_id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: member.user_id }),
+    queryFn: () => getProfileByUserId(member.user_id).then(p => p ? [p] : []),
     enabled: !!member.user_id,
   });
 

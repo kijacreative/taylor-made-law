@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { isAuthenticated, me, updateMe, getProfile } from '@/services/auth';
+import { filterApplications, createProfile, updateProfile } from '@/services/lawyers';
+import { createConsentLog } from '@/services/admin';
+import { createSubscriptionCheckout } from '@/services/onboarding';
+import { uploadFile } from '@/services/storage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
@@ -73,7 +77,7 @@ export default function LawyerSettings() {
   // Fetch the original lawyer application (read-only display)
   const { data: applications = [] } = useQuery({
     queryKey: ['lawyerApplication', user?.email],
-    queryFn: () => base44.entities.LawyerApplication.filter({ email: user.email }),
+    queryFn: () => filterApplications({ email: user.email }),
     enabled: !!user?.email
   });
   const lawyerApplication = applications[0] || null;
@@ -122,9 +126,9 @@ export default function LawyerSettings() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
+        const isAuth = await isAuthenticated();
         if (!isAuth) {navigate(createPageUrl('LawyerLogin'));return;}
-        const userData = await base44.auth.me();
+        const userData = await me();
         setUser(userData);
         setAccountForm({ full_name: userData.full_name || '', email: userData.email || '', phone: userData.phone || '' });
         // Note: full_name may also be stored on LawyerProfile — that gets merged below when profile loads
@@ -151,7 +155,7 @@ export default function LawyerSettings() {
   // Get lawyer profile
   const { data: profiles = [], isLoading: profileLoading } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
+    queryFn: () => getProfile(user.id).then(p => p ? [p] : []),
     enabled: !!user?.id
   });
 
@@ -203,7 +207,7 @@ export default function LawyerSettings() {
     if (!file) return;
     setUploadingPhoto(true);
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const { file_url } = await uploadFile(file);
       setProfileForm((prev) => ({ ...prev, profile_photo_url: file_url }));
     } catch (err) {
       setError('Failed to upload photo. Please try again.');
@@ -253,14 +257,14 @@ export default function LawyerSettings() {
 
     try {
       if (lawyerProfile) {
-        await base44.entities.LawyerProfile.update(lawyerProfile.id, profileData);
+        await updateProfile(lawyerProfile.id, profileData);
       } else {
-        await base44.entities.LawyerProfile.create({ ...profileData, user_id: user.id });
+        await createProfile({ ...profileData, user_id: user.id });
       }
 
       // Mark profile as complete on the user record if all fields are filled
       if (isProfileComplete && !user.profile_completed_at) {
-        await base44.auth.updateMe({ profile_completed_at: new Date().toISOString() });
+        await updateMe({ profile_completed_at: new Date().toISOString() });
         setUser((prev) => ({ ...prev, profile_completed_at: new Date().toISOString() }));
       }
 
@@ -288,14 +292,14 @@ export default function LawyerSettings() {
       let profileId;
 
       if (lawyerProfile) {
-        await base44.entities.LawyerProfile.update(lawyerProfile.id, {
+        await updateProfile(lawyerProfile.id, {
           referral_agreement_accepted: true,
           referral_agreement_accepted_at: new Date().toISOString()
         });
         profileId = lawyerProfile.id;
       } else {
         // No profile yet — create one with minimal required fields
-        const newProfile = await base44.entities.LawyerProfile.create({
+        const newProfile = await createProfile({
           user_id: user.id,
           firm_name: user.full_name || 'My Firm',
           phone: '',
@@ -308,7 +312,7 @@ export default function LawyerSettings() {
       }
 
       // Log consent
-      await base44.entities.ConsentLog.create({
+      await createConsentLog({
         entity_type: 'LawyerProfile',
         entity_id: profileId,
         consent_type: 'referral_agreement',
@@ -342,9 +346,9 @@ export default function LawyerSettings() {
       // Save name and phone to LawyerProfile (full_name is read-only on the User entity)
       const profileData = { full_name: accountForm.full_name, phone: accountForm.phone };
       if (lawyerProfile) {
-        await base44.entities.LawyerProfile.update(lawyerProfile.id, profileData);
+        await updateProfile(lawyerProfile.id, profileData);
       } else {
-        await base44.entities.LawyerProfile.create({ ...profileData, user_id: user.id, firm_name: accountForm.full_name, states_licensed: [], practice_areas: [] });
+        await createProfile({ ...profileData, user_id: user.id, firm_name: accountForm.full_name, states_licensed: [], practice_areas: [] });
       }
       queryClient.invalidateQueries(['lawyerProfile']);
       setUser((prev) => ({ ...prev, full_name: accountForm.full_name }));
@@ -363,7 +367,7 @@ export default function LawyerSettings() {
     }
     setCheckoutLoading(true);
     try {
-      const res = await base44.functions.invoke('createSubscriptionCheckout', {});
+      const res = await createSubscriptionCheckout({});
       if (res.data?.url) {
         window.location.href = res.data.url;
       } else {
@@ -384,7 +388,7 @@ export default function LawyerSettings() {
     setSaving(true);
     setError(null);
     try {
-      await base44.auth.updateMe({ password: passwordForm.new_password });
+      await updateMe({ password: passwordForm.new_password });
       setPasswordForm({ new_password: '', confirm_password: '' });
       showSuccess('Password updated successfully!');
     } catch (err) {

@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { getDirectThread, sendDirectMessage, uploadDirectMessageFile, subscribeDirectMessages, updateDirectMessage } from '@/services/messaging';
+import { getProfileByUserId } from '@/services/lawyers';
+import { createAuditLog } from '@/services/admin';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeft, Send, Paperclip, Loader2, AlertTriangle,
@@ -81,12 +84,10 @@ export default function DirectMessageThreadPage() {
   useEffect(() => {
     const init = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate('/login'); return; }
-        const userData = await base44.auth.me();
+        const userData = await getCurrentUser();
+        if (!userData) { navigate('/login'); return; }
         setUser(userData);
-        const profiles = await base44.entities.LawyerProfile.filter({ user_id: userData.id });
-        setLawyerProfile(profiles[0] || null);
+        setLawyerProfile(await getProfile(userData.id));
       } catch {
         navigate('/login');
       } finally {
@@ -100,7 +101,7 @@ export default function DirectMessageThreadPage() {
     if (!threadId) return;
     let res;
     try {
-      res = await base44.functions.invoke('getDirectThread', { thread_id: threadId });
+      res = await getDirectThread(threadId);
     } catch {
       navigate('/app/messages');
       return;
@@ -111,8 +112,8 @@ export default function DirectMessageThreadPage() {
     // Fetch full name from LawyerProfile and attach directly to participant
     if (participant?.user_id) {
       try {
-        const profiles = await base44.entities.LawyerProfile.filter({ user_id: participant.user_id });
-        if (profiles[0]?.full_name) participant.resolved_full_name = profiles[0].full_name;
+        const profile = await getProfileByUserId(participant.user_id);
+        if (profile?.full_name) participant.resolved_full_name = profile.full_name;
       } catch {}
     }
     setOtherParticipant(participant);
@@ -152,7 +153,7 @@ export default function DirectMessageThreadPage() {
   // Real-time subscription — stable deps, uses ref for userFullNames
   useEffect(() => {
     if (!threadId) return;
-    const unsub = base44.entities.DirectMessage.subscribe((event) => {
+    const unsub = subscribeDirectMessages((event) => {
       if (event.data?.thread_id === threadId) {
         if (event.type === 'create' && !event.data.is_deleted) {
           setMessages(prev => {
@@ -178,8 +179,8 @@ export default function DirectMessageThreadPage() {
 
   const loadUserFullName = async (userId) => {
     try {
-      const profiles = await base44.entities.LawyerProfile.filter({ user_id: userId });
-      const fullName = profiles[0]?.full_name || 'Attorney';
+      const profile = await getProfileByUserId(userId);
+      const fullName = profile?.full_name || 'Attorney';
       setUserFullNames(prev => ({ ...prev, [userId]: fullName }));
     } catch {
       setUserFullNames(prev => ({ ...prev, [userId]: 'Attorney' }));
@@ -219,7 +220,7 @@ export default function DirectMessageThreadPage() {
     setPendingFiles([]);
 
     try {
-      const res = await base44.functions.invoke('sendDirectMessage', { thread_id: threadId, body });
+      const res = await sendDirectMessage({ thread_id: threadId, body });
       if (res.data?.error) throw new Error(res.data.error);
       const messageId = res.data?.message?.id;
 
@@ -232,14 +233,14 @@ export default function DirectMessageThreadPage() {
           fd.append('file', pf.file);
           fd.append('thread_id', threadId);
           fd.append('message_id', messageId);
-          const upRes = await base44.functions.invoke('uploadDirectMessageFile', fd);
+          const upRes = await uploadDirectMessageFile(fd);
           if (upRes.data?.file) {
             uploadedFiles.push(upRes.data.file);
             fileIds.push(upRes.data.file.id);
           }
         }
         if (fileIds.length > 0) {
-          await base44.entities.DirectMessage.update(messageId, {
+          await updateDirectMessage(messageId, {
             has_attachments: true,
             attachment_file_ids: fileIds
           });
@@ -260,9 +261,9 @@ export default function DirectMessageThreadPage() {
 
   const handleDelete = async (msg) => {
     if (!window.confirm('Delete this message?')) return;
-    await base44.entities.DirectMessage.update(msg.id, { is_deleted: true, deleted_by: user.email });
+    await updateDirectMessage(msg.id, { is_deleted: true, deleted_by: user.email });
     setMessages(prev => prev.filter(m => m.id !== msg.id));
-    base44.entities.AuditLog?.create?.({ entity_type: 'DirectMessage', entity_id: msg.id, action: 'direct_message_deleted', actor_email: user.email }).catch?.(() => {});
+    createAuditLog({ entity_type: 'DirectMessage', entity_id: msg.id, action: 'direct_message_deleted', actor_email: user.email }).catch(() => {});
   };
 
   const visibleMessages = messages.filter(m => !m.is_deleted);

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { me as getMe } from '@/services/auth';
+import { listResources, updateResource, deleteResource, listResourceEvents } from '@/services/content';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Search, Edit, Trash2, Eye, EyeOff,
@@ -31,7 +32,7 @@ export default function AdminResources() {
   const [toggling, setToggling] = useState(null);
 
   useEffect(() => {
-    base44.auth.me().then(u => {
+    getMe().then(u => {
       if (!u || u.role !== 'admin') { navigate(createPageUrl('Home')); return; }
       setUser(u);
       setLoading(false);
@@ -40,13 +41,13 @@ export default function AdminResources() {
 
   const { data: resources = [], isLoading: resLoading } = useQuery({
     queryKey: ['adminResources'],
-    queryFn: () => base44.entities.Resource.list('-updated_date', 200),
+    queryFn: () => listResources(),
     enabled: !!user,
   });
 
   const { data: events = [] } = useQuery({
     queryKey: ['resourceEvents'],
-    queryFn: () => base44.entities.ResourceEvent.list('-created_date', 1000),
+    queryFn: () => listResourceEvents(),
     enabled: !!user,
   });
 
@@ -68,7 +69,7 @@ export default function AdminResources() {
   const handleToggleStatus = async (resource) => {
     setToggling(resource.id);
     const newStatus = resource.status === 'published' ? 'draft' : 'published';
-    await base44.entities.Resource.update(resource.id, {
+    await updateResource(resource.id, {
       status: newStatus,
       published_at: newStatus === 'published' ? new Date().toISOString() : null
     });
@@ -79,7 +80,7 @@ export default function AdminResources() {
   const handleDelete = async () => {
     if (!confirmDelete) return;
     setDeleting(true);
-    await base44.entities.Resource.delete(confirmDelete);
+    await deleteResource(confirmDelete);
     queryClient.invalidateQueries(['adminResources']);
     setConfirmDelete(null);
     setDeleting(false);

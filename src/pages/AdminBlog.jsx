@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser } from '@/services/auth';
+import { listBlogPosts, updateBlogPost, createBlogPost, deleteBlogPost } from '@/services/content';
+import { createAuditLog } from '@/services/admin';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Plus, Search, Edit2, Trash2, Eye, EyeOff, Copy,
@@ -48,9 +50,8 @@ export default function AdminBlog() {
   useEffect(() => {
     const check = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('Home')); return; }
-        const me = await base44.auth.me();
+        const me = await getCurrentUser();
+        if (!me) { navigate(createPageUrl('Home')); return; }
         if (me.role !== 'admin') { navigate(createPageUrl('LawyerDashboard')); return; }
         setUser(me);
       } catch { navigate(createPageUrl('Home')); }
@@ -61,7 +62,7 @@ export default function AdminBlog() {
 
   const { data: posts = [], isLoading, refetch } = useQuery({
     queryKey: ['adminBlogPosts'],
-    queryFn: () => base44.entities.BlogPost.list('-created_date'),
+    queryFn: () => listBlogPosts(),
     enabled: !!user,
   });
 
@@ -78,11 +79,11 @@ export default function AdminBlog() {
   const handleTogglePublish = async (post) => {
     setActionLoading(post.id);
     const newStatus = post.status === 'published' ? 'draft' : 'published';
-    await base44.entities.BlogPost.update(post.id, {
+    await updateBlogPost(post.id, {
       status: newStatus,
       ...(newStatus === 'published' ? { published_at: new Date().toISOString(), published_by: user.email } : {})
     });
-    await base44.entities.AuditLog.create({
+    await createAuditLog({
       entity_type: 'BlogPost', entity_id: post.id,
       action: newStatus === 'published' ? 'blog_published' : 'blog_unpublished',
       actor_email: user.email
@@ -95,7 +96,7 @@ export default function AdminBlog() {
   const handleDuplicate = async (post) => {
     setActionLoading(post.id + '_dup');
     const { id, created_date, updated_date, created_by, ...rest } = post;
-    await base44.entities.BlogPost.create({
+    await createBlogPost({
       ...rest,
       title: `${post.title} (Copy)`,
       slug: slugify(`${post.title}-copy-${Date.now()}`),
@@ -110,8 +111,8 @@ export default function AdminBlog() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await base44.entities.BlogPost.delete(deleteTarget.id);
-    await base44.entities.AuditLog.create({
+    await deleteBlogPost(deleteTarget.id);
+    await createAuditLog({
       entity_type: 'BlogPost', entity_id: deleteTarget.id,
       action: 'blog_deleted', actor_email: user.email
     }).catch(() => {});

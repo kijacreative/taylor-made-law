@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser } from '@/services/auth';
+import { filterBlogPosts, createBlogPost, updateBlogPost } from '@/services/content';
+import { createAuditLog } from '@/services/admin';
+import { uploadFile } from '@/services/storage';
 import {
   ArrowLeft, Save, Eye, Upload, X, Plus, Loader2,
   CheckCircle2, AlertCircle, Image as ImageIcon, Tag, FileDown
@@ -71,14 +74,13 @@ export default function AdminBlogEdit() {
   useEffect(() => {
     const init = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('Home')); return; }
-        const me = await base44.auth.me();
+        const me = await getCurrentUser();
+        if (!me) { navigate(createPageUrl('Home')); return; }
         if (me.role !== 'admin') { navigate(createPageUrl('LawyerDashboard')); return; }
         setUser(me);
 
         if (!isNew && postId) {
-          const posts = await base44.entities.BlogPost.filter({ id: postId });
+          const posts = await filterBlogPosts({ id: postId });
           if (posts[0]) {
             const p = posts[0];
             setForm({
@@ -144,13 +146,13 @@ export default function AdminBlogEdit() {
 
     try {
       if (isNew) {
-        const created = await base44.entities.BlogPost.create(payload);
-        await base44.entities.AuditLog.create({ entity_type: 'BlogPost', entity_id: created.id, action: publishNow ? 'blog_published' : 'blog_created', actor_email: user.email }).catch(() => {});
+        const created = await createBlogPost(payload);
+        await createAuditLog({ entity_type: 'BlogPost', entity_id: created.id, action: publishNow ? 'blog_published' : 'blog_created', actor_email: user.email }).catch(() => {});
         showToast(publishNow ? 'Post published!' : 'Post saved as draft.');
         navigate(createPageUrl('AdminBlogEdit') + `?id=${created.id}`, { replace: true });
       } else {
-        await base44.entities.BlogPost.update(postId, payload);
-        await base44.entities.AuditLog.create({ entity_type: 'BlogPost', entity_id: postId, action: publishNow ? 'blog_published' : 'blog_updated', actor_email: user.email }).catch(() => {});
+        await updateBlogPost(postId, payload);
+        await createAuditLog({ entity_type: 'BlogPost', entity_id: postId, action: publishNow ? 'blog_published' : 'blog_updated', actor_email: user.email }).catch(() => {});
         showToast(publishNow ? 'Post published!' : 'Changes saved.');
         setForm(f => ({ ...f, ...payload }));
       }
@@ -166,7 +168,7 @@ export default function AdminBlogEdit() {
     const file = e.target.files[0];
     if (!file) return;
     setUploadingImage(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await uploadFile(file);
     setForm(f => ({ ...f, featured_image_url: file_url }));
     setUploadingImage(false);
   };
@@ -175,7 +177,7 @@ export default function AdminBlogEdit() {
     const file = e.target.files[0];
     if (!file) return;
     setUploadingPdf(true);
-    const { file_url } = await base44.integrations.Core.UploadFile({ file });
+    const { file_url } = await uploadFile(file);
     setForm(f => ({ ...f, pdf_download_url: file_url, pdf_file_name: file.name }));
     setUploadingPdf(false);
   };

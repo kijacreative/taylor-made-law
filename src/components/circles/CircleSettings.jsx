@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { updateCircle, updateMember } from '@/services/circles';
 import { useQueryClient } from '@tanstack/react-query';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +26,7 @@ export default function CircleSettings({ circle, members, isAdmin }) {
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
-    await base44.entities.LegalCircle.update(circle.id, {
+    await updateCircle(circle.id, {
       name: form.name,
       description: form.description,
       case_sharing_enabled: form.case_sharing_enabled,
@@ -44,9 +44,9 @@ export default function CircleSettings({ circle, members, isAdmin }) {
     setDeleting(true);
     // Remove all members first
     for (const m of members) {
-      await base44.entities.LegalCircleMember.update(m.id, { status: 'removed' }).catch(() => {});
+      await updateMember(m.id, { status: 'removed' }).catch(() => {});
     }
-    await base44.entities.LegalCircle.update(circle.id, { is_active: false });
+    await updateCircle(circle.id, { is_active: false });
     navigate(createPageUrl('Groups'));
   };
 

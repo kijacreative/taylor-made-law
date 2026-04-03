@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser } from '@/services/auth';
+import { listPopups, listImpressions, updatePopup, createPopup, deletePopup } from '@/services/notifications';
 import { useQuery } from '@tanstack/react-query';
 import {
   Plus, Edit2, Trash2, Copy, ToggleLeft, ToggleRight, Loader2,
@@ -48,9 +49,8 @@ export default function AdminPopups() {
   useEffect(() => {
     const check = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('Home')); return; }
-        const me = await base44.auth.me();
+        const me = await getCurrentUser();
+        if (!me) { navigate(createPageUrl('Home')); return; }
         if (me.role !== 'admin') { navigate(createPageUrl('LawyerDashboard')); return; }
         setUser(me);
       } catch { navigate(createPageUrl('Home')); }
@@ -61,14 +61,14 @@ export default function AdminPopups() {
 
   const { data: popups = [], isLoading, refetch } = useQuery({
     queryKey: ['adminPopups'],
-    queryFn: () => base44.entities.Popup.list('-created_date'),
+    queryFn: () => listPopups('-created_date'),
     enabled: !!user,
   });
 
   // Impression counts per popup
   const { data: allImpressions = [] } = useQuery({
     queryKey: ['allPopupImpressions'],
-    queryFn: () => base44.entities.PopupImpression.list('-created_date', 500),
+    queryFn: () => listImpressions('-created_date', 500),
     enabled: !!user,
   });
 
@@ -81,7 +81,7 @@ export default function AdminPopups() {
   const handleToggleStatus = async (popup) => {
     setActionLoading(popup.id);
     const newStatus = popup.status === 'active' ? 'inactive' : 'active';
-    await base44.entities.Popup.update(popup.id, { status: newStatus });
+    await updatePopup(popup.id, { status: newStatus });
     showToast(newStatus === 'active' ? `"${popup.name}" activated.` : `"${popup.name}" deactivated.`);
     refetch();
     setActionLoading(null);
@@ -90,7 +90,7 @@ export default function AdminPopups() {
   const handleDuplicate = async (popup) => {
     setActionLoading(popup.id + '_dup');
     const { id, created_date, updated_date, created_by, ...rest } = popup;
-    await base44.entities.Popup.create({ ...rest, name: `${popup.name} (Copy)`, status: 'draft' });
+    await createPopup({ ...rest, name: `${popup.name} (Copy)`, status: 'draft' });
     showToast('Popup duplicated as draft.');
     refetch();
     setActionLoading(null);
@@ -98,7 +98,7 @@ export default function AdminPopups() {
 
   const handleDelete = async () => {
     if (!deleteTarget) return;
-    await base44.entities.Popup.delete(deleteTarget.id);
+    await deletePopup(deleteTarget.id);
     showToast(`"${deleteTarget.name}" deleted.`);
     setDeleteTarget(null);
     refetch();

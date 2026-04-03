@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { me as getMe, getProfile } from '@/services/auth';
+import { filterResources, createResourceEvent } from '@/services/content';
 import { useQuery } from '@tanstack/react-query';
 import {
   Search, FileText, Link2, Download, ExternalLink,
@@ -35,11 +36,11 @@ export default function LawyerResources() {
   const [sort, setSort] = useState('recent');
 
   useEffect(() => {
-    base44.auth.me().then(async u => {
+    getMe().then(async u => {
       if (!u) { navigate(createPageUrl('LawyerLogin')); return; }
       setUser(u);
-      const profiles = await base44.entities.LawyerProfile.filter({ user_id: u.id });
-      if (profiles?.[0]) setProfile(profiles[0]);
+      const p = await getProfile(u.id);
+      if (p) setProfile(p);
       setLoading(false);
     }).catch(() => navigate(createPageUrl('LawyerLogin')));
   }, []);
@@ -48,7 +49,7 @@ export default function LawyerResources() {
 
   const { data: resources = [], isLoading: resLoading } = useQuery({
     queryKey: ['lawyerResources'],
-    queryFn: () => base44.entities.Resource.filter({ status: 'published' }, '-updated_date', 200),
+    queryFn: () => filterResources({ status: 'published' }),
     enabled: !!user,
   });
 
@@ -71,7 +72,7 @@ export default function LawyerResources() {
 
   const trackEvent = async (resource, actionType) => {
     if (!user) return;
-    await base44.entities.ResourceEvent.create({
+    await createResourceEvent({
       resource_id: resource.id,
       user_id: user.id,
       user_email: user.email,

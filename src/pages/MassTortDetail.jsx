@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { filterMassTorts, filterContentPosts } from '@/services/content';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -32,12 +33,11 @@ export default function MassTortDetail() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
+        const userData = await getCurrentUser();
+        if (!userData) {
           navigate(createPageUrl('Home'));
           return;
         }
-        const userData = await base44.auth.me();
         setUser(userData);
       } catch (e) {
         navigate(createPageUrl('Home'));
@@ -51,7 +51,7 @@ export default function MassTortDetail() {
   // Get lawyer profile
   const { data: profiles = [] } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
+    queryFn: () => getProfile(user.id).then(p => p ? [p] : []),
     enabled: !!user?.id,
   });
 
@@ -61,7 +61,7 @@ export default function MassTortDetail() {
   const { data: massTort, isLoading: massTortLoading } = useQuery({
     queryKey: ['massTort', slug],
     queryFn: async () => {
-      const results = await base44.entities.MassTort.filter({ slug, is_published: true });
+      const results = await filterMassTorts({ slug, is_published: true });
       return results[0] || null;
     },
     enabled: !!slug,
@@ -72,7 +72,7 @@ export default function MassTortDetail() {
     queryKey: ['relatedContent', massTort?.tags],
     queryFn: async () => {
       if (!massTort?.tags || massTort.tags.length === 0) return [];
-      const all = await base44.entities.ContentPost.filter({ is_published: true }, '-published_at', 5);
+      const all = await filterContentPosts({ is_published: true }, '-published_at');
       return all.filter(post => 
         post.tags?.some(tag => massTort.tags.includes(tag))
       ).slice(0, 3);

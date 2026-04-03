@@ -1,7 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { filterCircles, filterMembers, updateMember } from '@/services/circles';
+import { getProfileByUserId } from '@/services/lawyers';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Users, MessageSquare, Briefcase, Settings, Loader2, Shield, LogOut, FolderOpen, FileText } from 'lucide-react';
@@ -29,9 +31,8 @@ export default function GroupDetail() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('Home')); return; }
-        const userData = await base44.auth.me();
+        const userData = await getCurrentUser();
+        if (!userData) { navigate(createPageUrl('Home')); return; }
         setUser(userData);
       } catch {
         navigate(createPageUrl('Home'));
@@ -44,14 +45,14 @@ export default function GroupDetail() {
 
   const { data: profiles = [] } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
+    queryFn: () => getProfile(user.id).then(p => p ? [p] : []),
     enabled: !!user?.id,
   });
   const lawyerProfile = profiles[0] || null;
 
   const { data: circles = [], isLoading: circleLoading, isFetching: circleFetching, refetch: refetchCircle } = useQuery({
     queryKey: ['legalCircle', circleId],
-    queryFn: () => base44.entities.LegalCircle.filter({ id: circleId }),
+    queryFn: () => filterCircles({ id: circleId }),
     enabled: !!circleId,
     retry: 8,
     retryDelay: 1500,
@@ -60,7 +61,7 @@ export default function GroupDetail() {
 
   const { data: myMemberships = [], isLoading: membershipLoading, isFetching: membershipFetching } = useQuery({
     queryKey: ['myCircleMembership', circleId, user?.id],
-    queryFn: () => base44.entities.LegalCircleMember.filter({ circle_id: circleId, user_id: user.id, status: 'active' }),
+    queryFn: () => filterMembers({ circle_id: circleId, user_id: user.id, status: 'active' }),
     enabled: !!circleId && !!user?.id,
     retry: 8,
     retryDelay: 1500,
@@ -73,12 +74,12 @@ export default function GroupDetail() {
   const { data: members = [], isLoading: membersLoading } = useQuery({
     queryKey: ['circleMembers', circleId],
     queryFn: async () => {
-      const circleMembers = await base44.entities.LegalCircleMember.filter({ circle_id: circleId, status: 'active' }, '-joined_at', 100);
+      const circleMembers = await filterMembers({ circle_id: circleId, status: 'active' });
       // Try to enrich with lawyer profiles, but don't block if it fails
       try {
         const userIds = circleMembers.map(m => m.user_id).filter(Boolean);
         const profilePromises = userIds.map(uid =>
-          base44.entities.LawyerProfile.filter({ user_id: uid }).then(r => r[0] || null).catch(() => null)
+          getProfileByUserId(uid).catch(() => null)
         );
         const profiles = await Promise.all(profilePromises);
         return circleMembers.map((member, i) => ({
@@ -112,7 +113,7 @@ export default function GroupDetail() {
 
   const handleLeave = async () => {
     if (!window.confirm('Are you sure you want to leave this circle?')) return;
-    await base44.entities.LegalCircleMember.update(myMembership.id, { status: 'removed' });
+    await updateMember(myMembership.id, { status: 'removed' });
     navigate(createPageUrl('Groups'));
   };
 

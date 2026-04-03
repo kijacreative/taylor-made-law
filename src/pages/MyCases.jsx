@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { filterCases, updateCase } from '@/services/cases';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -39,12 +40,11 @@ export default function MyCases() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
+        const userData = await getCurrentUser();
+        if (!userData) {
           navigate(createPageUrl('LawyerLogin'));
           return;
         }
-        const userData = await base44.auth.me();
         setUser(userData);
       } catch (e) {
         navigate(createPageUrl('Home'));
@@ -58,7 +58,7 @@ export default function MyCases() {
   // Get lawyer profile
   const { data: profiles = [] } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
+    queryFn: () => getProfile(user.id).then(p => p ? [p] : []),
     enabled: !!user?.id,
   });
 
@@ -67,7 +67,7 @@ export default function MyCases() {
   // Get my cases
   const { data: myCases = [], isLoading: casesLoading, refetch } = useQuery({
     queryKey: ['myCases', user?.email],
-    queryFn: () => base44.entities.Case.filter({ accepted_by_email: user.email }, '-accepted_at'),
+    queryFn: () => filterCases({ accepted_by_email: user.email }),
     enabled: !!user?.email,
   });
 
@@ -90,7 +90,7 @@ export default function MyCases() {
     
     setSaving(true);
     try {
-      await base44.entities.Case.update(viewingCase.id, {
+      await updateCase(viewingCase.id, {
         description: viewingCase.description,
         estimated_value: viewingCase.estimated_value ? parseFloat(viewingCase.estimated_value) : null,
         lawyer_notes: viewingCase.lawyer_notes

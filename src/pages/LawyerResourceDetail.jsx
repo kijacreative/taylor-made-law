@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { me as getMe, getProfile } from '@/services/auth';
+import { filterResources, createResourceEvent } from '@/services/content';
 import { useQuery } from '@tanstack/react-query';
 import {
   ArrowLeft, Download, ExternalLink, Lock,
@@ -25,24 +26,24 @@ export default function LawyerResourceDetail() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     setSlug(params.get('slug') || '');
-    base44.auth.me().then(async u => {
+    getMe().then(async u => {
       if (!u) { navigate(createPageUrl('LawyerLogin')); return; }
       setUser(u);
-      const profiles = await base44.entities.LawyerProfile.filter({ user_id: u.id });
-      if (profiles?.[0]) setProfile(profiles[0]);
+      const p = await getProfile(u.id);
+      if (p) setProfile(p);
       setLoading(false);
     }).catch(() => navigate(createPageUrl('LawyerLogin')));
   }, []);
 
   const { data: resources = [], isLoading: resLoading } = useQuery({
     queryKey: ['resourceDetail', slug],
-    queryFn: () => base44.entities.Resource.filter({ slug, status: 'published' }),
+    queryFn: () => filterResources({ slug, status: 'published' }),
     enabled: !!user && !!slug,
   });
 
   const { data: allResources = [] } = useQuery({
     queryKey: ['allResourcesForRelated'],
-    queryFn: () => base44.entities.Resource.filter({ status: 'published' }, '-updated_date', 50),
+    queryFn: () => filterResources({ status: 'published' }),
     enabled: !!user,
   });
 
@@ -60,7 +61,7 @@ export default function LawyerResourceDetail() {
 
   const trackEvent = async (actionType) => {
     if (!user || !resource) return;
-    await base44.entities.ResourceEvent.create({
+    await createResourceEvent({
       resource_id: resource.id,
       user_id: user.id,
       user_email: user.email,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { submitCase } from '@/services/cases';
+import { filterMembers, listCircles } from '@/services/circles';
 import { useQuery } from '@tanstack/react-query';
 import { X, CheckCircle2, Loader2, Scale } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
@@ -29,7 +30,7 @@ export default function SubmitCaseModal({ user, onClose }) {
   // Fetch circles the lawyer is a member of
   const { data: memberships = [] } = useQuery({
     queryKey: ['myCircleMemberships', user?.id],
-    queryFn: () => base44.entities.LegalCircleMember.filter({ user_id: user.id, status: 'active' }),
+    queryFn: () => filterMembers({ user_id: user.id, status: 'active' }),
     enabled: !!user?.id,
   });
 
@@ -37,7 +38,7 @@ export default function SubmitCaseModal({ user, onClose }) {
     queryKey: ['circleDetails', memberships.map(m => m.circle_id).join(',')],
     queryFn: async () => {
       if (!memberships.length) return [];
-      const all = await base44.entities.LegalCircle.list();
+      const all = await listCircles();
       return all.filter(c => memberships.some(m => m.circle_id === c.id));
     },
     enabled: memberships.length > 0,
@@ -66,7 +67,7 @@ export default function SubmitCaseModal({ user, onClose }) {
         status: form.circle_id ? 'pending_approval' : 'draft',
       };
 
-      await base44.functions.invoke('submitCase', caseData);
+      await submitCase(caseData);
 
       setStep('success');
     } catch (err) {

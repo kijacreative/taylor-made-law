@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { isAuthenticated, me, login, logout } from '@/services/auth';
+import { createAuditLog } from '@/services/admin';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, AlertCircle, Loader2, Shield } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
@@ -24,15 +25,15 @@ export default function LawyerLogin() {
   const activated = urlParams.get('activated') === '1';
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then(async (auth) => {
+    isAuthenticated().then(async (auth) => {
       if (auth) {
         try {
-          const userData = await base44.auth.me();
+          const userData = await me();
           if (userData.role === 'admin') {
             navigate(createPageUrl('AdminDashboard'), { replace: true });
           } else {
             if (userData.user_status === 'disabled') {
-              await base44.auth.logout();
+              await logout();
               setCheckingAuth(false);
               setDisabledBlock(true);
               return;
@@ -57,23 +58,23 @@ export default function LawyerLogin() {
     }
     setLoading(true);
     try {
-      await base44.auth.loginViaEmailPassword(email.toLowerCase().trim(), password);
+      await login(email.toLowerCase().trim(), password);
 
-      const userData = await base44.auth.me();
+      const userData = await me();
 
       if (userData.user_status === 'disabled') {
-        await base44.auth.logout();
+        await logout();
         setDisabledBlock(true);
         return;
       }
 
       if (userData.role === 'admin') {
-        await base44.auth.logout();
+        await logout();
         setError('This portal is for attorneys only. Admins must use the admin portal.');
         return;
       }
 
-      await base44.entities.AuditLog.create({
+      await createAuditLog({
         entity_type: 'User',
         entity_id: userData.id,
         action: 'login_success',
@@ -91,10 +92,10 @@ export default function LawyerLogin() {
         // Base44 hasn't marked email verified yet — wait 2s and retry once automatically
         await new Promise(r => setTimeout(r, 2000));
         try {
-          await base44.auth.loginViaEmailPassword(email.toLowerCase().trim(), password);
-          const userData2 = await base44.auth.me();
+          await login(email.toLowerCase().trim(), password);
+          const userData2 = await me();
           if (userData2.role === 'admin') {
-            await base44.auth.logout();
+            await logout();
             setError('This portal is for attorneys only. Admins must use the admin portal.');
             return;
           }

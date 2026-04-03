@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { filterInvitations, listCircles, updateInvitation, acceptCircleInvite } from '@/services/circles';
+import { getProfileByUserId } from '@/services/lawyers';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Users, Check, X, Loader2, Bell } from 'lucide-react';
@@ -18,9 +20,8 @@ export default function GroupInvitations() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('Home')); return; }
-        const userData = await base44.auth.me();
+        const userData = await getCurrentUser();
+        if (!userData) { navigate(createPageUrl('Home')); return; }
         setUser(userData);
       } catch {
         navigate(createPageUrl('Home'));
@@ -33,20 +34,20 @@ export default function GroupInvitations() {
 
   const { data: profiles = [] } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
+    queryFn: () => getProfile(user.id).then(p => p ? [p] : []),
     enabled: !!user?.id,
   });
   const lawyerProfile = profiles[0] || null;
 
   const { data: invites = [], isLoading: invitesLoading } = useQuery({
     queryKey: ['myInvites', user?.email],
-    queryFn: () => base44.entities.LegalCircleInvitation.filter({ invitee_email: user.email }, '-created_date'),
+    queryFn: () => filterInvitations({ invitee_email: user.email }),
     enabled: !!user?.email,
   });
 
   const { data: circles = [] } = useQuery({
     queryKey: ['circleDetails'],
-    queryFn: () => base44.entities.LegalCircle.list(),
+    queryFn: () => listCircles(),
     enabled: !!user,
   });
 
@@ -56,7 +57,7 @@ export default function GroupInvitations() {
     queryKey: ['inviterProfiles', inviterUserIds.join(',')],
     queryFn: async () => {
       const results = await Promise.all(
-        inviterUserIds.map(uid => base44.entities.LawyerProfile.filter({ user_id: uid }).then(r => r[0] || null).catch(() => null))
+        inviterUserIds.map(uid => getProfileByUserId(uid).catch(() => null))
       );
       return results.filter(Boolean);
     },
@@ -71,7 +72,7 @@ export default function GroupInvitations() {
   const handleAccept = async (invite) => {
     setActioning(a => ({ ...a, [invite.id]: 'accepting' }));
     // Call backend function to sync circle membership
-    await base44.functions.invoke('acceptCircleInvite', {
+    await acceptCircleInvite({
       invitation_id: invite.id,
       circle_id: invite.circle_id,
       inviter_user_id: invite.inviter_user_id
@@ -85,7 +86,7 @@ export default function GroupInvitations() {
 
   const handleDecline = async (invite) => {
     setActioning(a => ({ ...a, [invite.id]: 'declining' }));
-    await base44.entities.LegalCircleInvitation.update(invite.id, { status: 'declined' });
+    await updateInvitation(invite.id, { status: 'declined' });
     queryClient.invalidateQueries({ queryKey: ['myInvites'] });
     setActioning(a => ({ ...a, [invite.id]: null }));
   };

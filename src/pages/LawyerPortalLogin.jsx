@@ -8,7 +8,8 @@
  */
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { isAuthenticated, me, login, logout } from '@/services/auth';
+import { createAuditLog } from '@/services/admin';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff, AlertCircle, Loader2, Shield, CheckCircle2 } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
@@ -43,10 +44,10 @@ export default function LawyerPortalLogin() {
   const [checkingAuth, setCheckingAuth] = useState(true);
 
   useEffect(() => {
-    base44.auth.isAuthenticated().then(async (auth) => {
+    isAuthenticated().then(async (auth) => {
       if (auth) {
         try {
-          const user = await base44.auth.me();
+          const user = await me();
           routeAfterLogin(user);
         } catch {
           setCheckingAuth(false);
@@ -78,16 +79,16 @@ export default function LawyerPortalLogin() {
     }
     setLoading(true);
     try {
-      await base44.auth.loginViaEmailPassword(email.trim().toLowerCase(), password);
-      const user = await base44.auth.me();
+      await login(email.trim().toLowerCase(), password);
+      const user = await me();
 
       if (user.user_status === 'disabled') {
-        await base44.auth.logout();
+        await logout();
         setDisabledBlock(true);
         return;
       }
 
-      base44.entities.AuditLog.create({
+      createAuditLog({
         entity_type: 'User', entity_id: user.id,
         action: 'login_success', actor_email: user.email,
         actor_role: user.role || 'user', notes: 'Login via /login',

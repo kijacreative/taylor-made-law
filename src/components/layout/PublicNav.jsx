@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { isAuthenticated as checkAuth } from '@/services/auth';
 import { Menu, X, ChevronDown } from 'lucide-react';
 import TMLButton from '../ui/TMLButton';
 
@@ -13,7 +13,7 @@ const PublicNav = () => {
 
   React.useEffect(() => {
     const checkAuth = async () => {
-      const auth = await base44.auth.isAuthenticated();
+      const auth = await checkAuth();
       setIsAuthenticated(auth);
     };
     checkAuth();

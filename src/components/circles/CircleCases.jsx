@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { base44 } from '@/api/base44Client';
+import { submitCase } from '@/services/cases';
+import { filterCircleCases, updateCircleCase } from '@/services/circles';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Briefcase, MapPin, DollarSign, User, CheckCircle, X, Loader2 } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
@@ -22,7 +23,7 @@ export default function CircleCases({ circleId, circle, user, isAdmin }) {
 
   const { data: cases = [], isLoading } = useQuery({
     queryKey: ['circleCases', circleId],
-    queryFn: () => base44.entities.LegalCircleCase.filter({ circle_id: circleId }, '-created_date'),
+    queryFn: () => filterCircleCases({ circle_id: circleId }),
   });
 
   const handleCaseCreated = () => {
@@ -32,7 +33,7 @@ export default function CircleCases({ circleId, circle, user, isAdmin }) {
 
   const handleAccept = async (caseItem) => {
     if (!window.confirm(`Accept this case? You will be connected with the submitting attorney.`)) return;
-    await base44.entities.LegalCircleCase.update(caseItem.id, {
+    await updateCircleCase(caseItem.id, {
       status: 'accepted',
       accepted_by_user_id: user.id,
       accepted_by_email: user.email,
@@ -144,7 +145,7 @@ function SubmitCaseForm({ circleId, circle, user, onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    const res = await base44.functions.invoke('submitCase', {
+    const res = await submitCase({
       circle_id: circleId,
       title: form.title,
       summary: form.summary,

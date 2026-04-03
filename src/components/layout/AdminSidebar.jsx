@@ -14,7 +14,8 @@ import {
   ClipboardList,
   Zap
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { logout } from '@/services/auth';
+import { filterCases } from '@/services/cases';
 import { useQuery } from '@tanstack/react-query';
 
 const AdminSidebar = ({ user }) => {
@@ -25,7 +26,7 @@ const AdminSidebar = ({ user }) => {
   // Fetch pending cases count
   const { data: pendingCases = [] } = useQuery({
     queryKey: ['pendingCasesCount'],
-    queryFn: () => base44.entities.Case.filter({ status: 'draft' }),
+    queryFn: () => filterCases({ status: 'draft' }),
     enabled: !!user,
   });
 
@@ -96,7 +97,7 @@ const AdminSidebar = ({ user }) => {
   ];
 
   const handleLogout = () => {
-    base44.auth.logout();
+    logout();
   };
 
   return (

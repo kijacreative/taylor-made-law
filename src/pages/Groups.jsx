@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { filterMembers, filterCircles, filterInvitations } from '@/services/circles';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -30,12 +31,11 @@ export default function Groups() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
+        const userData = await getCurrentUser();
+        if (!userData) {
           navigate(createPageUrl('Home'));
           return;
         }
-        const userData = await base44.auth.me();
         setUser(userData);
       } catch (e) {
         navigate(createPageUrl('Home'));
@@ -48,7 +48,7 @@ export default function Groups() {
 
   const { data: profiles = [] } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
+    queryFn: () => getProfile(user.id).then(p => p ? [p] : []),
     enabled: !!user?.id,
   });
 
@@ -58,7 +58,7 @@ export default function Groups() {
   // Get user's group memberships
   const { data: memberships = [], isLoading: membershipsLoading } = useQuery({
     queryKey: ['myGroupMemberships', user?.id],
-    queryFn: () => base44.entities.LegalCircleMember.filter({ 
+    queryFn: () => filterMembers({
       user_id: user.id,
       status: 'active'
     }),
@@ -70,7 +70,7 @@ export default function Groups() {
   // Get the actual groups (only active circles)
   const { data: allCircles = [] } = useQuery({
     queryKey: ['legalCircles'],
-    queryFn: () => base44.entities.LegalCircle.filter({ is_active: true }),
+    queryFn: () => filterCircles({ is_active: true }),
     enabled: !!user,
     staleTime: 0,
     refetchOnMount: true,
@@ -92,7 +92,7 @@ export default function Groups() {
   // Get pending invitations
   const { data: pendingInvites = [] } = useQuery({
     queryKey: ['pendingInvites', user?.email],
-    queryFn: () => base44.entities.LegalCircleInvitation.filter({
+    queryFn: () => filterInvitations({
       invitee_email: user.email,
       status: 'pending'
     }),

@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser } from '@/services/auth';
+import { listCircles, listMembers, listCircleCases, updateCircle } from '@/services/circles';
+import { filterCircleMessages } from '@/services/circles';
 import { useQuery } from '@tanstack/react-query';
 import { Users, MessageSquare, Briefcase, Shield, Loader2, Eye, AlertTriangle, CheckCircle, X } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
@@ -15,9 +17,8 @@ export default function AdminCircles() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) { navigate(createPageUrl('AdminLogin')); return; }
-        const userData = await base44.auth.me();
+        const userData = await getCurrentUser();
+        if (!userData) { navigate(createPageUrl('AdminLogin')); return; }
         if (userData.role !== 'admin') { navigate(createPageUrl('LawyerDashboard')); return; }
         setUser(userData);
       } catch {
@@ -31,30 +32,30 @@ export default function AdminCircles() {
 
   const { data: circles = [], isLoading: circlesLoading } = useQuery({
     queryKey: ['adminAllCircles'],
-    queryFn: () => base44.entities.LegalCircle.list('-created_date', 100),
+    queryFn: () => listCircles(),
     enabled: !!user,
   });
 
   const { data: allMembers = [] } = useQuery({
     queryKey: ['adminAllMembers'],
-    queryFn: () => base44.entities.LegalCircleMember.list('-created_date', 500),
+    queryFn: () => listMembers(),
     enabled: !!user,
   });
 
   const { data: allCases = [] } = useQuery({
     queryKey: ['adminAllCircleCases'],
-    queryFn: () => base44.entities.LegalCircleCase.list('-created_date', 500),
+    queryFn: () => listCircleCases(),
     enabled: !!user,
   });
 
   const { data: allMessages = [] } = useQuery({
     queryKey: ['adminAllCircleMessages'],
-    queryFn: () => base44.entities.CircleMessage.list('-created_date', 200),
+    queryFn: () => listCircleMessages(),
     enabled: !!user,
   });
 
   const handleToggleActive = async (circle) => {
-    await base44.entities.LegalCircle.update(circle.id, { is_active: !circle.is_active });
+    await updateCircle(circle.id, { is_active: !circle.is_active });
   };
 
   if (loading) {

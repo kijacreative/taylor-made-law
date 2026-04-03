@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { createCircle, createMember } from '@/services/circles';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
@@ -34,12 +35,11 @@ export default function CreateGroup() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
+        const userData = await getCurrentUser();
+        if (!userData) {
           navigate(createPageUrl('Home'));
           return;
         }
-        const userData = await base44.auth.me();
         setUser(userData);
       } catch (e) {
         navigate(createPageUrl('Home'));
@@ -52,7 +52,7 @@ export default function CreateGroup() {
 
   const { data: profiles = [] } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
+    queryFn: () => getProfile(user.id).then(p => p ? [p] : []),
     enabled: !!user?.id
   });
 
@@ -69,7 +69,7 @@ export default function CreateGroup() {
       replace(/(^-|-$)/g, '');
 
       // Create circle
-      const circle = await base44.entities.LegalCircle.create({
+      const circle = await createCircle({
         name: formData.name,
         slug,
         description: formData.description,
@@ -87,7 +87,7 @@ export default function CreateGroup() {
 
       // Add creator as admin (best effort)
       try {
-        await base44.entities.LegalCircleMember.create({
+        await createMember({
           circle_id: circle.id,
           user_id: user.id,
           user_email: user.email,

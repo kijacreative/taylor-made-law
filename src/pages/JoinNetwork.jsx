@@ -6,7 +6,7 @@ import {
   Briefcase, DollarSign, Users, Shield,
   Plus, Trash2
 } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { publicLawyerSignup } from '@/services/onboarding';
 import PublicNav from '@/components/layout/PublicNav';
 import PublicFooter from '@/components/layout/PublicFooter';
 import TMLButton from '@/components/ui/TMLButton';
@@ -105,7 +105,7 @@ export default function JoinNetwork() {
     setLoading(true);
     setErrors(prev => ({ ...prev, submit: null }));
     try {
-      const res = await base44.functions.invoke('publicLawyerSignup', {
+      const res = await publicLawyerSignup({
         full_name: formData.full_name,
         email: formData.email,
         phone: formData.phone,

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ExternalLink } from 'lucide-react';
-import { base44 } from '@/api/base44Client';
+import { filterPopups, filterImpressions, createImpression, updateImpression } from '@/services/notifications';
 
 const SIZE_WIDTHS = {
   small: 'max-w-sm',
@@ -59,7 +59,7 @@ export default function PopupModal({ user, lawyerProfile, placement = 'dashboard
 
   const loadPopup = async () => {
     const placementFilters = [placement, 'all_app'];
-    const allPopups = await base44.entities.Popup.filter({ status: 'active' });
+    const allPopups = await filterPopups({ status: 'active' });
 
     // Filter by placement and audience
     const eligible = allPopups.filter(p =>
@@ -73,7 +73,7 @@ export default function PopupModal({ user, lawyerProfile, placement = 'dashboard
 
     // Find one to show (first eligible after frequency check)
     for (const p of eligible) {
-      const impressions = await base44.entities.PopupImpression.filter({
+      const impressions = await filterImpressions({
         popup_id: p.id,
         user_id: user.id,
       });
@@ -110,7 +110,7 @@ export default function PopupModal({ user, lawyerProfile, placement = 'dashboard
   const triggerShow = async (p) => {
     setVisible(true);
     // Record impression
-    const record = await base44.entities.PopupImpression.create({
+    const record = await createImpression({
       popup_id: p.id,
       user_id: user.id,
       user_email: user.email,
@@ -118,23 +118,23 @@ export default function PopupModal({ user, lawyerProfile, placement = 'dashboard
       session_id: SESSION_ID,
     });
     setImpressionId(record.id);
-    base44.analytics.track({ eventName: 'popup_shown', properties: { popup_id: p.id, popup_name: p.name } });
+    // Analytics: popup_shown (TODO: migrate analytics)
   };
 
   const handleClose = async () => {
     setVisible(false);
     if (impressionId) {
-      await base44.entities.PopupImpression.update(impressionId, { dismissed_at: new Date().toISOString() });
+      await updateImpression(impressionId, { dismissed_at: new Date().toISOString() });
     }
-    base44.analytics.track({ eventName: 'popup_dismissed', properties: { popup_id: popup?.id } });
+    // Analytics: popup_dismissed (TODO: migrate analytics)
   };
 
   const handleClick = async () => {
     if (!popup?.link_url) return;
     if (impressionId) {
-      await base44.entities.PopupImpression.update(impressionId, { clicked_at: new Date().toISOString() });
+      await updateImpression(impressionId, { clicked_at: new Date().toISOString() });
     }
-    base44.analytics.track({ eventName: 'popup_clicked', properties: { popup_id: popup?.id, link_url: popup?.link_url } });
+    // Analytics: popup_clicked (TODO: migrate analytics)
     if (popup.link_new_tab) {
       window.open(popup.link_url, '_blank');
     } else {

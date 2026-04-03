@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { getCurrentUser, getProfile } from '@/services/auth';
+import { filterCases, acceptCase, sendApplicationEmails } from '@/services/cases';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -41,12 +42,11 @@ export default function CaseDetail() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        const isAuth = await base44.auth.isAuthenticated();
-        if (!isAuth) {
+        const userData = await getCurrentUser();
+        if (!userData) {
           navigate(createPageUrl('Home'));
           return;
         }
-        const userData = await base44.auth.me();
         setUser(userData);
       } catch (e) {
         navigate(createPageUrl('Home'));
@@ -60,7 +60,7 @@ export default function CaseDetail() {
   // Get lawyer profile
   const { data: profiles, isLoading: profileLoading } = useQuery({
     queryKey: ['lawyerProfile', user?.id],
-    queryFn: () => base44.entities.LawyerProfile.filter({ user_id: user.id }),
+    queryFn: () => getProfile(user.id).then(p => p ? [p] : []),
     enabled: !!user?.id,
   });
 
@@ -84,7 +84,7 @@ export default function CaseDetail() {
   const { data: caseItem, isLoading: caseLoading } = useQuery({
     queryKey: ['case', caseId],
     queryFn: async () => {
-      const cases = await base44.entities.Case.filter({ id: caseId });
+      const cases = await filterCases({ id: caseId });
       return cases[0] || null;
     },
     enabled: !!caseId && !!user && profileLoaded && isApproved,
@@ -117,11 +117,11 @@ export default function CaseDetail() {
     
     try {
       // Accept case via backend function (bypasses RLS)
-      await base44.functions.invoke('acceptCase', { caseId });
+      await acceptCase({ caseId });
       
       // Send confirmation email via backend function
       try {
-        await base44.functions.invoke('sendApplicationEmails', {
+        await sendApplicationEmails({
           to: user.email,
           from_name: 'Taylor Made Law',
           subject: `Case Accepted — ${caseItem.title}`,
