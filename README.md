@@ -103,6 +103,17 @@ Key variables:
 - `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY` — Supabase connection
 - `VITE_PROVIDER_*` — feature flags controlling which backend serves each domain
 
+## Deployment (Vercel)
+
+1. Import this repo at [vercel.com/new](https://vercel.com/new)
+2. Vercel auto-detects Vite — no build settings to override
+3. Set the environment variables listed above in **Vercel → Project Settings → Environment Variables**
+4. Deploy
+
+SPA routing is handled by `vercel.json` (rewrites all paths to `index.html`).
+
+For staging: connect the `staging` branch to a separate Vercel preview environment.
+
 ## Documentation
 
 | Document | Contents |
