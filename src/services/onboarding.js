@@ -16,12 +16,24 @@ export async function publicLawyerSignup(payload) {
     logProvider('auth', 'publicLawyerSignup');
     const sb = getSupabase();
     if (!sb) throw new Error('Supabase client not available');
-    const { data, error } = await sb.functions.invoke('auth-signup', {
-      body: { action: 'signup', ...payload },
+
+    // Call the edge function directly via fetch to get proper error handling.
+    // sb.functions.invoke() throws on non-2xx which loses the error body.
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+    const res = await fetch(`${supabaseUrl}/functions/v1/auth-signup`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': anonKey,
+        'Authorization': `Bearer ${anonKey}`,
+      },
+      body: JSON.stringify({ action: 'signup', ...payload }),
     });
-    if (error) throw error;
-    // Edge function returns { data: { success, application_id, has_circle_invite } }
-    return data;
+    const json = await res.json();
+
+    // Return the response body — caller checks json.data.success / json.error_code
+    return json;
   }
   logProvider('auth', 'publicLawyerSignup', 'base44');
   return base44.functions.invoke('publicLawyerSignup', payload);

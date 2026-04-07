@@ -131,13 +131,19 @@ export default function JoinLawyerNetwork() {
         ...(circleToken ? { circle_token: circleToken } : {})
       });
 
-      const result = response.data;
+      // Handle error responses (edge function returns { error, error_code } on failure)
+      if (response.error_code === 'email_taken') {
+        setSubmitError('An account with this email already exists. Please sign in or use a different email.');
+        return;
+      }
+      if (response.error) {
+        setSubmitError(response.error);
+        return;
+      }
+
+      const result = response.data || response;
       if (!result.success) {
-        if (result.error_code === 'email_taken') {
-          setSubmitError('An account with this email already exists. Please sign in or use a different email.');
-        } else {
-          setSubmitError(result.error || 'An error occurred. Please try again.');
-        }
+        setSubmitError(result.error || 'An error occurred. Please try again.');
         return;
       }
 
