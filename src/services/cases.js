@@ -92,14 +92,36 @@ export async function submitPublicLead(payload) {
 }
 
 // ---------------------------------------------------------------------------
-// Backend functions (Base44 only — need Edge Functions for Supabase)
+// Backend functions
 // ---------------------------------------------------------------------------
 
-export function getCasesForLawyer() {
+export async function getCasesForLawyer() {
+  if (useSupabase('cases_read')) {
+    logProvider('cases_read', 'getCasesForLawyer');
+    const sb = getSupabase();
+    if (!sb) throw new Error('Supabase client not available');
+    const { data, error } = await sb.functions.invoke('cases', {
+      body: { action: 'list' },
+    });
+    if (error) throw error;
+    return data?.data || data;
+  }
+  logProvider('cases_read', 'getCasesForLawyer', 'base44');
   return base44.functions.invoke('getCasesForLawyer', {});
 }
 
-export function acceptCase(payload) {
+export async function acceptCase(payload) {
+  if (useSupabase('cases_read')) {
+    logProvider('cases_read', 'acceptCase');
+    const sb = getSupabase();
+    if (!sb) throw new Error('Supabase client not available');
+    const { data, error } = await sb.functions.invoke('cases', {
+      body: { action: 'accept', ...payload },
+    });
+    if (error) throw error;
+    return data?.data || data;
+  }
+  logProvider('cases_read', 'acceptCase', 'base44');
   return base44.functions.invoke('acceptCase', payload);
 }
 
