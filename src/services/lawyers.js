@@ -31,11 +31,40 @@ export function listProfiles(sort = '-created_date', limit = 500) {
   return base44.entities.LawyerProfile.list(sort, limit);
 }
 
-export function createProfile(data) {
+export async function createProfile(data) {
+  if (useSupabase('profile_read')) {
+    logProvider('profile_read', 'createProfile');
+    const sb = getSupabase();
+    if (sb) {
+      const { data: record, error } = await sb
+        .from('lawyer_profiles')
+        .insert(data)
+        .select()
+        .single();
+      if (error) throw error;
+      return record;
+    }
+  }
+  logProvider('profile_read', 'createProfile', 'base44');
   return base44.entities.LawyerProfile.create(data);
 }
 
-export function updateProfile(id, data) {
+export async function updateProfile(id, data) {
+  if (useSupabase('profile_read')) {
+    logProvider('profile_read', 'updateProfile');
+    const sb = getSupabase();
+    if (sb) {
+      const { data: record, error } = await sb
+        .from('lawyer_profiles')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return record;
+    }
+  }
+  logProvider('profile_read', 'updateProfile', 'base44');
   return base44.entities.LawyerProfile.update(id, data);
 }
 

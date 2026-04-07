@@ -1,14 +1,28 @@
 /**
  * Admin service — AuditLog, ConsentLog, and admin-only User + team operations.
+ *
+ * Supports dual providers (Base44 / Supabase) via feature flags.
  */
 import { base44 } from '@/api/base44Client';
+import { getSupabase } from '@/api/supabaseClient';
+import { useSupabase, logProvider } from './provider';
 
 // ---------------------------------------------------------------------------
 // AuditLog (write-only from frontend; read in admin detail pages)
 // ---------------------------------------------------------------------------
 
-export function createAuditLog(data) {
+export async function createAuditLog(data) {
   // Fire-and-forget pattern — callers should .catch(() => {})
+  if (useSupabase('auth')) {
+    logProvider('auth', 'createAuditLog');
+    const sb = getSupabase();
+    if (sb) {
+      const { error } = await sb.from('audit_logs').insert(data);
+      if (error) throw error;
+      return;
+    }
+  }
+  logProvider('auth', 'createAuditLog', 'base44');
   return base44.entities.AuditLog.create(data);
 }
 
@@ -20,7 +34,17 @@ export function filterAuditLogs(query) {
 // ConsentLog (write-only)
 // ---------------------------------------------------------------------------
 
-export function createConsentLog(data) {
+export async function createConsentLog(data) {
+  if (useSupabase('auth')) {
+    logProvider('auth', 'createConsentLog');
+    const sb = getSupabase();
+    if (sb) {
+      const { error } = await sb.from('consent_logs').insert(data);
+      if (error) throw error;
+      return;
+    }
+  }
+  logProvider('auth', 'createConsentLog', 'base44');
   return base44.entities.ConsentLog.create(data);
 }
 

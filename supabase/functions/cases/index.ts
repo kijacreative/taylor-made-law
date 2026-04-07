@@ -9,6 +9,8 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createAdminClient, getAuthUser, jsonResponse, errorResponse } from '../_shared/supabase.ts';
 import { corsHeaders } from '../_shared/cors.ts';
+import { sendEmail } from '../_shared/resend.ts';
+import { tmlEmailWrapper, tmlH1, tmlP, tmlButton, APP_URL } from '../_shared/email-templates.ts';
 
 const TEASER_FIELDS = ['id', 'title', 'state', 'practice_area', 'status', 'is_trending', 'published_at', 'created_at'];
 
@@ -147,6 +149,112 @@ async function handleAccept(req: Request) {
 }
 
 // ---------------------------------------------------------------------------
+// submitLead — public intake (no auth required)
+// ---------------------------------------------------------------------------
+
+async function handleSubmitLead(req: Request) {
+  const body = await req.json().catch(() => ({}));
+
+  const {
+    first_name, last_name, email, phone,
+    practice_area, state, description, urgency,
+    consent_given, consent_version, consent_text,
+  } = body;
+
+  // Basic validation
+  if (!first_name || !last_name || !email) {
+    return errorResponse('Name and email are required', 400);
+  }
+
+  const sb = createAdminClient();
+
+  // 1. Create lead
+  const { data: lead, error: leadErr } = await sb
+    .from('leads')
+    .insert({
+      first_name,
+      last_name,
+      email: email.toLowerCase().trim(),
+      phone: phone || null,
+      practice_area: practice_area || null,
+      state: state || null,
+      description: description || null,
+      urgency: urgency || 'medium',
+      status: 'new',
+      source: 'website',
+    })
+    .select()
+    .single();
+
+  if (leadErr) {
+    console.error('Lead insert error:', leadErr);
+    return errorResponse(leadErr.message, 500);
+  }
+
+  // 2. Create consent log (fire-and-forget)
+  if (consent_given) {
+    sb.from('consent_logs').insert({
+      consent_type: 'terms',
+      consent_version: consent_version || '1.0.0',
+      consent_text: consent_text || '',
+      accepted: true,
+      consented_at: new Date().toISOString(),
+    }).then(() => {});
+  }
+
+  // 3. Create audit log (fire-and-forget)
+  sb.from('audit_logs').insert({
+    entity_type: 'Lead',
+    entity_id: lead.id,
+    action: 'lead_submitted',
+    actor_email: email.toLowerCase().trim(),
+    actor_role: 'public',
+    notes: `Public lead intake: ${practice_area || 'General'} in ${state || 'Unspecified'}`,
+  }).then(() => {});
+
+  // 4. Send confirmation email to client (fire-and-forget)
+  sendEmail({
+    to: email.toLowerCase().trim(),
+    subject: 'We Received Your Request — Taylor Made Law',
+    html: tmlEmailWrapper(`
+      ${tmlH1('Thank You for Reaching Out')}
+      ${tmlP(`Dear ${first_name},`)}
+      ${tmlP('We have received your request and a qualified attorney from our network will be in touch with you shortly.')}
+      ${tmlP(`<strong>Practice Area:</strong> ${practice_area || 'Not specified'}<br><strong>State:</strong> ${state || 'Not specified'}<br><strong>Urgency:</strong> ${urgency || 'Medium'}`)}
+      ${tmlP('If you have any immediate questions, please don\'t hesitate to contact our support team.')}
+      ${tmlButton(`mailto:support@taylormadelaw.com`, 'Contact Support')}
+    `),
+  }).catch(err => console.error('Client email failed:', err));
+
+  // 5. Notify admin users (fire-and-forget)
+  const { data: admins } = await sb
+    .from('profiles')
+    .select('email')
+    .eq('role', 'admin');
+
+  if (admins?.length) {
+    const adminEmails = admins.map((a: { email: string }) => a.email);
+    sendEmail({
+      to: adminEmails,
+      subject: `New Lead: ${first_name} ${last_name} — ${practice_area || 'General'}`,
+      html: tmlEmailWrapper(`
+        ${tmlH1('New Lead Submitted')}
+        ${tmlP(`<strong>Name:</strong> ${first_name} ${last_name}`)}
+        ${tmlP(`<strong>Email:</strong> ${email}`)}
+        ${tmlP(`<strong>Phone:</strong> ${phone || 'Not provided'}`)}
+        ${tmlP(`<strong>Practice Area:</strong> ${practice_area || 'Not specified'}`)}
+        ${tmlP(`<strong>State:</strong> ${state || 'Not specified'}`)}
+        ${tmlP(`<strong>Urgency:</strong> ${urgency || 'Medium'}`)}
+        ${tmlP(`<strong>Description:</strong> ${description || 'None provided'}`)}
+        ${tmlButton(`${APP_URL}/AdminLeads`, 'Review in Dashboard')}
+      `),
+    }).catch(err => console.error('Admin email failed:', err));
+  }
+
+  return jsonResponse({ data: { success: true, lead_id: lead.id } });
+}
+
+// ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
 
@@ -162,6 +270,7 @@ serve(async (req) => {
     switch (action) {
       case 'list': return await handleList(req);
       case 'accept': return await handleAccept(req);
+      case 'submit_lead': return await handleSubmitLead(req);
       default: return errorResponse(`Unknown action: ${action}`, 400);
     }
   } catch (err) {

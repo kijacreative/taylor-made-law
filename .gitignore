@@ -46,3 +46,4 @@ scripts/migration/transform/data/
 scripts/migration/logs/
 
 .env
+.vercel

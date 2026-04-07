@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { isAuthenticated, me, logout, redirectToLogin, verifyOtp, resendOtp } from '@/services/auth';
+import { isAuthenticated, me, logout, login, verifyOtp, resendOtp } from '@/services/auth';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, AlertCircle, Loader2, Mail, ArrowLeft, Shield } from 'lucide-react';
 
@@ -50,7 +50,22 @@ export default function AdminLogin() {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    redirectToLogin(createPageUrl('AdminDashboard'));
+    setError('');
+    setLoading(true);
+    try {
+      await login(email.toLowerCase().trim(), password);
+      const userData = await me();
+      if (userData.role !== 'admin') {
+        await logout();
+        setError('Access denied. This portal is for administrators only.');
+        return;
+      }
+      navigate(createPageUrl('AdminDashboard'), { replace: true });
+    } catch (err) {
+      setError(err.message || 'Invalid email or password. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleOtpChange = (index, value) => {

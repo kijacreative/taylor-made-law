@@ -13,6 +13,7 @@ import JoinNetwork from './pages/JoinNetwork.jsx';
 import AdminNetworkReview from './pages/AdminNetworkReview.jsx';
 import JoinLawyerNetwork from './pages/JoinLawyerNetwork.jsx';
 import LawyerPortalLogin from './pages/LawyerPortalLogin.jsx';
+import AdminLogin from './pages/AdminLogin.jsx';
 import AdminApplications from './pages/AdminApplications.jsx';
 import AdminLeadDocketSync from './pages/AdminLeadDocketSync.jsx';
 import DirectMessages from './pages/DirectMessages.jsx';
@@ -83,6 +84,7 @@ const AuthenticatedApp = () => {
       <Route path="/join-lawyer-network" element={<LayoutWrapper currentPageName="JoinLawyerNetwork"><JoinLawyerNetwork /></LayoutWrapper>} />
       <Route path="/app/onboarding" element={<LayoutWrapper currentPageName="LawyerOnboarding"><LawyerOnboarding /></LayoutWrapper>} />
       <Route path="/app/dashboard" element={<Navigate to="/LawyerDashboard" replace />} />
+      <Route path="/admin/login" element={<LayoutWrapper currentPageName="AdminLogin"><AdminLogin /></LayoutWrapper>} />
       <Route path="/admin/applications" element={<LayoutWrapper currentPageName="AdminApplications"><AdminApplications /></LayoutWrapper>} />
       <Route path="/admin/lead-docket-sync" element={<LayoutWrapper currentPageName="AdminLeadDocketSync"><AdminLeadDocketSync /></LayoutWrapper>} />
       <Route path="/app/messages" element={<LayoutWrapper currentPageName="DirectMessages"><DirectMessages /></LayoutWrapper>} />

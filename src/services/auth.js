@@ -105,24 +105,19 @@ export async function logout(redirectUrl) {
     logProvider('auth', 'logout');
     const sb = getSupabase();
     if (sb) await sb.auth.signOut();
-    // Clean up stale Base44 token if present
-    try { localStorage.removeItem('base44_access_token'); } catch {}
-    if (redirectUrl) window.location.href = redirectUrl;
-    return;
   }
-  logProvider('auth', 'logout', 'base44');
-  return base44.auth.logout(redirectUrl);
+  // Always clear local token regardless of provider
+  try { localStorage.removeItem('base44_access_token'); } catch {}
+  if (redirectUrl) {
+    window.location.href = redirectUrl;
+  } else {
+    window.location.href = '/login';
+  }
 }
 
 export function redirectToLogin(returnUrl) {
-  if (useSupabase('auth')) {
-    logProvider('auth', 'redirectToLogin');
-    // Supabase doesn't have a hosted login page — redirect to app's login route
-    window.location.href = '/login' + (returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : '');
-    return;
-  }
-  logProvider('auth', 'redirectToLogin', 'base44');
-  return base44.auth.redirectToLogin(returnUrl);
+  // Always redirect to our own login page (works on any host, including Vercel)
+  window.location.href = '/login' + (returnUrl ? `?returnUrl=${encodeURIComponent(returnUrl)}` : '');
 }
 
 // ---------------------------------------------------------------------------

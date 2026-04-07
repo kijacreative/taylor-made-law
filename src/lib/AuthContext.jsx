@@ -205,30 +205,28 @@ export const AuthProvider = ({ children }) => {
 
   const checkAppState = USE_SUPABASE_AUTH ? checkAppStateSupabase : checkAppStateBase44;
 
-  const logout = async (shouldRedirect = true) => {
+  const logout = async (redirectUrl) => {
     setUser(null);
     setIsAuthenticated(false);
 
     if (USE_SUPABASE_AUTH) {
       const sb = getSupabase();
       if (sb) await sb.auth.signOut();
-      try { localStorage.removeItem('base44_access_token'); } catch {}
-      if (shouldRedirect) window.location.href = '/login';
+    }
+
+    // Always clear local token regardless of provider
+    try { localStorage.removeItem('base44_access_token'); } catch {}
+
+    // Redirect to provided URL or default login page
+    if (redirectUrl) {
+      window.location.href = redirectUrl;
     } else {
-      if (shouldRedirect) {
-        base44.auth.logout(window.location.href);
-      } else {
-        base44.auth.logout();
-      }
+      window.location.href = '/login';
     }
   };
 
   const navigateToLogin = () => {
-    if (USE_SUPABASE_AUTH) {
-      window.location.href = '/login';
-    } else {
-      base44.auth.redirectToLogin(window.location.href);
-    }
+    window.location.href = '/login';
   };
 
   return (

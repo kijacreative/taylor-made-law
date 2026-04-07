@@ -5,6 +5,7 @@
  * Write functions and backend function invocations remain on Base44.
  */
 import { base44 } from '@/api/base44Client';
+import { getSupabase } from '@/api/supabaseClient';
 import { supabaseQuery } from './supabase-helpers';
 import { useSupabase, logProvider } from './provider';
 
@@ -68,6 +69,26 @@ export function createLead(data) {
 
 export function updateLead(id, data) {
   return base44.entities.Lead.update(id, data);
+}
+
+// ---------------------------------------------------------------------------
+// Public lead intake (no auth — calls edge function)
+// ---------------------------------------------------------------------------
+
+export async function submitPublicLead(payload) {
+  if (useSupabase('cases_read')) {
+    logProvider('cases_read', 'submitPublicLead');
+    const sb = getSupabase();
+    if (!sb) throw new Error('Supabase client not available');
+    const { data, error } = await sb.functions.invoke('cases', {
+      body: { action: 'submit_lead', ...payload },
+    });
+    if (error) throw error;
+    return data;
+  }
+  // Base44 fallback: create lead + return it
+  logProvider('cases_read', 'submitPublicLead', 'base44');
+  return base44.entities.Lead.create(payload);
 }
 
 // ---------------------------------------------------------------------------
