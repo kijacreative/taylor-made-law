@@ -21,9 +21,8 @@ import {
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
 import PopupModal from '@/components/popups/PopupModal';
-import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
+import TMLCard, { TMLCardContent } from '@/components/ui/TMLCard';
 import TMLBadge from '@/components/ui/TMLBadge';
-import { CASE_STATUSES } from '@/components/design/DesignTokens';
 
 export default function LawyerDashboard() {
   const navigate = useNavigate();
@@ -90,7 +89,8 @@ export default function LawyerDashboard() {
     queryKey: ['casesForLawyer', user?.id],
     queryFn: async () => {
       const res = await getCasesForLawyer();
-      return res.data;
+      // Service may return { data: { cases, stats } } (Base44) or { cases, stats } (Supabase)
+      return res?.data || res;
     },
     enabled: !!user,
   });

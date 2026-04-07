@@ -17,13 +17,9 @@ import {
   Clock,
   Plus,
   Crown,
-  DollarSign,
-  Calendar,
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
-import TMLCard, { TMLCardContent } from '@/components/ui/TMLCard';
-import TMLBadge from '@/components/ui/TMLBadge';
 import SubmitCaseModal from '@/components/cases/SubmitCaseModal';
 import UpgradeModal from '@/components/membership/UpgradeModal';
 import CategoryFilter from '@/components/cases/CategoryFilter';
@@ -66,7 +62,7 @@ export default function CaseExchange() {
     queryKey: ['casesForLawyer', user?.id],
     queryFn: async () => {
       const res = await getCasesForLawyer();
-      return res.data;
+      return res?.data || res;
     },
     enabled: !!user,
   });
