@@ -7,8 +7,8 @@ import { MOCK_USER_DATA, MOCK_PUBLIC_SETTINGS } from '@/api/base44MockClient.js'
 
 const AuthContext = createContext();
 
-// Check which auth provider is active
-const AUTH_PROVIDER = import.meta.env.VITE_PROVIDER_AUTH || 'base44';
+// Check which auth provider is active (trim to handle Vercel CLI \n suffix)
+const AUTH_PROVIDER = (import.meta.env.VITE_PROVIDER_AUTH || 'base44').trim();
 const USE_SUPABASE_AUTH = AUTH_PROVIDER === 'supabase';
 
 export const AuthProvider = ({ children }) => {

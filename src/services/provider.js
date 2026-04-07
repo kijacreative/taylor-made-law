@@ -17,13 +17,16 @@
  * Rollback: set env var to 'base44' or remove it, restart dev server.
  */
 
+/** Trim env values — Vercel CLI can inject trailing \n characters. */
+const env = (key) => (import.meta.env[key] || '').trim() || 'base44';
+
 const PROVIDERS = {
-  content_read:  import.meta.env.VITE_PROVIDER_CONTENT_READ  || 'base44',
-  profile_read:  import.meta.env.VITE_PROVIDER_PROFILE_READ  || 'base44',
-  cases_read:    import.meta.env.VITE_PROVIDER_CASES_READ    || 'base44',
-  circles_read:  import.meta.env.VITE_PROVIDER_CIRCLES_READ  || 'base44',
-  messaging_read: import.meta.env.VITE_PROVIDER_MESSAGING_READ || 'base44',
-  auth:           import.meta.env.VITE_PROVIDER_AUTH            || 'base44',
+  content_read:  env('VITE_PROVIDER_CONTENT_READ'),
+  profile_read:  env('VITE_PROVIDER_PROFILE_READ'),
+  cases_read:    env('VITE_PROVIDER_CASES_READ'),
+  circles_read:  env('VITE_PROVIDER_CIRCLES_READ'),
+  messaging_read: env('VITE_PROVIDER_MESSAGING_READ'),
+  auth:           env('VITE_PROVIDER_AUTH'),
   // Future domains:
   // content_write: import.meta.env.VITE_PROVIDER_CONTENT_WRITE || 'base44',
   // cases_write:   import.meta.env.VITE_PROVIDER_CASES_WRITE   || 'base44',
