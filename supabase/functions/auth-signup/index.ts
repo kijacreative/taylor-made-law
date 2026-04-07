@@ -209,6 +209,36 @@ async function handleSignup(body: Record<string, unknown>) {
     console.error('[auth-signup] lawyer_profiles insert error:', lpError.message);
   }
 
+  // Generate and send email verification OTP
+  const otpCode = String(Math.floor(100000 + Math.random() * 900000)); // 6-digit code
+  const otpHash = await sha256(otpCode);
+  const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
+
+  // Store OTP hash in email_verification_otps table
+  const { error: otpError } = await sb.from('email_verification_otps').insert({
+    email,
+    code_hash: otpHash,
+    expires_at: otpExpiresAt,
+  });
+
+  if (otpError) {
+    console.error('[auth-signup] OTP insert error:', otpError.message);
+  }
+
+  // Send verification email with OTP code
+  sendEmail({
+    to: email,
+    subject: 'Verify Your Email — Taylor Made Law',
+    html: tmlEmailWrapper([
+      tmlH1('Verify Your Email'),
+      tmlP(`Hi ${full_name},`),
+      tmlP('Thank you for signing up for the Taylor Made Law Attorney Network. Please use the verification code below to confirm your email address:'),
+      `<div style="text-align:center;margin:24px 0;"><span style="display:inline-block;background:#f5f0fa;border:2px solid #3a164d;border-radius:12px;padding:16px 32px;font-size:32px;font-weight:700;letter-spacing:8px;color:#3a164d;">${otpCode}</span></div>`,
+      tmlP('This code expires in 10 minutes.'),
+      tmlP('If you did not sign up for Taylor Made Law, you can safely ignore this email.'),
+    ].join('')),
+  }).catch((err) => console.error('[auth-signup] OTP email failed:', err));
+
   // Audit log (fire-and-forget)
   sb.from('audit_logs')
     .insert({
@@ -608,6 +638,144 @@ async function handleFinalize(body: Record<string, unknown>) {
 }
 
 // ---------------------------------------------------------------------------
+// Action: verify_otp — verify email with 6-digit code
+// ---------------------------------------------------------------------------
+
+async function handleVerifyOtp(body: Record<string, unknown>) {
+  const { email: rawEmail, otpCode } = body;
+
+  if (!rawEmail || !otpCode) {
+    return errorResponse('Missing email or otpCode', 400);
+  }
+
+  const email = normalizeEmail(rawEmail as string);
+  const code = (otpCode as string).trim();
+  const sb = createAdminClient();
+
+  // Hash the provided code
+  const codeHash = await sha256(code);
+
+  // Find matching OTP
+  const { data: otpRow, error: otpError } = await sb
+    .from('email_verification_otps')
+    .select('*')
+    .eq('email', email)
+    .eq('code_hash', codeHash)
+    .is('used_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (otpError) {
+    console.error('[auth-signup] OTP lookup error:', otpError.message);
+    return errorResponse('Failed to verify code', 500);
+  }
+
+  if (!otpRow) {
+    return errorResponse('Invalid verification code', 400);
+  }
+
+  // Check expiry
+  if (new Date(otpRow.expires_at) < new Date()) {
+    return errorResponse('Verification code has expired. Please request a new one.', 400);
+  }
+
+  // Mark OTP as used
+  await sb
+    .from('email_verification_otps')
+    .update({ used_at: new Date().toISOString() })
+    .eq('id', otpRow.id);
+
+  // Confirm user's email in Supabase Auth
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('id')
+    .eq('email', email)
+    .maybeSingle();
+
+  if (profile) {
+    // Confirm email in auth.users
+    await sb.auth.admin.updateUserById(profile.id, { email_confirm: true });
+
+    // Update profiles
+    await sb
+      .from('profiles')
+      .update({ email_verified: true })
+      .eq('id', profile.id);
+  }
+
+  return jsonResponse({ data: { success: true } });
+}
+
+// ---------------------------------------------------------------------------
+// Action: resend_otp — generate and send a new OTP code
+// ---------------------------------------------------------------------------
+
+async function handleResendOtp(body: Record<string, unknown>) {
+  const { email: rawEmail } = body;
+
+  if (!rawEmail) {
+    return errorResponse('Missing email', 400);
+  }
+
+  const email = normalizeEmail(rawEmail as string);
+  const sb = createAdminClient();
+
+  // Rate limiting: check recent OTPs (max 5 per hour)
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const { data: recentOtps } = await sb
+    .from('email_verification_otps')
+    .select('id')
+    .eq('email', email)
+    .gte('created_at', oneHourAgo);
+
+  if (recentOtps && recentOtps.length >= 5) {
+    return errorResponse('Too many verification attempts. Please try again later.', 429);
+  }
+
+  // Look up user's name for the email
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('full_name')
+    .eq('email', email)
+    .maybeSingle();
+
+  const displayName = profile?.full_name || 'there';
+
+  // Generate new OTP
+  const otpCode = String(Math.floor(100000 + Math.random() * 900000));
+  const otpHash = await sha256(otpCode);
+  const otpExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+  // Store OTP
+  const { error: otpError } = await sb.from('email_verification_otps').insert({
+    email,
+    code_hash: otpHash,
+    expires_at: otpExpiresAt,
+  });
+
+  if (otpError) {
+    console.error('[auth-signup] resend OTP insert error:', otpError.message);
+    return errorResponse('Failed to generate verification code', 500);
+  }
+
+  // Send email
+  await sendEmail({
+    to: email,
+    subject: 'Your New Verification Code — Taylor Made Law',
+    html: tmlEmailWrapper([
+      tmlH1('New Verification Code'),
+      tmlP(`Hi ${displayName},`),
+      tmlP('Here is your new verification code:'),
+      `<div style="text-align:center;margin:24px 0;"><span style="display:inline-block;background:#f5f0fa;border:2px solid #3a164d;border-radius:12px;padding:16px 32px;font-size:32px;font-weight:700;letter-spacing:8px;color:#3a164d;">${otpCode}</span></div>`,
+      tmlP('This code expires in 10 minutes.'),
+    ].join('')),
+  });
+
+  return jsonResponse({ data: { success: true } });
+}
+
+// ---------------------------------------------------------------------------
 // Main router
 // ---------------------------------------------------------------------------
 
@@ -634,6 +802,10 @@ serve(async (req) => {
         return await handleActivate(body);
       case 'finalize':
         return await handleFinalize(body);
+      case 'verify_otp':
+        return await handleVerifyOtp(body);
+      case 'resend_otp':
+        return await handleResendOtp(body);
       default:
         return errorResponse(`Unknown action: ${action}`, 400);
     }

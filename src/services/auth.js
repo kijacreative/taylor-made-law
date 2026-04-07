@@ -129,12 +129,12 @@ export async function verifyOtp({ email, otpCode }) {
     logProvider('auth', 'verifyOtp');
     const sb = getSupabase();
     if (!sb) throw new Error('Supabase client not available');
-    const { data, error } = await sb.auth.verifyOtp({
-      email,
-      token: otpCode,
-      type: 'email',
+    // Use custom OTP verification via edge function
+    const { data, error } = await sb.functions.invoke('auth-signup', {
+      body: { action: 'verify_otp', email, otpCode },
     });
     if (error) throw error;
+    if (data?.error) throw new Error(data.error);
     return data;
   }
   logProvider('auth', 'verifyOtp', 'base44');
@@ -146,8 +146,12 @@ export async function resendOtp(email) {
     logProvider('auth', 'resendOtp');
     const sb = getSupabase();
     if (!sb) throw new Error('Supabase client not available');
-    const { data, error } = await sb.auth.resend({ type: 'signup', email });
+    // Use custom OTP resend via edge function
+    const { data, error } = await sb.functions.invoke('auth-signup', {
+      body: { action: 'resend_otp', email },
+    });
     if (error) throw error;
+    if (data?.error) throw new Error(data.error);
     return data;
   }
   logProvider('auth', 'resendOtp', 'base44');
