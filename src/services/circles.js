@@ -121,8 +121,30 @@ export function listCircleCases(sort = '-created_date') {
 }
 
 // LegalCircleCase — writes (Base44 only)
-export function updateCircleCase(id, data) {
+export async function updateCircleCase(id, data) {
+  if (useSupabase('circles_read')) {
+    logProvider('circles_read', 'updateCircleCase');
+    const sb = getSupabase();
+    if (sb) {
+      const { data: record, error } = await sb.from('legal_circle_cases').update(data).eq('id', id).select().single();
+      if (error) throw error;
+      return record;
+    }
+  }
   return base44.entities.LegalCircleCase.update(id, data);
+}
+
+export async function createCircleCase(data) {
+  if (useSupabase('circles_read')) {
+    logProvider('circles_read', 'createCircleCase');
+    const sb = getSupabase();
+    if (sb) {
+      const { data: record, error } = await sb.from('legal_circle_cases').insert(data).select().single();
+      if (error) throw error;
+      return record;
+    }
+  }
+  return base44.entities.LegalCircleCase.create(data);
 }
 
 // ---------------------------------------------------------------------------

@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { submitCase } from '@/services/cases';
-import { filterCircleCases, updateCircleCase } from '@/services/circles';
+import { filterCircleCases, updateCircleCase, createCircleCase } from '@/services/circles';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus, Briefcase, MapPin, DollarSign, User, CheckCircle, X, Loader2 } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
-import TMLCard, { TMLCardContent } from '@/components/ui/TMLCard';
+import TMLCard from '@/components/ui/TMLCard';
 import TMLBadge from '@/components/ui/TMLBadge';
 import { PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
 
@@ -44,6 +43,19 @@ export default function CircleCases({ circleId, circle, user, isAdmin }) {
     setSelectedCase(null);
   };
 
+  const handleApprove = async (caseItem) => {
+    await updateCircleCase(caseItem.id, { status: 'available' });
+    queryClient.invalidateQueries({ queryKey: ['circleCases', circleId] });
+    setSelectedCase(null);
+  };
+
+  const handleReject = async (caseItem) => {
+    if (!window.confirm('Reject this case submission?')) return;
+    await updateCircleCase(caseItem.id, { status: 'closed' });
+    queryClient.invalidateQueries({ queryKey: ['circleCases', circleId] });
+    setSelectedCase(null);
+  };
+
   if (showSubmit) {
     return (
       <SubmitCaseForm
@@ -63,7 +75,10 @@ export default function CircleCases({ circleId, circle, user, isAdmin }) {
         user={user}
         isAdmin={isAdmin}
         canAccept={circle.member_can_accept_cases && selectedCase.status === 'available' && selectedCase.submitted_by_user_id !== user.id}
+        canApprove={isAdmin && selectedCase.status === 'pending_approval'}
         onAccept={() => handleAccept(selectedCase)}
+        onApprove={() => handleApprove(selectedCase)}
+        onReject={() => handleReject(selectedCase)}
         onBack={() => setSelectedCase(null)}
       />
     );
@@ -145,25 +160,32 @@ function SubmitCaseForm({ circleId, circle, user, onSuccess, onCancel }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    const res = await submitCase({
-      circle_id: circleId,
-      title: form.title,
-      summary: form.summary,
-      description: form.description,
-      state: form.state,
-      practice_area: form.practice_area,
-      estimated_value: form.estimated_value || null,
-      client_first_name: form.client_first_name,
-      client_last_name: form.client_last_name,
-      client_email: form.client_email,
-      client_phone: form.client_phone,
-    });
-    setSubmitting(false);
-    if (res.data?.error) {
-      alert(res.data.error);
-      return;
+    try {
+      const initialStatus = circle.require_admin_approval ? 'pending_approval' : 'available';
+      await createCircleCase({
+        circle_id: circleId,
+        title: form.title,
+        summary: form.summary || null,
+        description: form.description || null,
+        state: form.state,
+        practice_area: form.practice_area,
+        estimated_value: form.estimated_value ? parseFloat(form.estimated_value) : null,
+        key_facts: form.key_facts || null,
+        client_first_name: form.client_first_name || null,
+        client_last_name: form.client_last_name || null,
+        client_email: form.client_email || null,
+        client_phone: form.client_phone || null,
+        submitted_by_user_id: user.id,
+        submitted_by_name: user.full_name || user.email,
+        submitted_by_email: user.email,
+        status: initialStatus,
+      });
+      setSubmitting(false);
+      onSuccess();
+    } catch (err) {
+      setSubmitting(false);
+      alert(err?.message || 'Failed to submit case');
     }
-    onSuccess();
   };
 
   const labelClass = "block text-sm font-medium text-gray-700 mb-1";
@@ -244,8 +266,9 @@ function SubmitCaseForm({ circleId, circle, user, onSuccess, onCancel }) {
   );
 }
 
-function CaseDetail({ caseItem, user, isAdmin, canAccept, onAccept, onBack }) {
+function CaseDetail({ caseItem, user, isAdmin, canAccept, canApprove, onAccept, onApprove, onReject, onBack }) {
   const [accepting, setAccepting] = useState(false);
+  const [approving, setApproving] = useState(false);
 
   const doAccept = async () => {
     setAccepting(true);
@@ -319,6 +342,22 @@ function CaseDetail({ caseItem, user, isAdmin, canAccept, onAccept, onBack }) {
               )}
               {caseItem.client_email && <div><span className="text-gray-500">Email: </span><span className="text-gray-900">{caseItem.client_email}</span></div>}
               {caseItem.client_phone && <div><span className="text-gray-500">Phone: </span><span className="text-gray-900">{caseItem.client_phone}</span></div>}
+            </div>
+          </div>
+        )}
+
+        {canApprove && (
+          <div className="border-t pt-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
+              <p className="text-sm font-semibold text-amber-800">This case is awaiting admin approval</p>
+              <p className="text-xs text-amber-600 mt-1">Approve to make it available for circle members to accept.</p>
+            </div>
+            <div className="flex justify-end gap-3">
+              <TMLButton variant="outline" onClick={onReject}>Reject</TMLButton>
+              <TMLButton variant="primary" loading={approving} onClick={async () => { setApproving(true); await onApprove(); setApproving(false); }}>
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Approve Case
+              </TMLButton>
             </div>
           </div>
         )}
