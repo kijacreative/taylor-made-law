@@ -94,11 +94,11 @@ export default function AdminApplications() {
     disabled: applications.filter(a => a.status === 'disabled' || a.status === 'rejected').length,
   };
 
-  const runAction = async (action, appId, payload = {}) => {
-    setActionLoading(prev => ({ ...prev, [appId]: action }));
+  const runAction = async (reviewAction, appId, payload = {}) => {
+    setActionLoading(prev => ({ ...prev, [appId]: reviewAction }));
     try {
-      const res = await reviewLawyerApplication({ action, application_id: appId, ...payload });
-      if (!res.data?.success) throw new Error(res.data?.error || 'Action failed');
+      const res = await reviewLawyerApplication({ review_action: reviewAction, application_id: appId, ...payload });
+      if (!(res?.data?.success || res?.success)) throw new Error(res?.data?.error || res?.error || 'Action failed');
       queryClient.invalidateQueries(['lawyerApplications']);
     } finally {
       setActionLoading(prev => ({ ...prev, [appId]: null }));
@@ -180,7 +180,7 @@ export default function AdminApplications() {
                 const loading = actionLoading[app.id];
                 const onboarded = !!app.billing_demo_status;
                 const matchedProfile = profileByName[app.full_name];
-                const referralDone = !!app.consent_referral || !!matchedProfile?.referral_agreement_accepted;
+                const referralDone = !!app.consent_terms || !!app.consent_referral || !!matchedProfile?.referral_agreement_accepted;
 
                 return (
                   <TMLCard key={app.id} variant="elevated" className="overflow-hidden">
@@ -232,7 +232,7 @@ export default function AdminApplications() {
                           <button
                             onClick={() => setInfoModal({ appId: app.id, email: app.email })}
                             className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg transition-colors">
-                            <Mail className="w-3 h-3" /> Info
+                            <Mail className="w-3 h-3" /> Email
                           </button>
                           <button
                             onClick={() => setDisableModal({ appId: app.id, email: app.email, name: app.full_name })}
@@ -277,7 +277,7 @@ export default function AdminApplications() {
                             </div>
                             <div>
                               <p className="text-xs font-semibold text-gray-400 uppercase mb-1">Applied</p>
-                              <p className="text-gray-800">{app.created_date ? new Date(app.created_date).toLocaleDateString() : '—'}</p>
+                              <p className="text-gray-800">{(app.created_at || app.created_date) ? new Date(app.created_at || app.created_date).toLocaleDateString() : '—'}</p>
                             </div>
                             {app.bio && (
                               <div className="md:col-span-2 lg:col-span-3">

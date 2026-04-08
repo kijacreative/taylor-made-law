@@ -56,6 +56,7 @@ export default function AdminCases() {
     state: '',
     practice_area: '',
     estimated_value: '',
+    referral_percentage: '25',
     is_trending: false,
     key_facts: ''
   });
@@ -178,6 +179,7 @@ export default function AdminCases() {
         state: newCase.state,
         practice_area: newCase.practice_area,
         estimated_value: newCase.estimated_value ? parseFloat(newCase.estimated_value) : null,
+        referral_percentage: parseInt(newCase.referral_percentage) || 25,
         is_trending: newCase.is_trending,
         key_facts: newCase.key_facts ? newCase.key_facts.split('\n').filter((f) => f.trim()) : [],
         status: 'published',
@@ -195,6 +197,7 @@ export default function AdminCases() {
         state: '',
         practice_area: '',
         estimated_value: '',
+        referral_percentage: '25',
         is_trending: false,
         key_facts: ''
       });
@@ -525,14 +528,28 @@ export default function AdminCases() {
 
               </div>
               
-              <TMLInput
-              label="Estimated Value ($)"
-              type="number"
-              placeholder="Enter estimated case value"
-              value={newCase.estimated_value}
-              onChange={(e) => setNewCase({ ...newCase, estimated_value: e.target.value })} />
+              <div className="grid grid-cols-2 gap-4">
+                <TMLInput
+                label="Estimated Value ($)"
+                type="number"
+                placeholder="Enter estimated case value"
+                value={newCase.estimated_value}
+                onChange={(e) => setNewCase({ ...newCase, estimated_value: e.target.value })} />
 
-              
+                <TMLSelect
+                label="Referral Fee (%)"
+                options={[
+                  { value: '15', label: '15%' },
+                  { value: '20', label: '20%' },
+                  { value: '25', label: '25% (Standard)' },
+                  { value: '30', label: '30%' },
+                  { value: '33', label: '33%' },
+                  { value: '40', label: '40%' },
+                ]}
+                value={newCase.referral_percentage}
+                onChange={(e) => setNewCase({ ...newCase, referral_percentage: e.target.value })} />
+              </div>
+
               <TMLTextarea
               label="Key Facts (one per line)"
               placeholder="Enter key facts, one per line..."

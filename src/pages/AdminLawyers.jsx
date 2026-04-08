@@ -48,8 +48,8 @@ export default function AdminLawyers() {
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Top-level section: 'applications' | 'attorneys'
-  const [section, setSection] = useState('applications');
+  // Top-level section: 'attorneys' (applications now links to /admin/applications)
+  const [section, setSection] = useState('attorneys');
 
   // Applications state
   const [appTab, setAppTab] = useState('pending');
@@ -373,11 +373,11 @@ export default function AdminLawyers() {
 
           {/* Section Switcher */}
           <div className="flex gap-1 mb-8 bg-white border border-gray-200 rounded-xl p-1 w-fit">
-            <button onClick={() => setSection('applications')}
-              className={`px-5 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 ${section === 'applications' ? 'bg-[#3a164d] text-white shadow-sm' : 'text-gray-600 hover:text-gray-900'}`}>
+            <button onClick={() => navigate('/admin/applications')}
+              className="px-5 py-2.5 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-gray-600 hover:text-gray-900">
               <FileText className="w-4 h-4" /> Applications
               {(appCounts.pending || 0) > 0 && (
-                <span className={`text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold ${section === 'applications' ? 'bg-white/20' : 'bg-amber-100 text-amber-700'}`}>
+                <span className="text-xs rounded-full w-5 h-5 flex items-center justify-center font-bold bg-amber-100 text-amber-700">
                   {appCounts.pending}
                 </span>
               )}
