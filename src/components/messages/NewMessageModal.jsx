@@ -15,7 +15,16 @@ export default function NewMessageModal({ currentUserId, onSelect, onClose }) {
     setSearching(true);
     try {
       const res = await searchNetworkAttorneys(q);
-      setResults(res.data?.results || []);
+      // Normalize: Supabase returns array of lawyer_profiles, Base44 returns { data: { results } }
+      const raw = Array.isArray(res) ? res : (res?.data?.results || res?.results || []);
+      // Map to consistent shape: { user_id, name, firm_name, email, practice_areas }
+      setResults(raw.map(r => ({
+        user_id: r.user_id || r.id,
+        name: r.full_name || r.name || r.email,
+        firm_name: r.firm_name || '',
+        email: r.email || '',
+        practice_areas: r.practice_areas || [],
+      })).filter(r => r.user_id && r.user_id !== currentUserId));
     } catch {
       setResults([]);
     } finally {

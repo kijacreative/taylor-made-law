@@ -322,6 +322,156 @@ async function handleSendMessage(req: Request) {
 }
 
 // ---------------------------------------------------------------------------
+// getDirectInbox — list all threads for the current user
+// ---------------------------------------------------------------------------
+
+async function handleGetInbox(req: Request) {
+  const auth = await getAuthUser(req);
+  if (!auth) return errorResponse('Unauthorized', 401);
+
+  const { profile } = auth;
+  const sb = createAdminClient();
+
+  // Get all participant records for this user (not hidden)
+  const { data: myParticipants, error: partErr } = await sb
+    .from('direct_message_participants')
+    .select('thread_id, last_read_at')
+    .eq('user_id', profile.id)
+    .eq('is_hidden', false);
+
+  if (partErr) return errorResponse(partErr.message, 500);
+  if (!myParticipants || myParticipants.length === 0) {
+    return jsonResponse({ data: { threads: [], total_unread: 0 } });
+  }
+
+  const threadIds = myParticipants.map((p: { thread_id: string }) => p.thread_id);
+  const lastReadMap: Record<string, string | null> = {};
+  myParticipants.forEach((p: { thread_id: string; last_read_at: string | null }) => {
+    lastReadMap[p.thread_id] = p.last_read_at;
+  });
+
+  // Fetch threads
+  const { data: threads, error: threadErr } = await sb
+    .from('direct_message_threads')
+    .select('*')
+    .in('id', threadIds)
+    .order('last_message_at', { ascending: false, nullsFirst: false });
+
+  if (threadErr) return errorResponse(threadErr.message, 500);
+
+  // For each thread, get the other participant's profile info
+  const enrichedThreads = [];
+  let totalUnread = 0;
+
+  for (const thread of (threads || [])) {
+    const otherUserId = (thread.participant_user_ids || []).find(
+      (uid: string) => uid !== profile.id
+    );
+
+    let otherUser = null;
+    if (otherUserId) {
+      const { data: op } = await sb
+        .from('profiles')
+        .select('id, email, full_name, profile_photo_url')
+        .eq('id', otherUserId)
+        .maybeSingle();
+      otherUser = op;
+    }
+
+    // Calculate unread
+    const lastRead = lastReadMap[thread.id];
+    const isUnread = thread.last_message_at &&
+      thread.last_message_sender_id !== profile.id &&
+      (!lastRead || new Date(thread.last_message_at) > new Date(lastRead));
+
+    if (isUnread) totalUnread++;
+
+    enrichedThreads.push({
+      ...thread,
+      other_participant: otherUser,
+      is_unread: !!isUnread,
+    });
+  }
+
+  return jsonResponse({ data: { threads: enrichedThreads, total_unread: totalUnread } });
+}
+
+// ---------------------------------------------------------------------------
+// getDirectThread — get full thread with messages
+// ---------------------------------------------------------------------------
+
+async function handleGetThread(req: Request) {
+  const auth = await getAuthUser(req);
+  if (!auth) return errorResponse('Unauthorized', 401);
+
+  const { profile } = auth;
+  const sb = createAdminClient();
+
+  const body = await req.json().catch(() => ({}));
+  const threadId = body.thread_id;
+  if (!threadId) return errorResponse('Missing thread_id', 400);
+
+  // Verify user is a participant
+  const { data: myPart } = await sb
+    .from('direct_message_participants')
+    .select('id')
+    .eq('thread_id', threadId)
+    .eq('user_id', profile.id)
+    .maybeSingle();
+
+  if (!myPart) return errorResponse('Not a participant in this thread', 403);
+
+  // Get thread
+  const { data: thread, error: threadErr } = await sb
+    .from('direct_message_threads')
+    .select('*')
+    .eq('id', threadId)
+    .single();
+
+  if (threadErr || !thread) return errorResponse('Thread not found', 404);
+
+  // Get messages (most recent 100)
+  const { data: messages, error: msgErr } = await sb
+    .from('direct_messages')
+    .select('*')
+    .eq('thread_id', threadId)
+    .order('created_at', { ascending: true })
+    .limit(100);
+
+  if (msgErr) return errorResponse(msgErr.message, 500);
+
+  // Get other participant info
+  const otherUserId = (thread.participant_user_ids || []).find(
+    (uid: string) => uid !== profile.id
+  );
+
+  let otherParticipant = null;
+  if (otherUserId) {
+    const { data: op } = await sb
+      .from('profiles')
+      .select('id, email, full_name, profile_photo_url, firm_name')
+      .eq('id', otherUserId)
+      .maybeSingle();
+    otherParticipant = op;
+  }
+
+  // Mark as read
+  await sb
+    .from('direct_message_participants')
+    .update({ last_read_at: new Date().toISOString() })
+    .eq('thread_id', threadId)
+    .eq('user_id', profile.id);
+
+  return jsonResponse({
+    data: {
+      thread,
+      messages: messages || [],
+      other_participant: otherParticipant,
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
 
@@ -337,6 +487,8 @@ serve(async (req) => {
     switch (action) {
       case 'start_thread': return await handleStartThread(req);
       case 'send_message': return await handleSendMessage(req);
+      case 'get_inbox': return await handleGetInbox(req);
+      case 'get_thread': return await handleGetThread(req);
       default: return errorResponse(`Unknown action: ${action}`, 400);
     }
   } catch (err) {
