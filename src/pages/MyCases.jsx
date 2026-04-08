@@ -71,7 +71,7 @@ export default function MyCases() {
     enabled: !!user?.email,
   });
 
-  // Get my circle cases (accepted by me or submitted by me)
+  // Get my circle cases (accepted by me, or submitted by me once accepted/closed)
   const { data: myCircleCases = [], isLoading: circleCasesLoading, refetch: refetchCircle } = useQuery({
     queryKey: ['myCircleCases', user?.id],
     queryFn: async () => {
@@ -82,14 +82,18 @@ export default function MyCases() {
       // Merge and deduplicate
       const all = [...accepted, ...submitted];
       const seen = new Set();
-      return all.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; })
-        .map(c => ({ ...c, _source: 'circle' }));
+      return all.filter(c => {
+        if (seen.has(c.id)) return false;
+        seen.add(c.id);
+        // Only show cases that have been accepted or closed — not available/pending
+        return ['accepted', 'in_progress', 'closed'].includes(c.status);
+      }).map(c => ({ ...c, _source: 'circle' }));
     },
     enabled: !!user?.id,
   });
 
   const myCases = [...marketplaceCases.map(c => ({ ...c, _source: 'marketplace' })), ...myCircleCases];
-  const activeCases = myCases.filter(c => ['accepted', 'in_progress', 'available', 'pending_approval'].includes(c.status));
+  const activeCases = myCases.filter(c => ['accepted', 'in_progress'].includes(c.status));
   const closedCases = myCases.filter(c => ['closed', 'withdrawn'].includes(c.status));
 
   const displayCases = activeTab === 'active' ? activeCases : closedCases;
