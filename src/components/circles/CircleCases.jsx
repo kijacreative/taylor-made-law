@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { filterCircleCases, updateCircleCase, createCircleCase } from '@/services/circles';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Briefcase, MapPin, DollarSign, User, CheckCircle, X, Loader2 } from 'lucide-react';
+import { Plus, Briefcase, MapPin, DollarSign, User, CheckCircle, X, Loader2, FileText, MessageSquare, Lock } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLCard from '@/components/ui/TMLCard';
 import TMLBadge from '@/components/ui/TMLBadge';
@@ -25,34 +25,50 @@ export default function CircleCases({ circleId, circle, user, isAdmin }) {
     queryFn: () => filterCircleCases({ circle_id: circleId }),
   });
 
-  const handleCaseCreated = () => {
-    setShowSubmit(false);
+  const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['circleCases', circleId] });
   };
 
-  const handleAccept = async (caseItem) => {
-    if (!window.confirm(`Accept this case? You will be connected with the submitting attorney.`)) return;
+  const handleCaseCreated = () => {
+    setShowSubmit(false);
+    refresh();
+  };
+
+  const handleAccept = async (caseItem, proposedFee) => {
     await updateCircleCase(caseItem.id, {
       status: 'accepted',
       accepted_by_user_id: user.id,
       accepted_by_email: user.email,
       accepted_by_name: user.full_name,
-      accepted_at: new Date().toISOString()
+      accepted_at: new Date().toISOString(),
+      proposed_fee: proposedFee != null ? parseInt(proposedFee) : caseItem.referral_percentage,
     });
-    queryClient.invalidateQueries({ queryKey: ['circleCases', circleId] });
+    refresh();
     setSelectedCase(null);
   };
 
   const handleApprove = async (caseItem) => {
     await updateCircleCase(caseItem.id, { status: 'available' });
-    queryClient.invalidateQueries({ queryKey: ['circleCases', circleId] });
+    refresh();
     setSelectedCase(null);
   };
 
   const handleReject = async (caseItem) => {
     if (!window.confirm('Reject this case submission?')) return;
     await updateCircleCase(caseItem.id, { status: 'closed' });
-    queryClient.invalidateQueries({ queryKey: ['circleCases', circleId] });
+    refresh();
+    setSelectedCase(null);
+  };
+
+  const handleUpdateNotes = async (caseItem, notes) => {
+    await updateCircleCase(caseItem.id, { notes });
+    refresh();
+  };
+
+  const handleCloseCase = async (caseItem) => {
+    if (!window.confirm('Mark this case as closed?')) return;
+    await updateCircleCase(caseItem.id, { status: 'closed' });
+    refresh();
     setSelectedCase(null);
   };
 
@@ -76,9 +92,11 @@ export default function CircleCases({ circleId, circle, user, isAdmin }) {
         isAdmin={isAdmin}
         canAccept={circle.member_can_accept_cases && selectedCase.status === 'available' && selectedCase.submitted_by_user_id !== user.id}
         canApprove={isAdmin && selectedCase.status === 'pending_approval'}
-        onAccept={() => handleAccept(selectedCase)}
+        onAccept={handleAccept}
         onApprove={() => handleApprove(selectedCase)}
         onReject={() => handleReject(selectedCase)}
+        onUpdateNotes={(notes) => handleUpdateNotes(selectedCase, notes)}
+        onCloseCase={() => handleCloseCase(selectedCase)}
         onBack={() => setSelectedCase(null)}
       />
     );
@@ -131,14 +149,12 @@ export default function CircleCases({ circleId, circle, user, isAdmin }) {
                   {caseItem.estimated_value && (
                     <span className="flex items-center gap-1"><DollarSign className="w-3 h-3" />${caseItem.estimated_value.toLocaleString()}</span>
                   )}
+                  {caseItem.referral_percentage && (
+                    <span className="flex items-center gap-1"><FileText className="w-3 h-3" />{caseItem.referral_percentage}% referral</span>
+                  )}
                   <span className="flex items-center gap-1"><User className="w-3 h-3" />{caseItem.submitted_by_name}</span>
                 </div>
               </div>
-              {caseItem.status === 'available' && caseItem.submitted_by_user_id !== user.id && (
-                <TMLButton variant="primary" size="sm" onClick={e => { e.stopPropagation(); setSelectedCase(caseItem); }}>
-                  View
-                </TMLButton>
-              )}
             </div>
           </div>
         ))
@@ -147,12 +163,14 @@ export default function CircleCases({ circleId, circle, user, isAdmin }) {
   );
 }
 
+// ─── Submit Case Form ────────────────────────────────────────────────────────
+
 function SubmitCaseForm({ circleId, circle, user, onSuccess, onCancel }) {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
     title: '', summary: '', description: '', state: '', practice_area: '',
-    estimated_value: '', key_facts: '', client_first_name: '', client_last_name: '',
-    client_email: '', client_phone: ''
+    estimated_value: '', referral_percentage: '25', key_facts: '',
+    client_first_name: '', client_last_name: '', client_email: '', client_phone: ''
   });
 
   const update = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -170,6 +188,7 @@ function SubmitCaseForm({ circleId, circle, user, onSuccess, onCancel }) {
         state: form.state,
         practice_area: form.practice_area,
         estimated_value: form.estimated_value ? parseFloat(form.estimated_value) : null,
+        referral_percentage: parseInt(form.referral_percentage) || 25,
         key_facts: form.key_facts || null,
         client_first_name: form.client_first_name || null,
         client_last_name: form.client_last_name || null,
@@ -195,7 +214,7 @@ function SubmitCaseForm({ circleId, circle, user, onSuccess, onCancel }) {
     <div className="bg-white rounded-xl border border-gray-100 shadow-sm">
       <div className="p-6 border-b border-gray-100">
         <h3 className="text-lg font-bold text-gray-900">Submit Case to Circle</h3>
-        <p className="text-sm text-gray-500 mt-1">This case will only be visible to circle members.</p>
+        <p className="text-sm text-gray-500 mt-1">Client information is only shared after a member accepts the case.</p>
       </div>
       <form onSubmit={handleSubmit} className="p-6 space-y-5">
         <div className="grid md:grid-cols-2 gap-4">
@@ -217,6 +236,21 @@ function SubmitCaseForm({ circleId, circle, user, onSuccess, onCancel }) {
               {PRACTICE_AREAS.map(a => <option key={a} value={a}>{a}</option>)}
             </select>
           </div>
+          <div>
+            <label className={labelClass}>Estimated Value ($)</label>
+            <input type="number" className={inputClass} value={form.estimated_value} onChange={e => update('estimated_value', e.target.value)} placeholder="e.g. 50000" />
+          </div>
+          <div>
+            <label className={labelClass}>Referral Fee (%)</label>
+            <select className={inputClass} value={form.referral_percentage} onChange={e => update('referral_percentage', e.target.value)}>
+              <option value="15">15%</option>
+              <option value="20">20%</option>
+              <option value="25">25% (Standard)</option>
+              <option value="30">30%</option>
+              <option value="33">33%</option>
+              <option value="40">40%</option>
+            </select>
+          </div>
           <div className="md:col-span-2">
             <label className={labelClass}>Summary</label>
             <input className={inputClass} value={form.summary} onChange={e => update('summary', e.target.value)} placeholder="Brief one-line summary" />
@@ -225,26 +259,25 @@ function SubmitCaseForm({ circleId, circle, user, onSuccess, onCancel }) {
             <label className={labelClass}>Description</label>
             <textarea rows={4} className={inputClass} value={form.description} onChange={e => update('description', e.target.value)} placeholder="Detailed case description..." />
           </div>
-          <div>
-            <label className={labelClass}>Estimated Value ($)</label>
-            <input type="number" className={inputClass} value={form.estimated_value} onChange={e => update('estimated_value', e.target.value)} placeholder="e.g. 50000" />
-          </div>
-          <div>
+          <div className="md:col-span-2">
             <label className={labelClass}>Key Facts (one per line)</label>
             <textarea rows={3} className={inputClass} value={form.key_facts} onChange={e => update('key_facts', e.target.value)} placeholder="- Injured in auto accident&#10;- Client has documented injuries" />
           </div>
         </div>
 
         <div className="border-t pt-4">
-          <p className="text-sm font-semibold text-gray-700 mb-3">Client Information (Circle-Private)</p>
+          <div className="flex items-center gap-2 mb-3">
+            <Lock className="w-4 h-4 text-[#3a164d]" />
+            <p className="text-sm font-semibold text-gray-700">Client Information (shared only after acceptance)</p>
+          </div>
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className={labelClass}>First Name</label>
-              <input className={inputClass} value={form.client_first_name} onChange={e => update('client_first_name', e.target.value)} />
+              <label className={labelClass}>First Name *</label>
+              <input required className={inputClass} value={form.client_first_name} onChange={e => update('client_first_name', e.target.value)} />
             </div>
             <div>
-              <label className={labelClass}>Last Name</label>
-              <input className={inputClass} value={form.client_last_name} onChange={e => update('client_last_name', e.target.value)} />
+              <label className={labelClass}>Last Name *</label>
+              <input required className={inputClass} value={form.client_last_name} onChange={e => update('client_last_name', e.target.value)} />
             </div>
             <div>
               <label className={labelClass}>Email</label>
@@ -266,14 +299,32 @@ function SubmitCaseForm({ circleId, circle, user, onSuccess, onCancel }) {
   );
 }
 
-function CaseDetail({ caseItem, user, isAdmin, canAccept, canApprove, onAccept, onApprove, onReject, onBack }) {
+// ─── Case Detail View ────────────────────────────────────────────────────────
+
+function CaseDetail({ caseItem, user, isAdmin, canAccept, canApprove, onAccept, onApprove, onReject, onUpdateNotes, onCloseCase, onBack }) {
   const [accepting, setAccepting] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
+  const [proposedFee, setProposedFee] = useState(String(caseItem.referral_percentage || 25));
+  const [notes, setNotes] = useState(caseItem.notes || '');
+  const [savingNotes, setSavingNotes] = useState(false);
+
+  const isOwner = caseItem.submitted_by_user_id === user.id;
+  const isAcceptor = caseItem.accepted_by_user_id === user.id;
+  const canSeeClient = isOwner || isAdmin || caseItem.status === 'accepted';
+  const canManage = isOwner || isAdmin || isAcceptor;
 
   const doAccept = async () => {
     setAccepting(true);
-    await onAccept();
+    await onAccept(caseItem, proposedFee);
     setAccepting(false);
+    setShowAcceptModal(false);
+  };
+
+  const doSaveNotes = async () => {
+    setSavingNotes(true);
+    await onUpdateNotes(notes);
+    setSavingNotes(false);
   };
 
   return (
@@ -288,7 +339,8 @@ function CaseDetail({ caseItem, user, isAdmin, canAccept, canApprove, onAccept, 
         </TMLBadge>
       </div>
       <div className="p-6 space-y-6">
-        <div className="grid md:grid-cols-3 gap-4">
+        {/* Key Info */}
+        <div className="grid md:grid-cols-4 gap-4">
           <div className="bg-gray-50 rounded-lg p-3">
             <p className="text-xs text-gray-500 mb-1">State</p>
             <p className="font-medium text-gray-900">{caseItem.state}</p>
@@ -303,8 +355,13 @@ function CaseDetail({ caseItem, user, isAdmin, canAccept, canApprove, onAccept, 
               <p className="font-medium text-gray-900">${caseItem.estimated_value.toLocaleString()}</p>
             </div>
           )}
+          <div className="bg-[#f5f0fa] rounded-lg p-3">
+            <p className="text-xs text-[#3a164d] mb-1">Referral Fee</p>
+            <p className="font-bold text-[#3a164d]">{caseItem.referral_percentage || 25}%</p>
+          </div>
         </div>
 
+        {/* Description */}
         {caseItem.description && (
           <div>
             <p className="text-sm font-semibold text-gray-700 mb-2">Description</p>
@@ -312,11 +369,12 @@ function CaseDetail({ caseItem, user, isAdmin, canAccept, canApprove, onAccept, 
           </div>
         )}
 
+        {/* Key Facts */}
         {caseItem.key_facts?.length > 0 && (
           <div>
             <p className="text-sm font-semibold text-gray-700 mb-2">Key Facts</p>
             <ul className="space-y-1">
-              {caseItem.key_facts.map((f, i) => (
+              {(Array.isArray(caseItem.key_facts) ? caseItem.key_facts : caseItem.key_facts.split('\n').filter(Boolean)).map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm text-gray-600">
                   <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
                   {f}
@@ -326,26 +384,75 @@ function CaseDetail({ caseItem, user, isAdmin, canAccept, canApprove, onAccept, 
           </div>
         )}
 
+        {/* Submitted By */}
+        <div className="text-sm text-gray-500">
+          Submitted by <span className="font-medium text-gray-700">{caseItem.submitted_by_name}</span>
+          {caseItem.created_at && <> on {new Date(caseItem.created_at).toLocaleDateString()}</>}
+        </div>
+
+        {/* Accepted Info */}
         {caseItem.status === 'accepted' && caseItem.accepted_by_name && (
           <div className="bg-green-50 border border-green-100 rounded-lg p-4">
             <p className="text-sm font-semibold text-green-800">Accepted by {caseItem.accepted_by_name}</p>
-            {caseItem.accepted_at && <p className="text-xs text-green-600">{new Date(caseItem.accepted_at).toLocaleDateString()}</p>}
+            {caseItem.accepted_at && <p className="text-xs text-green-600 mt-1">{new Date(caseItem.accepted_at).toLocaleDateString()}</p>}
+            {caseItem.proposed_fee && caseItem.proposed_fee !== caseItem.referral_percentage && (
+              <p className="text-sm text-green-700 mt-2">Proposed fee: <strong>{caseItem.proposed_fee}%</strong> (original: {caseItem.referral_percentage}%)</p>
+            )}
           </div>
         )}
 
-        {(caseItem.client_first_name || caseItem.client_email) && (caseItem.submitted_by_user_id === user.id || isAdmin || caseItem.status === 'accepted') && (
+        {/* Client Info — only visible to submitter, admin, or after acceptance */}
+        {canSeeClient && (caseItem.client_first_name || caseItem.client_email) ? (
           <div className="border-t pt-4">
-            <p className="text-sm font-semibold text-gray-700 mb-3">Client Contact</p>
-            <div className="grid md:grid-cols-2 gap-3 text-sm">
+            <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <User className="w-4 h-4" /> Client Contact
+            </p>
+            <div className="grid md:grid-cols-2 gap-3 text-sm bg-gray-50 rounded-lg p-4">
               {(caseItem.client_first_name || caseItem.client_last_name) && (
-                <div><span className="text-gray-500">Name: </span><span className="text-gray-900">{caseItem.client_first_name} {caseItem.client_last_name}</span></div>
+                <div><span className="text-gray-500">Name: </span><span className="font-medium text-gray-900">{caseItem.client_first_name} {caseItem.client_last_name}</span></div>
               )}
-              {caseItem.client_email && <div><span className="text-gray-500">Email: </span><span className="text-gray-900">{caseItem.client_email}</span></div>}
-              {caseItem.client_phone && <div><span className="text-gray-500">Phone: </span><span className="text-gray-900">{caseItem.client_phone}</span></div>}
+              {caseItem.client_email && <div><span className="text-gray-500">Email: </span><a href={`mailto:${caseItem.client_email}`} className="font-medium text-[#3a164d] hover:underline">{caseItem.client_email}</a></div>}
+              {caseItem.client_phone && <div><span className="text-gray-500">Phone: </span><a href={`tel:${caseItem.client_phone}`} className="font-medium text-[#3a164d] hover:underline">{caseItem.client_phone}</a></div>}
+            </div>
+          </div>
+        ) : !canSeeClient && caseItem.status === 'available' ? (
+          <div className="border-t pt-4">
+            <div className="bg-gray-50 rounded-lg p-4 flex items-center gap-3">
+              <Lock className="w-5 h-5 text-gray-400 shrink-0" />
+              <p className="text-sm text-gray-500">Client information will be shared after you accept this case.</p>
+            </div>
+          </div>
+        ) : null}
+
+        {/* Notes & Updates (visible for accepted/closed cases to involved parties) */}
+        {canManage && (caseItem.status === 'accepted' || caseItem.status === 'closed') && (
+          <div className="border-t pt-4">
+            <p className="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+              <MessageSquare className="w-4 h-4" /> Case Notes & Updates
+            </p>
+            <textarea
+              rows={4}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Add notes, updates, or status changes for this case..."
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d] mb-3"
+            />
+            <div className="flex justify-between">
+              <div>
+                {caseItem.status === 'accepted' && (
+                  <TMLButton variant="outline" size="sm" onClick={onCloseCase}>
+                    Mark Case as Closed
+                  </TMLButton>
+                )}
+              </div>
+              <TMLButton variant="primary" size="sm" loading={savingNotes} onClick={doSaveNotes} disabled={notes === (caseItem.notes || '')}>
+                Save Notes
+              </TMLButton>
             </div>
           </div>
         )}
 
+        {/* Admin Approval */}
         {canApprove && (
           <div className="border-t pt-4">
             <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-4">
@@ -362,12 +469,51 @@ function CaseDetail({ caseItem, user, isAdmin, canAccept, canApprove, onAccept, 
           </div>
         )}
 
-        {canAccept && (
+        {/* Accept Case with Fee Negotiation */}
+        {canAccept && !showAcceptModal && (
           <div className="border-t pt-4 flex justify-end">
-            <TMLButton variant="primary" loading={accepting} onClick={doAccept}>
+            <TMLButton variant="primary" onClick={() => setShowAcceptModal(true)}>
               <CheckCircle className="w-4 h-4 mr-2" />
               Accept Case
             </TMLButton>
+          </div>
+        )}
+
+        {canAccept && showAcceptModal && (
+          <div className="border-t pt-4">
+            <div className="bg-[#f5f0fa] border border-[#3a164d]/20 rounded-lg p-5 space-y-4">
+              <h4 className="font-semibold text-gray-900">Accept Case & Agree to Referral Fee</h4>
+              <div className="flex items-center gap-4">
+                <div className="flex-1">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Referral Fee</label>
+                  <select
+                    value={proposedFee}
+                    onChange={e => setProposedFee(e.target.value)}
+                    className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]"
+                  >
+                    <option value="15">15%</option>
+                    <option value="20">20%</option>
+                    <option value="25">25% (Standard)</option>
+                    <option value="30">30%</option>
+                    <option value="33">33%</option>
+                    <option value="40">40%</option>
+                  </select>
+                </div>
+                <div className="text-sm text-gray-500 pt-5">
+                  {proposedFee !== String(caseItem.referral_percentage || 25) && (
+                    <span className="text-amber-600 font-medium">Counter-offer (original: {caseItem.referral_percentage || 25}%)</span>
+                  )}
+                </div>
+              </div>
+              <p className="text-xs text-gray-500">By accepting, you agree to handle this case and pay the referral fee. Client information will be shared.</p>
+              <div className="flex justify-end gap-3">
+                <TMLButton variant="outline" size="sm" onClick={() => setShowAcceptModal(false)}>Cancel</TMLButton>
+                <TMLButton variant="primary" size="sm" loading={accepting} onClick={doAccept}>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Confirm Acceptance
+                </TMLButton>
+              </div>
+            </div>
           </div>
         )}
       </div>
