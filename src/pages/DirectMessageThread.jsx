@@ -185,11 +185,16 @@ export default function DirectMessageThreadPage() {
     return () => unsub();
   }, [threadId, queryClient]);
 
+  const [userPhotos, setUserPhotos] = useState({});
+
   const loadUserFullName = async (userId) => {
     try {
       const profile = await getProfileByUserId(userId);
       const fullName = profile?.full_name || 'Attorney';
       setUserFullNames(prev => ({ ...prev, [userId]: fullName }));
+      if (profile?.profile_photo_url) {
+        setUserPhotos(prev => ({ ...prev, [userId]: profile.profile_photo_url }));
+      }
     } catch {
       setUserFullNames(prev => ({ ...prev, [userId]: 'Attorney' }));
     }
@@ -367,11 +372,17 @@ export default function DirectMessageThreadPage() {
               const isMe = msg.sender_user_id === user?.id;
               return (
                 <div key={msg.id} className={`flex gap-3 ${isMe ? 'flex-row-reverse' : ''} ${msg.showHeader ? 'mt-5' : 'mt-0.5'}`}>
-                  {msg.showHeader && (
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${isMe ? 'bg-[#3a164d]' : 'bg-[#a47864]'}`}>
-                      {msg.sender_name?.charAt(0)?.toUpperCase() || '?'}
-                    </div>
-                  )}
+                  {msg.showHeader && (() => {
+                    const senderName = isMe ? (user?.full_name || 'You') : (userFullNames[msg.sender_user_id] || 'Attorney');
+                    const senderPhoto = isMe ? user?.profile_photo_url : userPhotos[msg.sender_user_id];
+                    return senderPhoto ? (
+                      <img src={senderPhoto} alt={senderName} className="w-8 h-8 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0 ${isMe ? 'bg-[#3a164d]' : 'bg-[#a47864]'}`}>
+                        {senderName.charAt(0).toUpperCase()}
+                      </div>
+                    );
+                  })()}
                   {!msg.showHeader && <div className="w-8 shrink-0" />}
                   <div className={`group max-w-[65%] flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                     {msg.showHeader && (
