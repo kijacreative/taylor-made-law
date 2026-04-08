@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, Users, CheckCircle2, XCircle, Mail, Phone,
   Scale, Building2, Loader2, X, Shield, Eye,
-  Plus, AlertCircle, Ban, RotateCcw, Info, Send, Download,
+  Plus, AlertCircle, Ban, RotateCcw, Info, Send, Download, DollarSign,
   FileText, BadgeCheck, ArrowLeft, Edit2, Key, UserX
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
@@ -515,7 +515,19 @@ export default function AdminLawyers() {
                                 {!u.password_set ? (
                                   <span className="text-xs font-medium bg-amber-50 text-amber-700 px-2 py-0.5 rounded-full border border-amber-200">Not Activated</span>
                                 ) : (
-                                  <span className="text-xs font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">✓ Activated</span>
+                                  <span className="text-xs font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">Activated</span>
+                                )}
+                                {u.subscription_status === 'past_due' && (
+                                  <span className="text-xs font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-300 flex items-center gap-1"><AlertCircle className="w-3 h-3" />Payment Past Due</span>
+                                )}
+                                {u.subscription_status === 'cancelled' && (
+                                  <span className="text-xs font-semibold bg-red-100 text-red-800 px-2 py-0.5 rounded-full border border-red-300">Sub Cancelled</span>
+                                )}
+                                {u.membership_status === 'paid' && u.subscription_status === 'active' && (
+                                  <span className="text-xs font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1"><DollarSign className="w-3 h-3" />Paid</span>
+                                )}
+                                {u.membership_status === 'trial' && (
+                                  <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">Trial</span>
                                 )}
                               </div>
                               <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
@@ -529,7 +541,7 @@ export default function AdminLawyers() {
                                 </div>
                               )}
                               <p className="text-xs text-gray-400 mt-1">
-                                Joined: {u.created_date ? new Date(u.created_date).toLocaleDateString() : '—'}
+                                Joined: {(u.created_at || u.created_date) ? new Date(u.created_at || u.created_date).toLocaleDateString() : '—'}
                                 {u.approved_at && ` · Approved: ${new Date(u.approved_at).toLocaleDateString()}`}
                               </p>
                             </div>
@@ -725,17 +737,65 @@ export default function AdminLawyers() {
             <div className="p-6 space-y-4">
               {editMembershipTab === 'membership' && (
                 <>
+                  {/* Payment Alert */}
+                  {(editingUser.subscription_status === 'past_due' || editingUser.subscription_status === 'cancelled') && (
+                    <div className={`flex items-start gap-3 p-4 rounded-xl border ${editingUser.subscription_status === 'past_due' ? 'bg-amber-50 border-amber-200' : 'bg-red-50 border-red-200'}`}>
+                      <AlertCircle className={`w-5 h-5 mt-0.5 shrink-0 ${editingUser.subscription_status === 'past_due' ? 'text-amber-600' : 'text-red-600'}`} />
+                      <div>
+                        <p className={`font-semibold text-sm ${editingUser.subscription_status === 'past_due' ? 'text-amber-800' : 'text-red-800'}`}>
+                          {editingUser.subscription_status === 'past_due' ? 'Payment Past Due' : 'Subscription Cancelled'}
+                        </p>
+                        <p className={`text-xs mt-0.5 ${editingUser.subscription_status === 'past_due' ? 'text-amber-600' : 'text-red-600'}`}>
+                          {editingUser.subscription_status === 'past_due' ? 'The most recent payment attempt failed. Contact the attorney or update payment manually.' : 'This attorney\'s subscription has been cancelled.'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Membership Status */}
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Membership Status</label>
+                    <select value={editMembershipData.membership_status ?? editingUser.membership_status ?? 'none'}
+                      onChange={e => setEditMembershipData(d => ({ ...d, membership_status: e.target.value }))}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d] bg-white">
+                      <option value="paid">Paid</option>
+                      <option value="trial">Trial</option>
+                      <option value="none">None</option>
+                    </select>
+                  </div>
+
+                  {/* Subscription Status */}
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Subscription Status</label>
+                    <select value={editMembershipData.subscription_status ?? editingUser.subscription_status ?? 'none'}
+                      onChange={e => setEditMembershipData(d => ({ ...d, subscription_status: e.target.value }))}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d] bg-white">
+                      <option value="active">Active</option>
+                      <option value="trial">Trial</option>
+                      <option value="past_due">Past Due</option>
+                      <option value="cancelled">Cancelled</option>
+                      <option value="none">None</option>
+                    </select>
+                  </div>
+
+                  {/* Free Trial Months */}
                   <div>
                     <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Free Trial Months</label>
-                    <input type="number" min="0" max="24" value={editMembershipData.free_trial_months ?? 0}
+                    <input type="number" min="0" max="24" value={editMembershipData.free_trial_months ?? editingUser.free_trial_months ?? 0}
                       onChange={e => setEditMembershipData(d => ({ ...d, free_trial_months: parseInt(e.target.value) || 0 }))}
                       className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]" />
                   </div>
+
+                  {/* Status Summary */}
                   <div className="bg-gray-50 rounded-xl p-4 text-sm space-y-2">
-                    <p className="text-gray-500">Current status: <span className="font-semibold text-emerald-600">Approved</span></p>
+                    <p className="text-gray-500">User status: <span className="font-semibold text-gray-800">{editingUser.user_status || '—'}</span></p>
+                    <p className="text-gray-500">Membership: <span className={`font-semibold ${editingUser.membership_status === 'paid' ? 'text-emerald-600' : editingUser.membership_status === 'trial' ? 'text-blue-600' : 'text-gray-600'}`}>{editingUser.membership_status || 'none'}</span></p>
+                    <p className="text-gray-500">Subscription: <span className={`font-semibold ${editingUser.subscription_status === 'active' ? 'text-emerald-600' : editingUser.subscription_status === 'past_due' ? 'text-amber-600' : editingUser.subscription_status === 'cancelled' ? 'text-red-600' : 'text-gray-600'}`}>{editingUser.subscription_status || 'none'}</span></p>
+                    {editingUser.stripe_customer_id && <p className="text-gray-500">Stripe ID: <span className="font-mono text-xs text-gray-600">{editingUser.stripe_customer_id}</span></p>}
                     {editingUser.approved_at && <p className="text-gray-500">Approved on: <span className="font-medium text-gray-800">{new Date(editingUser.approved_at).toLocaleDateString()}</span></p>}
                     {editingUser.trial_ends_at && <p className="text-gray-500">Trial ends: <span className="font-medium text-gray-800">{new Date(editingUser.trial_ends_at).toLocaleDateString()}</span></p>}
                   </div>
+
                   <div className="flex gap-3 pt-2">
                     <TMLButton variant="outline" onClick={() => setEditingUser(null)} className="flex-1">Cancel</TMLButton>
                     <TMLButton variant="primary" onClick={handleEditMembership} className="flex-1" loading={saving}>Save Changes</TMLButton>
