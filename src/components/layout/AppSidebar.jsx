@@ -35,28 +35,37 @@ const AppSidebar = ({ user, lawyerProfile }) => {
     };
     loadUnread();
 
-    // Subscribe to new DMs — bump unread when a message arrives that isn't from the current user
-    const unsubMsg = subscribeDirectMessages((event) => {
-      if (event.type === 'create' && event.data?.sender_user_id !== user.id) {
-        // Only count if not currently viewing that thread
-        const threadId = event.data?.thread_id;
-        const isViewingThread = window.location.pathname === `/app/messages/${threadId}`;
-        if (!isViewingThread) {
-          setUnreadCount(prev => prev + 1);
+    // Subscribe to new DMs — bump unread when a message arrives
+    let unsubMsg = () => {};
+    let unsubPart = () => {};
+    try {
+      unsubMsg = subscribeDirectMessages((event) => {
+        // Supabase Realtime: { eventType, new, old }; Base44: { type, data }
+        const isCreate = event.eventType === 'INSERT' || event.type === 'create';
+        const msgData = event.new || event.data;
+        if (isCreate && msgData?.sender_user_id !== user.id) {
+          const threadId = msgData?.thread_id;
+          const isViewingThread = window.location.pathname === `/app/messages/${threadId}`;
+          if (!isViewingThread) {
+            setUnreadCount(prev => prev + 1);
+          }
         }
-      }
-    });
+      }) || (() => {});
 
-    // Subscribe to participant updates — when last_read_at changes, re-fetch the count
-    const unsubPart = subscribeDirectMessageParticipants((event) => {
-      if (event.type === 'update' && event.data?.user_id === user.id) {
-        loadUnread();
-      }
-    });
+      unsubPart = subscribeDirectMessageParticipants((event) => {
+        const isUpdate = event.eventType === 'UPDATE' || event.type === 'update';
+        const partData = event.new || event.data;
+        if (isUpdate && partData?.user_id === user.id) {
+          loadUnread();
+        }
+      }) || (() => {});
+    } catch (err) {
+      console.debug('[AppSidebar] Subscription setup skipped:', err.message);
+    }
 
     return () => {
-      unsubMsg();
-      unsubPart();
+      try { unsubMsg(); } catch {}
+      try { unsubPart(); } catch {}
     };
   }, [user?.id, isApprovedLawyer]);
 

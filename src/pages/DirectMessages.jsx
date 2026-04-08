@@ -73,7 +73,14 @@ export default function DirectMessages() {
     return () => unsub();
   }, [user, isApproved, queryClient]);
 
-  const threads = inboxData?.threads || [];
+  // Normalize thread shape — Supabase returns { id, other_participant: { full_name, email } }
+  // Base44 returns { thread_id, other_user_name, other_user_email }
+  const threads = (inboxData?.threads || []).map(t => ({
+    ...t,
+    thread_id: t.thread_id || t.id,
+    other_user_name: t.other_user_name || t.other_participant?.full_name || t.other_participant?.email || 'Unknown',
+    other_user_email: t.other_user_email || t.other_participant?.email || '',
+  }));
 
   const filtered = threads.filter(t =>
     !search || t.other_user_name?.toLowerCase().includes(search.toLowerCase()) ||
