@@ -151,13 +151,11 @@ export default function AdminLeadDetail() {
       
       if (isJuniorAssociate && recommendation) {
         updateData.junior_reviewer = user.email;
-        updateData.junior_reviewed_at = new Date().toISOString();
         updateData.junior_recommendation = recommendation;
       }
-      
+
       if (isSeniorOrAdmin) {
         updateData.senior_reviewer = user.email;
-        updateData.senior_reviewed_at = new Date().toISOString();
       }
       
       await updateLead(leadId, updateData);
@@ -173,7 +171,8 @@ export default function AdminLeadDetail() {
       refetch();
       queryClient.invalidateQueries(['allLeads']);
     } catch (err) {
-      setError('Failed to update status');
+      console.error('Status update error:', err);
+      setError(err?.message || 'Failed to update status');
     } finally {
       setSaving(false);
     }
@@ -189,9 +188,9 @@ export default function AdminLeadDetail() {
       
       await updateLead(leadId, {
         status: 'rejected',
-        rejection_reason: rejectionReason,
         senior_reviewer: user.email,
-        senior_reviewed_at: new Date().toISOString()
+        senior_recommendation: rejectionReason,
+        internal_notes: `${lead.internal_notes ? lead.internal_notes + '\n' : ''}Rejected: ${rejectionReason}`
       });
       
       await logAudit('reject', `Rejected: ${rejectionReason}`, beforeState, {
@@ -265,7 +264,6 @@ Taylor Made Law Team
       await updateLead(leadId, {
         status: 'published',
         senior_reviewer: user.email,
-        senior_reviewed_at: new Date().toISOString()
       });
       
       await logAudit('publish_marketplace', 'Published to Case Exchange', { status: lead.status }, { status: 'published' });
@@ -290,7 +288,6 @@ Taylor Made Law Team
       await updateLead(leadId, {
         status: 'routed_cochran',
         senior_reviewer: user.email,
-        senior_reviewed_at: new Date().toISOString()
       });
       
       await logAudit('route_cochran', 'Routed to Cochran Firm', { status: lead.status }, { status: 'routed_cochran' });
