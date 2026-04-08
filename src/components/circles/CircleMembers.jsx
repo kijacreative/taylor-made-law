@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { filterInvitations, updateInvitation, updateMember, createCircleInvitation, sendCircleInviteEmail } from '@/services/circles';
+import { filterInvitations, filterMembers, updateInvitation, updateMember, createCircleInvitation, sendCircleInviteEmail, approveMember, denyMember } from '@/services/circles';
 import { searchNetworkAttorneys } from '@/services/lawyers';
 import { startDirectThread } from '@/services/messaging';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import MemberProfileModal from './MemberProfileModal';
-import { UserPlus, Shield, Trash2, Mail, Search, Loader2, CheckCircle, Users, ExternalLink, X, Clock, MessageCircle } from 'lucide-react';
+import { UserPlus, Shield, Trash2, Mail, Search, Loader2, CheckCircle, ExternalLink, X, Clock, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import TMLButton from '@/components/ui/TMLButton';
 import TMLBadge from '@/components/ui/TMLBadge';
@@ -15,8 +15,9 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
   const handleDM = async (member) => {
     if (member.user_id === user.id) return;
     const res = await startDirectThread(member.user_id);
-    if (res.data?.thread_id) {
-      navigate(`/app/messages/${res.data.thread_id}`);
+    const threadData = res?.data || res;
+    if (threadData?.thread_id) {
+      navigate(`/app/messages/${threadData.thread_id}`);
     }
   };
   const [showInvite, setShowInvite] = useState(false);
@@ -35,6 +36,12 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
 
   const memberEmails = new Set(members.map(m => m.user_email));
 
+  const { data: pendingJoinRequests = [], refetch: refetchPendingJoins } = useQuery({
+    queryKey: ['pendingJoinRequests', circleId],
+    queryFn: () => filterMembers({ circle_id: circleId, status: 'pending' }),
+    enabled: !!circleId && isAdmin,
+  });
+
   const { data: pendingInvites = [], refetch: refetchInvites } = useQuery({
     queryKey: ['circlePendingInvites', circleId],
     queryFn: () => filterInvitations({ circle_id: circleId, status: 'pending' }),
@@ -51,7 +58,13 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
       setSearching(true);
       try {
         const res = await searchNetworkAttorneys(searchQuery);
-        setSearchResults(res.data?.results || []);
+        const raw = Array.isArray(res) ? res : (res?.data?.results || res?.results || []);
+        setSearchResults(raw.map(r => ({
+          user_id: r.user_id || r.id,
+          name: r.full_name || r.name || r.email,
+          firm_name: r.firm_name || '',
+          email: r.email || '',
+        })));
       } catch {
         setSearchResults([]);
       } finally {
@@ -336,6 +349,37 @@ export default function CircleMembers({ circleId, members, user, isAdmin, circle
               </div>
             </form>
           )}
+        </div>
+      )}
+
+      {/* Pending Join Requests (admin only) */}
+      {isAdmin && pendingJoinRequests.length > 0 && (
+        <div className="bg-amber-50 rounded-xl border border-amber-200 p-4 space-y-3">
+          <h4 className="font-semibold text-amber-900 flex items-center gap-2 text-sm">
+            <Clock className="w-4 h-4" />
+            Pending Join Requests ({pendingJoinRequests.length})
+          </h4>
+          {pendingJoinRequests.map(req => (
+            <div key={req.id} className="flex items-center gap-3 bg-white rounded-lg p-3 border border-amber-100">
+              <div className="w-9 h-9 rounded-full bg-amber-200 flex items-center justify-center text-amber-800 font-semibold text-sm shrink-0">
+                {(req.full_name || req.user_name || '?').charAt(0).toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-gray-900 text-sm truncate">{req.full_name || req.user_name || 'Attorney'}</p>
+                <p className="text-xs text-gray-500 truncate">{req.user_email}</p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button
+                  onClick={async () => { await approveMember(circleId, req.id); refetchPendingJoins(); queryClient.invalidateQueries(['circleMembers']); }}
+                  className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                >Accept</button>
+                <button
+                  onClick={async () => { await denyMember(circleId, req.id); refetchPendingJoins(); }}
+                  className="px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold rounded-lg transition-colors"
+                >Deny</button>
+              </div>
+            </div>
+          ))}
         </div>
       )}
 

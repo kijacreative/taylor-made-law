@@ -5,6 +5,7 @@
  * Write functions, subscriptions, and backend function invocations remain on Base44.
  */
 import { base44 } from '@/api/base44Client';
+import { getSupabase } from '@/api/supabaseClient';
 import { supabaseQuery } from './supabase-helpers';
 import { useSupabase, logProvider } from './provider';
 
@@ -228,4 +229,50 @@ export function getDocumentHistory(payload) {
 
 export function requestDocumentSignatures(payload) {
   return base44.functions.invoke('requestDocumentSignatures', payload);
+}
+
+// ---------------------------------------------------------------------------
+// Circle join / membership management
+// ---------------------------------------------------------------------------
+
+export async function requestJoinCircle(circleId) {
+  if (useSupabase('circles_read')) {
+    logProvider('circles_read', 'requestJoinCircle');
+    const sb = getSupabase();
+    if (!sb) throw new Error('Supabase client not available');
+    const { data, error } = await sb.functions.invoke('circles', {
+      body: { action: 'request_join', circle_id: circleId },
+    });
+    if (error) throw error;
+    return data?.data || data;
+  }
+  return base44.functions.invoke('requestJoinCircle', { circle_id: circleId });
+}
+
+export async function approveMember(circleId, memberId) {
+  if (useSupabase('circles_read')) {
+    logProvider('circles_read', 'approveMember');
+    const sb = getSupabase();
+    if (!sb) throw new Error('Supabase client not available');
+    const { data, error } = await sb.functions.invoke('circles', {
+      body: { action: 'approve_member', circle_id: circleId, member_id: memberId },
+    });
+    if (error) throw error;
+    return data?.data || data;
+  }
+  return base44.functions.invoke('approveMember', { circle_id: circleId, member_id: memberId });
+}
+
+export async function denyMember(circleId, memberId) {
+  if (useSupabase('circles_read')) {
+    logProvider('circles_read', 'denyMember');
+    const sb = getSupabase();
+    if (!sb) throw new Error('Supabase client not available');
+    const { data, error } = await sb.functions.invoke('circles', {
+      body: { action: 'deny_member', circle_id: circleId, member_id: memberId },
+    });
+    if (error) throw error;
+    return data?.data || data;
+  }
+  return base44.functions.invoke('denyMember', { circle_id: circleId, member_id: memberId });
 }

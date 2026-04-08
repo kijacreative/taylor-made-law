@@ -434,6 +434,257 @@ function escapeHtml(str: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// requestJoinCircle (action: 'request_join')
+// ---------------------------------------------------------------------------
+
+async function handleRequestJoin(req: Request) {
+  const auth = await getAuthUser(req);
+  if (!auth) return errorResponse('Unauthorized', 401);
+
+  const { profile } = auth;
+  const body = await req.json().catch(() => ({}));
+  const { circle_id } = body;
+  if (!circle_id) return errorResponse('Missing circle_id', 400);
+
+  const sb = createAdminClient();
+
+  // Verify circle exists and is discoverable
+  const { data: circle, error: circleErr } = await sb
+    .from('legal_circles')
+    .select('*')
+    .eq('id', circle_id)
+    .eq('is_active', true)
+    .single();
+
+  if (circleErr || !circle) return errorResponse('Circle not found', 404);
+  if (circle.visibility !== 'discoverable') return errorResponse('This circle is not open for joining', 403);
+
+  // Check not already a member
+  const { data: existing } = await sb
+    .from('legal_circle_members')
+    .select('id, status')
+    .eq('circle_id', circle_id)
+    .eq('user_id', profile.id)
+    .maybeSingle();
+
+  if (existing?.status === 'active') return errorResponse('You are already a member', 400);
+  if (existing?.status === 'pending') return errorResponse('Your request is already pending', 400);
+
+  const senderName = await getSenderName(sb, profile.id, profile.email);
+  const now = new Date().toISOString();
+
+  if (circle.require_admin_approval) {
+    // Insert as pending member
+    if (existing) {
+      await sb.from('legal_circle_members').update({ status: 'pending' }).eq('id', existing.id);
+    } else {
+      await sb.from('legal_circle_members').insert({
+        circle_id,
+        user_id: profile.id,
+        user_email: profile.email,
+        user_name: senderName,
+        full_name: senderName,
+        role: 'member',
+        status: 'pending',
+        joined_at: now,
+      });
+    }
+
+    // Notify circle admins
+    const { data: admins } = await sb
+      .from('legal_circle_members')
+      .select('user_id, user_email')
+      .eq('circle_id', circle_id)
+      .eq('role', 'admin')
+      .eq('status', 'active');
+
+    if (admins?.length) {
+      for (const admin of admins) {
+        sb.from('circle_notifications').insert({
+          user_id: admin.user_id,
+          user_email: admin.user_email,
+          circle_id,
+          type: 'join_request',
+          title: 'New Join Request',
+          body: `${senderName} wants to join "${circle.name}"`,
+          link: `/CircleMembers?id=${circle_id}`,
+          is_read: false,
+        }).then(() => {}).catch(() => {});
+
+        sendEmail({
+          to: admin.user_email,
+          subject: `Join Request: ${senderName} wants to join "${circle.name}"`,
+          html: tmlEmailWrapper(`
+            ${tmlH1('New Join Request')}
+            ${tmlP(`<strong>${escapeHtml(senderName)}</strong> (${escapeHtml(profile.email)}) has requested to join <strong>${escapeHtml(circle.name)}</strong>.`)}
+            ${tmlButton(`${APP_URL}/CircleMembers?id=${circle_id}`, 'Review Request')}
+          `),
+          from: 'Taylor Made Law <notifications@taylormadelaw.com>',
+        }).catch(() => {});
+      }
+    }
+
+    sb.from('audit_logs').insert({
+      entity_type: 'LegalCircleMember',
+      action: 'request_join',
+      actor_id: profile.id,
+      actor_email: profile.email,
+      actor_role: 'user',
+      notes: `Requested to join circle "${circle.name}"`,
+    }).then(() => {});
+
+    return jsonResponse({ data: { success: true, requested: true } });
+  }
+
+  // No approval required — auto-join
+  if (existing) {
+    await sb.from('legal_circle_members').update({ status: 'active', joined_at: now }).eq('id', existing.id);
+  } else {
+    await sb.from('legal_circle_members').insert({
+      circle_id,
+      user_id: profile.id,
+      user_email: profile.email,
+      user_name: senderName,
+      full_name: senderName,
+      role: 'member',
+      status: 'active',
+      joined_at: now,
+    });
+  }
+
+  // Increment member count
+  await sb.from('legal_circles').update({ member_count: (circle.member_count || 0) + 1 }).eq('id', circle_id);
+
+  sb.from('audit_logs').insert({
+    entity_type: 'LegalCircleMember',
+    action: 'auto_join',
+    actor_id: profile.id,
+    actor_email: profile.email,
+    actor_role: 'user',
+    notes: `Auto-joined circle "${circle.name}"`,
+  }).then(() => {});
+
+  return jsonResponse({ data: { success: true, joined: true } });
+}
+
+// ---------------------------------------------------------------------------
+// approveMember (action: 'approve_member')
+// ---------------------------------------------------------------------------
+
+async function handleApproveMember(req: Request) {
+  const auth = await getAuthUser(req);
+  if (!auth) return errorResponse('Unauthorized', 401);
+
+  const { profile } = auth;
+  const body = await req.json().catch(() => ({}));
+  const { circle_id, member_id } = body;
+  if (!circle_id || !member_id) return errorResponse('Missing circle_id or member_id', 400);
+
+  const sb = createAdminClient();
+
+  // Verify caller is circle admin
+  const { data: callerMember } = await sb
+    .from('legal_circle_members')
+    .select('role')
+    .eq('circle_id', circle_id)
+    .eq('user_id', profile.id)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (callerMember?.role !== 'admin') return errorResponse('Only circle admins can approve members', 403);
+
+  // Get the pending member
+  const { data: member, error: memErr } = await sb
+    .from('legal_circle_members')
+    .select('*')
+    .eq('id', member_id)
+    .eq('status', 'pending')
+    .single();
+
+  if (memErr || !member) return errorResponse('Pending member not found', 404);
+
+  // Approve
+  await sb.from('legal_circle_members').update({ status: 'active', joined_at: new Date().toISOString() }).eq('id', member_id);
+
+  // Increment member count
+  const { data: circle } = await sb.from('legal_circles').select('member_count, name').eq('id', circle_id).single();
+  if (circle) {
+    await sb.from('legal_circles').update({ member_count: (circle.member_count || 0) + 1 }).eq('id', circle_id);
+  }
+
+  // Notify the member
+  sendEmail({
+    to: member.user_email,
+    subject: `You've been accepted to "${circle?.name || 'Legal Circle'}"`,
+    html: tmlEmailWrapper(`
+      ${tmlH1('Welcome to the Circle!')}
+      ${tmlP(`Your request to join <strong>${escapeHtml(circle?.name || 'the circle')}</strong> has been approved.`)}
+      ${tmlButton(`${APP_URL}/GroupDetail?id=${circle_id}`, 'Visit Circle')}
+    `),
+    from: 'Taylor Made Law <notifications@taylormadelaw.com>',
+  }).catch(() => {});
+
+  return jsonResponse({ data: { success: true } });
+}
+
+// ---------------------------------------------------------------------------
+// denyMember (action: 'deny_member')
+// ---------------------------------------------------------------------------
+
+async function handleDenyMember(req: Request) {
+  const auth = await getAuthUser(req);
+  if (!auth) return errorResponse('Unauthorized', 401);
+
+  const { profile } = auth;
+  const body = await req.json().catch(() => ({}));
+  const { circle_id, member_id } = body;
+  if (!circle_id || !member_id) return errorResponse('Missing circle_id or member_id', 400);
+
+  const sb = createAdminClient();
+
+  // Verify caller is circle admin
+  const { data: callerMember } = await sb
+    .from('legal_circle_members')
+    .select('role')
+    .eq('circle_id', circle_id)
+    .eq('user_id', profile.id)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  if (callerMember?.role !== 'admin') return errorResponse('Only circle admins can deny members', 403);
+
+  // Get the pending member
+  const { data: member, error: memErr } = await sb
+    .from('legal_circle_members')
+    .select('*')
+    .eq('id', member_id)
+    .eq('status', 'pending')
+    .single();
+
+  if (memErr || !member) return errorResponse('Pending member not found', 404);
+
+  // Decline
+  await sb.from('legal_circle_members').update({ status: 'declined' }).eq('id', member_id);
+
+  // Notify the member
+  const { data: circle } = await sb.from('legal_circles').select('name').eq('id', circle_id).single();
+
+  sendEmail({
+    to: member.user_email,
+    subject: `Update on your request to join "${circle?.name || 'Legal Circle'}"`,
+    html: tmlEmailWrapper(`
+      ${tmlH1('Request Update')}
+      ${tmlP(`Your request to join <strong>${escapeHtml(circle?.name || 'the circle')}</strong> was not approved at this time.`)}
+      ${tmlP('You can explore other circles or reach out to the circle administrator for more information.')}
+      ${tmlButton(`${APP_URL}/Groups`, 'Browse Circles')}
+    `),
+    from: 'Taylor Made Law <notifications@taylormadelaw.com>',
+  }).catch(() => {});
+
+  return jsonResponse({ data: { success: true } });
+}
+
+// ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
 
@@ -450,6 +701,9 @@ serve(async (req) => {
       case 'invite': return await handleInvite(req);
       case 'send_invite_email': return await handleSendInviteEmail(req);
       case 'notify_message': return await handleNotifyMessage(req);
+      case 'request_join': return await handleRequestJoin(req);
+      case 'approve_member': return await handleApproveMember(req);
+      case 'deny_member': return await handleDenyMember(req);
       default: return errorResponse(`Unknown action: ${action}`, 400);
     }
   } catch (err) {

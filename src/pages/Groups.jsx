@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { getCurrentUser, getProfile } from '@/services/auth';
-import { filterMembers, filterCircles, filterInvitations } from '@/services/circles';
+import { filterMembers, filterCircles, filterInvitations, requestJoinCircle } from '@/services/circles';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -10,7 +10,6 @@ import {
   Plus,
   Lock,
   Globe,
-  ArrowRight,
   Loader2,
   Shield,
   Sparkles,
@@ -98,6 +97,39 @@ export default function Groups() {
     }),
     enabled: !!user?.email,
   });
+
+  // Get pending join requests
+  const { data: pendingMemberships = [], refetch: refetchPending } = useQuery({
+    queryKey: ['pendingMemberships', user?.id],
+    queryFn: () => filterMembers({ user_id: user.id, status: 'pending' }),
+    enabled: !!user?.id,
+  });
+
+  const pendingCircleIds = new Set(pendingMemberships.map(m => m.circle_id));
+
+  const [joinLoading, setJoinLoading] = useState(null); // circle_id being joined
+  const [joinSuccess, setJoinSuccess] = useState(null);
+
+  const handleJoinCircle = async (circleId, e) => {
+    e.preventDefault(); // prevent Link navigation
+    e.stopPropagation();
+    setJoinLoading(circleId);
+    setJoinSuccess(null);
+    try {
+      const res = await requestJoinCircle(circleId);
+      if (res?.joined) {
+        setJoinSuccess({ id: circleId, msg: 'Joined!' });
+      } else if (res?.requested) {
+        setJoinSuccess({ id: circleId, msg: 'Request sent!' });
+      }
+      // Refresh data
+      refetchPending();
+    } catch (err) {
+      alert(err?.message || 'Could not join circle');
+    } finally {
+      setJoinLoading(null);
+    }
+  };
 
   if (loading || membershipsLoading) {
     return (
@@ -333,6 +365,24 @@ export default function Groups() {
                               ))}
                             </div>
                           )}
+                          {/* Join / Request button */}
+                          <div className="mt-4 pt-3 border-t border-gray-100">
+                            {pendingCircleIds.has(circle.id) || joinSuccess?.id === circle.id ? (
+                              <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-200">
+                                <Clock className="w-3.5 h-3.5" />
+                                {joinSuccess?.id === circle.id ? joinSuccess.msg : 'Request Pending'}
+                              </span>
+                            ) : (
+                              <button
+                                onClick={(e) => handleJoinCircle(circle.id, e)}
+                                disabled={joinLoading === circle.id}
+                                className="inline-flex items-center gap-1.5 text-xs font-semibold text-white bg-[#3a164d] hover:bg-[#2a1038] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+                              >
+                                {joinLoading === circle.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Plus className="w-3.5 h-3.5" />}
+                                {circle.require_admin_approval ? 'Request to Join' : 'Join Circle'}
+                              </button>
+                            )}
+                          </div>
                         </TMLCardContent>
                       </TMLCard>
                     </Link>
