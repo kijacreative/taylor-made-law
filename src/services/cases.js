@@ -194,3 +194,22 @@ export function sendApplicationEmails(payload) {
 export function retrySyncLead(payload) {
   return base44.functions.invoke('retrySyncLead', payload);
 }
+
+/**
+ * Send a notification email to all site admins (+ optional extra recipient).
+ * Uses the cases edge function's send_notification action via Resend.
+ */
+export async function sendAdminNotification({ subject, body_text, body_html, to_email }) {
+  if (useSupabase('cases_read')) {
+    logProvider('cases_read', 'sendAdminNotification');
+    const sb = getSupabase();
+    if (!sb) throw new Error('Supabase client not available');
+    const { data, error } = await sb.functions.invoke('cases', {
+      body: { action: 'send_notification', subject, body_text, body_html, to_email },
+    });
+    if (error) throw error;
+    return data?.data || data;
+  }
+  // Base44 fallback
+  return base44.functions.invoke('sendApplicationEmails', { subject, body: body_text || body_html, to: to_email });
+}

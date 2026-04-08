@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { getCurrentUser } from '@/services/auth';
-import { filterLeads, updateLead, createCase } from '@/services/cases';
-import { filterAuditLogs, createAuditLog as createAuditLogEntry, sendEmail } from '@/services/admin';
+import { filterLeads, updateLead, createCase, sendAdminNotification } from '@/services/cases';
+import { filterAuditLogs, createAuditLog as createAuditLogEntry } from '@/services/admin';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -198,30 +198,15 @@ export default function AdminLeadDetail() {
         rejection_reason: rejectionReason
       });
       
-      // Send rejection email
+      // Send rejection notification to admins + client
       try {
-        await sendEmail({
-          to: lead.email,
-          subject: 'Taylor Made Law - Update on Your Request',
-          body: `
-Dear ${lead.first_name},
-
-Thank you for contacting Taylor Made Law regarding your legal matter.
-
-After reviewing your request, we regret to inform you that we are unable to assist with your case at this time. 
-
-${rejectionReason}
-
-We encourage you to reach out to your local bar association for a referral to an attorney who may be able to help.
-
-Thank you for considering Taylor Made Law.
-
-Best regards,
-Taylor Made Law Team
-          `.trim()
+        await sendAdminNotification({
+          subject: `Lead Rejected: ${lead.first_name} ${lead.last_name} — ${lead.practice_area}`,
+          to_email: lead.email,
+          body_text: `Dear ${lead.first_name},\n\nThank you for contacting Taylor Made Law regarding your legal matter.\n\nAfter reviewing your request, we regret to inform you that we are unable to assist with your case at this time.\n\n${rejectionReason}\n\nWe encourage you to reach out to your local bar association for a referral to an attorney who may be able to help.\n\nBest regards,\nTaylor Made Law Team`
         });
       } catch (emailErr) {
-        console.log('Email send attempted');
+        console.log('Rejection email send attempted');
       }
       
       setShowRejectModal(false);
@@ -292,39 +277,14 @@ Taylor Made Law Team
       
       await logAudit('route_cochran', 'Routed to Cochran Firm', { status: lead.status }, { status: 'routed_cochran' });
       
-      // Send email to Cochran with case information
+      // Send notification to all admins with case referral details
       try {
-        await sendEmail({
-          to: 'pburns@cochrantexas.com',
-          subject: `New Case Referral - ${lead.practice_area} (${lead.state})`,
-          body: `
-New Case Referral from Taylor Made Law
-
-CLIENT INFORMATION:
-Name: ${lead.first_name} ${lead.last_name}
-Email: ${lead.email}
-Phone: ${lead.phone}
-
-CASE DETAILS:
-State: ${lead.state}
-Practice Area: ${lead.practice_area}
-Urgency: ${lead.urgency || 'Not specified'}
-${lead.estimated_value ? `Estimated Value: $${lead.estimated_value.toLocaleString()}` : ''}
-
-CASE DESCRIPTION:
-${lead.description}
-
-${lead.internal_notes ? `INTERNAL NOTES:\n${lead.internal_notes}` : ''}
-
-Lead ID: ${leadId}
-Submitted: ${new Date((lead.created_at || lead.created_date)).toLocaleString()}
-
----
-This lead has been routed to Cochran Firm by ${user.email}
-          `.trim()
+        await sendAdminNotification({
+          subject: `Case Routed to Cochran: ${lead.first_name} ${lead.last_name} — ${lead.practice_area} (${lead.state})`,
+          body_text: `New Case Referral from Taylor Made Law\n\nCLIENT INFORMATION:\nName: ${lead.first_name} ${lead.last_name}\nEmail: ${lead.email}\nPhone: ${lead.phone}\n\nCASE DETAILS:\nState: ${lead.state}\nPractice Area: ${lead.practice_area}\nUrgency: ${lead.urgency || 'Not specified'}${lead.estimated_value ? `\nEstimated Value: $${lead.estimated_value.toLocaleString()}` : ''}\n\nCASE DESCRIPTION:\n${lead.description}${lead.internal_notes ? `\n\nINTERNAL NOTES:\n${lead.internal_notes}` : ''}\n\nLead ID: ${leadId}\nRouted by: ${user.email}`
         });
       } catch (emailErr) {
-        console.log('Email send attempted');
+        console.log('Cochran routing email send attempted');
       }
       
       setSuccess('Lead routed to Cochran Firm and email notification sent');

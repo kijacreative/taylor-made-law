@@ -255,6 +255,53 @@ async function handleSubmitLead(req: Request) {
 }
 
 // ---------------------------------------------------------------------------
+// sendNotification — send branded email to all admins (auth required)
+// ---------------------------------------------------------------------------
+
+async function handleSendNotification(req: Request) {
+  const auth = await getAuthUser(req);
+  if (!auth) return errorResponse('Unauthorized', 401);
+
+  const body = await req.json().catch(() => ({}));
+  const { subject, body_text, body_html, to_email } = body;
+
+  if (!subject) return errorResponse('Missing subject', 400);
+
+  const sb = createAdminClient();
+
+  // Get admin emails
+  const { data: admins } = await sb
+    .from('profiles')
+    .select('email')
+    .eq('role', 'admin');
+
+  const recipients: string[] = [];
+  if (to_email) recipients.push(to_email);
+  if (admins?.length) {
+    admins.forEach((a: { email: string }) => {
+      if (!recipients.includes(a.email)) recipients.push(a.email);
+    });
+  }
+
+  if (recipients.length === 0) {
+    return errorResponse('No recipients found', 400);
+  }
+
+  // Build HTML from body_html or plain text
+  const html = body_html
+    ? tmlEmailWrapper(body_html)
+    : tmlEmailWrapper(
+        (body_text || '').split('\n').map((line: string) =>
+          line.trim() ? tmlP(line) : '<br/>'
+        ).join('')
+      );
+
+  await sendEmail({ to: recipients, subject, html });
+
+  return jsonResponse({ data: { success: true, recipients_count: recipients.length } });
+}
+
+// ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
 
@@ -271,6 +318,7 @@ serve(async (req) => {
       case 'list': return await handleList(req);
       case 'accept': return await handleAccept(req);
       case 'submit_lead': return await handleSubmitLead(req);
+      case 'send_notification': return await handleSendNotification(req);
       default: return errorResponse(`Unknown action: ${action}`, 400);
     }
   } catch (err) {
