@@ -110,12 +110,19 @@ export default function DirectMessageThreadPage() {
     if (data?.error) { navigate('/app/messages'); return; }
     setThreadData(data?.thread)
     const participant = data?.other_participant;
-    // Fetch full name from LawyerProfile and attach directly to participant
-    if (participant?.user_id) {
-      try {
-        const profile = await getProfileByUserId(participant.user_id);
-        if (profile?.full_name) participant.resolved_full_name = profile.full_name;
-      } catch {}
+    // Normalize: Supabase returns { id, email, full_name }, Base44 returns { user_id, user_email }
+    if (participant) {
+      participant.user_id = participant.user_id || participant.id;
+      participant.user_email = participant.user_email || participant.email;
+      // Use full_name directly if available (Supabase), otherwise fetch from LawyerProfile
+      if (!participant.full_name && participant.user_id) {
+        try {
+          const profile = await getProfileByUserId(participant.user_id);
+          if (profile?.full_name) participant.resolved_full_name = profile.full_name;
+        } catch {}
+      } else if (participant.full_name) {
+        participant.resolved_full_name = participant.full_name;
+      }
     }
     setOtherParticipant(participant);
     const msgs = data?.messages || [];
@@ -299,12 +306,16 @@ export default function DirectMessageThreadPage() {
             <Link to="/app/messages" className="p-2 rounded-xl text-gray-400 hover:text-[#3a164d] hover:bg-gray-100 transition-colors">
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <div className="w-10 h-10 rounded-full bg-[#a47864] flex items-center justify-center text-white font-semibold">
-              {otherName.charAt(0).toUpperCase()}
-            </div>
+            {otherParticipant?.profile_photo_url ? (
+              <img src={otherParticipant.profile_photo_url} alt={otherName} className="w-10 h-10 rounded-full object-cover" />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-[#a47864] flex items-center justify-center text-white font-semibold">
+                {otherName.charAt(0).toUpperCase()}
+              </div>
+            )}
             <div className="flex-1">
               <p className="font-semibold text-gray-900">{otherName}</p>
-              <p className="text-xs text-gray-400">{otherParticipant?.user_email || ''}</p>
+              <p className="text-xs text-gray-400">{otherParticipant?.user_email || otherParticipant?.email || ''}</p>
             </div>
           </div>
 
