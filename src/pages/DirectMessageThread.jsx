@@ -106,9 +106,10 @@ export default function DirectMessageThreadPage() {
       navigate('/app/messages');
       return;
     }
-    if (res.data?.error) { navigate('/app/messages'); return; }
-    setThreadData(res.data?.thread);
-    const participant = res.data?.other_participant;
+    const data = res?.data || res;
+    if (data?.error) { navigate('/app/messages'); return; }
+    setThreadData(data?.thread)
+    const participant = data?.other_participant;
     // Fetch full name from LawyerProfile and attach directly to participant
     if (participant?.user_id) {
       try {
@@ -117,7 +118,7 @@ export default function DirectMessageThreadPage() {
       } catch {}
     }
     setOtherParticipant(participant);
-    const msgs = res.data?.messages || [];
+    const msgs = data?.messages || [];
     setMessages(msgs);
     // Load full names for all senders
     const uniqueSenders = [...new Set(msgs.map(m => m.sender_user_id))];
@@ -221,8 +222,9 @@ export default function DirectMessageThreadPage() {
 
     try {
       const res = await sendDirectMessage({ thread_id: threadId, body });
-      if (res.data?.error) throw new Error(res.data.error);
-      const messageId = res.data?.message?.id;
+      const sendData = res?.data || res;
+      if (sendData?.error) throw new Error(sendData.error);
+      const messageId = sendData?.message?.id;
 
       // Upload files if any
       if (filesToSend.length > 0 && messageId) {

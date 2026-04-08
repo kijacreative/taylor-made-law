@@ -3,7 +3,6 @@ import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { 
   LayoutDashboard, 
-  Briefcase, 
   FolderOpen,
   Settings, 
   LogOut,
@@ -30,8 +29,8 @@ const AppSidebar = ({ user, lawyerProfile }) => {
 
     // Initial load
     const loadUnread = async () => {
-      const res = await getDirectInbox().catch(() => null);
-      const count = res?.data?.total_unread || 0;
+      const res = await getDirectInbox().catch(() => ({ threads: [], total_unread: 0 }));
+      const count = res?.data?.total_unread || res?.total_unread || 0;
       setUnreadCount(count);
     };
     loadUnread();

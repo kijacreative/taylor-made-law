@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import { getCurrentUser, getProfile } from '@/services/auth';
 import { getDirectInbox, startDirectThread, subscribeDirectMessages } from '@/services/messaging';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -58,7 +57,7 @@ export default function DirectMessages() {
     queryKey: ['directInbox', user?.id],
     queryFn: async () => {
       const res = await getDirectInbox();
-      return res.data;
+      return res?.data || res || { threads: [], total_unread: 0 };
     },
     enabled: !!user && isApproved,
     refetchInterval: 8000,
@@ -89,9 +88,10 @@ export default function DirectMessages() {
     setShowNewMessage(false);
     try {
       const res = await startDirectThread(recipientUserId);
-      if (res.data?.thread_id) {
+      const threadData = res?.data || res;
+      if (threadData?.thread_id) {
         queryClient.invalidateQueries({ queryKey: ['directInbox'] });
-        navigate(`/app/messages/${res.data.thread_id}`);
+        navigate(`/app/messages/${threadData.thread_id}`);
       }
     } catch (err) {
       alert('Could not start conversation. Please try again.');
