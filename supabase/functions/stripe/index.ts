@@ -29,7 +29,7 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') ?? '', {
   httpClient: Stripe.createFetchHttpClient(),
 });
 
-const DEFAULT_PRICE_ID = 'price_1TCqcIBI0mAZLD5som54aFFB';
+const DEFAULT_PRICE_ID = 'price_1TJm06BI0mAZLD5sDnIDvVez'; // $99/month TML membership
 
 // ---------------------------------------------------------------------------
 // Helpers
