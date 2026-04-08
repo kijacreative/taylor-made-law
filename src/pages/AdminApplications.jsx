@@ -8,7 +8,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isAuthenticated, me } from '@/services/auth';
-import { listApplications, listProfiles, reviewLawyerApplication } from '@/services/lawyers';
+import { listApplications, listProfiles, reviewLawyerApplication, updateUser } from '@/services/lawyers';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -45,6 +45,9 @@ export default function AdminApplications() {
   const [infoMessage, setInfoMessage] = useState('');
   const [disableModal, setDisableModal] = useState(null); // { appId, email, name }
   const [disableReason, setDisableReason] = useState('');
+  const [billingModal, setBillingModal] = useState(null); // { app }
+  const [billingData, setBillingData] = useState({ membership_status: 'paid', subscription_status: 'active', free_trial_months: 0 });
+  const [billingSaving, setBillingSaving] = useState(false);
 
   useEffect(() => {
     isAuthenticated().then(async (auth) => {
@@ -212,12 +215,12 @@ export default function AdminApplications() {
                             : <div className="w-4 h-4 rounded-full border-2 border-gray-300" />}
                           <span className="text-gray-500">Agreement</span>
                         </div>
-                        <div className="flex items-center gap-1 text-xs">
+                        <button className="flex items-center gap-1 text-xs hover:bg-gray-100 rounded-lg px-1.5 py-0.5 transition-colors" onClick={e => { e.stopPropagation(); setBillingModal({ app }); setBillingData({ membership_status: 'paid', subscription_status: 'active', free_trial_months: 0 }); }}>
                           {onboarded
                             ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
                             : <div className="w-4 h-4 rounded-full border-2 border-gray-300" />}
                           <span className="text-gray-500">Billing</span>
-                        </div>
+                        </button>
                       </div>
                       {/* Actions (pending only) */}
                       {app.status === 'active_pending_review' && (
@@ -347,6 +350,64 @@ export default function AdminApplications() {
             <div className="flex justify-end gap-2">
               <button onClick={() => setDisableModal(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
               <TMLButton variant="danger" size="sm" onClick={handleDisable}>Disable Account</TMLButton>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Billing / Payment Modal */}
+      {billingModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={() => setBillingModal(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-gray-900 mb-1">Manage Payment</h3>
+            <p className="text-sm text-gray-500 mb-4">Set payment details for <strong>{billingModal.app.full_name}</strong>.</p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Membership Status</label>
+                <select value={billingData.membership_status}
+                  onChange={e => setBillingData(d => ({ ...d, membership_status: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d] bg-white">
+                  <option value="paid">Paid</option>
+                  <option value="trial">Trial</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Subscription Status</label>
+                <select value={billingData.subscription_status}
+                  onChange={e => setBillingData(d => ({ ...d, subscription_status: e.target.value }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d] bg-white">
+                  <option value="active">Active</option>
+                  <option value="trial">Trial</option>
+                  <option value="past_due">Past Due</option>
+                  <option value="cancelled">Cancelled</option>
+                  <option value="none">None</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wide block mb-1.5">Free Trial Months</label>
+                <input type="number" min="0" max="24" value={billingData.free_trial_months}
+                  onChange={e => setBillingData(d => ({ ...d, free_trial_months: parseInt(e.target.value) || 0 }))}
+                  className="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]" />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2 mt-6">
+              <button onClick={() => setBillingModal(null)} className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800">Cancel</button>
+              <TMLButton variant="primary" size="sm" loading={billingSaving} onClick={async () => {
+                if (!billingModal.app.user_id) return;
+                setBillingSaving(true);
+                try {
+                  await updateUser(billingModal.app.user_id, billingData);
+                  queryClient.invalidateQueries(['lawyerApplications']);
+                  setBillingModal(null);
+                } catch (err) {
+                  console.error('Billing update failed:', err);
+                } finally {
+                  setBillingSaving(false);
+                }
+              }}>Save Payment Details</TMLButton>
             </div>
           </div>
         </div>
