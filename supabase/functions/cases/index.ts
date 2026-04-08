@@ -191,7 +191,41 @@ async function handleSubmitLead(req: Request) {
     return errorResponse(leadErr.message, 500);
   }
 
-  // 2. Create consent log (fire-and-forget)
+  // 2. Sync to Lead Docket (server-side, no CORS issues)
+  try {
+    const ldRes = await fetch('https://taylormadelaw.leaddocket.com/Opportunities/FormJson/1', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        first_name, last_name, email, phone,
+        state, practice_area, description, urgency,
+      }),
+    });
+    const ldBody = await ldRes.json().catch(() => ({}));
+    if (ldBody.success && ldBody.opportunityId) {
+      await sb.from('leads').update({
+        sync_status: 'sent',
+        lead_docket_id: String(ldBody.opportunityId),
+        last_sync_attempt_at: new Date().toISOString(),
+      }).eq('id', lead.id);
+    } else {
+      await sb.from('leads').update({
+        sync_status: 'failed',
+        sync_error_message: ldBody.message || 'Unknown error',
+        last_sync_attempt_at: new Date().toISOString(),
+      }).eq('id', lead.id);
+    }
+  } catch (syncErr) {
+    console.error('Lead Docket sync failed:', syncErr);
+    await sb.from('leads').update({
+      sync_status: 'failed',
+      sync_error_message: (syncErr as Error).message || 'Network error',
+      last_sync_attempt_at: new Date().toISOString(),
+    }).eq('id', lead.id);
+  }
+
+  // 3. Create consent log (fire-and-forget)
+  // (renumbered after Lead Docket sync insertion)
   if (consent_given) {
     sb.from('consent_logs').insert({
       consent_type: 'terms',
