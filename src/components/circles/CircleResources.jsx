@@ -3,7 +3,7 @@ import { filterCircleFiles, uploadCircleFile, deleteCircleFile } from '@/service
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   FolderOpen, Upload, Search, Download, Eye, Trash2, File,
-  FileText, FileImage, FileArchive, Loader2, X, ExternalLink
+  FileText, FileImage, FileArchive, Loader2, X
 } from 'lucide-react';
 import TMLButton from '@/components/ui/TMLButton';
 
@@ -37,7 +37,7 @@ function FilePreviewModal({ file, onClose }) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-gray-900 truncate">{file.file_name}</p>
-            <p className="text-xs text-gray-400">{formatBytes(file.file_size)} · {file.uploaded_by_name} · {formatDate(file.created_date)}</p>
+            <p className="text-xs text-gray-400">{formatBytes(file.file_size)} · {file.uploaded_by_name || file.uploaded_by_email} · {formatDate(file.created_at || file.created_date)}</p>
           </div>
           <div className="flex items-center gap-2 ml-4 shrink-0">
             <a href={file.file_url} download={file.file_name} target="_blank" rel="noreferrer"
@@ -81,7 +81,7 @@ export default function CircleResources({ circleId, user, isAdmin }) {
 
   const { data: allFiles = [], isLoading } = useQuery({
     queryKey: ['circleFiles', circleId],
-    queryFn: () => filterCircleFiles({ circle_id: circleId, is_deleted: false }),
+    queryFn: () => filterCircleFiles({ circle_id: circleId }).then(f => f.filter(x => !x.deleted_at && !x.is_deleted)),
     enabled: !!circleId,
     refetchInterval: 15000
   });
@@ -235,7 +235,7 @@ export default function CircleResources({ circleId, user, isAdmin }) {
                       {file.uploaded_by_name || file.uploaded_by_email || '—'}
                     </td>
                     <td className="px-4 py-3 text-gray-400 hidden md:table-cell whitespace-nowrap">
-                      {formatDate(file.created_date)}
+                      {formatDate(file.created_at || file.created_date)}
                     </td>
                     <td className="px-4 py-3 text-gray-400 hidden md:table-cell whitespace-nowrap">
                       {formatBytes(file.file_size)}
