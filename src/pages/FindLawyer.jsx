@@ -124,7 +124,7 @@ export default function FindLawyer() {
           urgency: formData.urgency
         };
 
-        await fetch('https://taylormadelaw.leaddocket.com/opportunities/form/1', {
+        await fetch('https://taylormadelaw.leaddocket.com/Opportunities/FormJson/1', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
