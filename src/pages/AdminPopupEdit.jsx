@@ -5,7 +5,7 @@ import { getCurrentUser } from '@/services/auth';
 import { filterPopups, createPopup, updatePopup } from '@/services/notifications';
 import { uploadFile } from '@/services/storage';
 import {
-  ArrowLeft, Save, Upload, X, Loader2, CheckCircle2, AlertCircle, Image as ImageIcon
+  ArrowLeft, Save, X, Loader2, CheckCircle2, AlertCircle, Image as ImageIcon
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';

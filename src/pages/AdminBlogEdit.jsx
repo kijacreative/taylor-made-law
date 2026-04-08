@@ -6,8 +6,8 @@ import { filterBlogPosts, createBlogPost, updateBlogPost } from '@/services/cont
 import { createAuditLog } from '@/services/admin';
 import { uploadFile } from '@/services/storage';
 import {
-  ArrowLeft, Save, Eye, Upload, X, Plus, Loader2,
-  CheckCircle2, AlertCircle, Image as ImageIcon, Tag, FileDown
+  ArrowLeft, Save, Eye, X, Plus, Loader2,
+  CheckCircle2, AlertCircle, Image as ImageIcon, FileDown
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';

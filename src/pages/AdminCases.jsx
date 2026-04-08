@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { getCurrentUser } from '@/services/auth';
 import { listCases, createCase, updateCase } from '@/services/cases';
@@ -10,7 +10,6 @@ import {
   Filter,
   Scale,
   CheckCircle2,
-  XCircle,
   MapPin,
   User,
   DollarSign,
@@ -25,7 +24,7 @@ import {
 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
-import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
+import TMLCard, { TMLCardContent } from '@/components/ui/TMLCard';
 import TMLBadge from '@/components/ui/TMLBadge';
 import TMLSelect from '@/components/ui/TMLSelect';
 import TMLInput from '@/components/ui/TMLInput';

@@ -9,16 +9,15 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isAuthenticated, me } from '@/services/auth';
 import { listApplications, listProfiles, reviewLawyerApplication } from '@/services/lawyers';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  CheckCircle2, Clock, XCircle, Mail, Loader2, Search,
-  ChevronDown, ChevronUp, User, AlertTriangle, Filter
+  CheckCircle2, XCircle, Mail, Loader2, Search,
+  ChevronDown, ChevronUp, User, AlertTriangle
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
-import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
-import TMLBadge from '@/components/ui/TMLBadge';
+import TMLCard from '@/components/ui/TMLCard';
 
 const STATUS_CONFIG = {
   active_pending_review: { label: 'Pending Review', color: 'bg-amber-100 text-amber-800 border border-amber-200' },

@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { getCurrentUser } from '@/services/auth';
 import { filterLeads, updateLead, createCase } from '@/services/cases';
-import { createAuditLog, filterAuditLogs, sendEmail } from '@/services/admin';
+import { filterAuditLogs, sendEmail } from '@/services/admin';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -30,7 +30,6 @@ import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/componen
 import TMLBadge from '@/components/ui/TMLBadge';
 import TMLTextarea from '@/components/ui/TMLTextarea';
 import TMLInput from '@/components/ui/TMLInput';
-import TMLSelect from '@/components/ui/TMLSelect';
 import { LEAD_STATUSES, URGENCY_LEVELS } from '@/components/design/DesignTokens';
 
 export default function AdminLeadDetail() {

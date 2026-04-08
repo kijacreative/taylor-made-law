@@ -31,12 +31,41 @@ export function filterCases(query) {
   return base44.entities.Case.filter(query);
 }
 
-// Case entity — writes (Base44 only)
-export function createCase(data) {
+// Case entity — writes (dual provider)
+export async function createCase(data) {
+  if (useSupabase('cases_read')) {
+    logProvider('cases_read', 'createCase');
+    const sb = getSupabase();
+    if (sb) {
+      const { data: record, error } = await sb
+        .from('cases')
+        .insert(data)
+        .select()
+        .single();
+      if (error) throw error;
+      return record;
+    }
+  }
+  logProvider('cases_read', 'createCase', 'base44');
   return base44.entities.Case.create(data);
 }
 
-export function updateCase(id, data) {
+export async function updateCase(id, data) {
+  if (useSupabase('cases_read')) {
+    logProvider('cases_read', 'updateCase');
+    const sb = getSupabase();
+    if (sb) {
+      const { data: record, error } = await sb
+        .from('cases')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return record;
+    }
+  }
+  logProvider('cases_read', 'updateCase', 'base44');
   return base44.entities.Case.update(id, data);
 }
 
@@ -62,12 +91,41 @@ export function filterLeads(query) {
   return base44.entities.Lead.filter(query);
 }
 
-// Lead entity — writes (Base44 only)
-export function createLead(data) {
+// Lead entity — writes (dual provider)
+export async function createLead(data) {
+  if (useSupabase('cases_read')) {
+    logProvider('cases_read', 'createLead');
+    const sb = getSupabase();
+    if (sb) {
+      const { data: record, error } = await sb
+        .from('leads')
+        .insert(data)
+        .select()
+        .single();
+      if (error) throw error;
+      return record;
+    }
+  }
+  logProvider('cases_read', 'createLead', 'base44');
   return base44.entities.Lead.create(data);
 }
 
-export function updateLead(id, data) {
+export async function updateLead(id, data) {
+  if (useSupabase('cases_read')) {
+    logProvider('cases_read', 'updateLead');
+    const sb = getSupabase();
+    if (sb) {
+      const { data: record, error } = await sb
+        .from('leads')
+        .update(data)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return record;
+    }
+  }
+  logProvider('cases_read', 'updateLead', 'base44');
   return base44.entities.Lead.update(id, data);
 }
 

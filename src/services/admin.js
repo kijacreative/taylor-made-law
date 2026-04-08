@@ -26,7 +26,24 @@ export async function createAuditLog(data) {
   return base44.entities.AuditLog.create(data);
 }
 
-export function filterAuditLogs(query) {
+export async function filterAuditLogs(query) {
+  if (useSupabase('auth')) {
+    logProvider('auth', 'filterAuditLogs');
+    const sb = getSupabase();
+    if (sb) {
+      let q = sb.from('audit_logs').select('*');
+      if (query && typeof query === 'object') {
+        for (const [key, value] of Object.entries(query)) {
+          q = q.eq(key, value);
+        }
+      }
+      q = q.order('created_at', { ascending: false });
+      const { data, error } = await q;
+      if (error) throw error;
+      return data || [];
+    }
+  }
+  logProvider('auth', 'filterAuditLogs', 'base44');
   return base44.entities.AuditLog.filter(query);
 }
 
@@ -60,7 +77,19 @@ export function createInvitation(data) {
 // Admin team operations (backend functions)
 // ---------------------------------------------------------------------------
 
-export function inviteAdminUser(payload) {
+export async function inviteAdminUser(payload) {
+  if (useSupabase('auth')) {
+    logProvider('auth', 'inviteAdminUser');
+    const sb = getSupabase();
+    if (sb) {
+      const { data, error } = await sb.functions.invoke('admin-lawyers', {
+        body: { action: 'invite_admin', ...payload },
+      });
+      if (error) throw error;
+      return data;
+    }
+  }
+  logProvider('auth', 'inviteAdminUser', 'base44');
   return base44.functions.invoke('inviteAdminUser', payload);
 }
 
@@ -68,6 +97,8 @@ export function inviteAdminUser(payload) {
 // Email (Core.SendEmail — used in ForgotPassword, AdminLeadDetail, AdminTeam)
 // ---------------------------------------------------------------------------
 
+// Email — remains Base44 only. Supabase email sending is handled by edge functions
+// (e.g. auth-signup, admin-lawyers) rather than a generic sendEmail wrapper.
 export function sendEmail(params) {
   return base44.integrations.Core.SendEmail(params);
 }

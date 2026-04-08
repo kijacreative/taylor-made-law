@@ -6,14 +6,13 @@ import { listApplications, listUsers, updateUser, approveLawyer, approveLawyerAp
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, Users, CheckCircle2, XCircle, Clock, Mail, Phone,
+  Search, Users, CheckCircle2, XCircle, Mail, Phone,
   Scale, Building2, Loader2, X, Shield, Eye,
   Plus, AlertCircle, Ban, RotateCcw, Info, Send, Download,
-  FileText, BadgeCheck, ArrowLeft, Edit2, Key, UserX, Calendar
+  FileText, BadgeCheck, ArrowLeft, Edit2, Key, UserX
 } from 'lucide-react';
 import AdminSidebar from '@/components/layout/AdminSidebar';
 import TMLButton from '@/components/ui/TMLButton';
-import TMLCard, { TMLCardContent } from '@/components/ui/TMLCard';
 import TMLInput from '@/components/ui/TMLInput';
 import TMLTextarea from '@/components/ui/TMLTextarea';
 import TMLSelect from '@/components/ui/TMLSelect';
