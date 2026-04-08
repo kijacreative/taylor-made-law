@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { getCurrentUser } from '@/services/auth';
 import { filterLeads, updateLead, createCase } from '@/services/cases';
-import { filterAuditLogs, sendEmail } from '@/services/admin';
+import { filterAuditLogs, createAuditLog as createAuditLogEntry, sendEmail } from '@/services/admin';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -99,8 +99,8 @@ export default function AdminLeadDetail() {
   const isJuniorAssociate = user?.user_type === 'junior_associate';
   const isSeniorOrAdmin = ['admin', 'senior_associate'].includes(user?.user_type) || user?.role === 'admin';
 
-  const createAuditLog = async (action, notes, beforeState, afterState) => {
-    await createAuditLog({
+  const logAudit = async (action, notes, beforeState, afterState) => {
+    await createAuditLogEntry({
       entity_type: 'Lead',
       entity_id: leadId,
       action,
@@ -109,7 +109,7 @@ export default function AdminLeadDetail() {
       before_state: JSON.stringify(beforeState),
       after_state: JSON.stringify(afterState),
       notes
-    });
+    }).catch(() => {}); // fire-and-forget
   };
 
   const handleSaveNotes = async () => {
@@ -125,7 +125,7 @@ export default function AdminLeadDetail() {
         estimated_value: estimatedValue ? parseFloat(estimatedValue) : null
       });
       
-      await createAuditLog('update_notes', 'Notes and estimated value updated', beforeState, {
+      await logAudit('update_notes', 'Notes and estimated value updated', beforeState, {
         internal_notes: internalNotes,
         estimated_value: estimatedValue ? parseFloat(estimatedValue) : null
       });
@@ -162,7 +162,7 @@ export default function AdminLeadDetail() {
       
       await updateLead(leadId, updateData);
       
-      await createAuditLog(
+      await logAudit(
         `status_change_${newStatus}`,
         `Status changed from ${lead.status} to ${newStatus}${recommendation ? ` (Recommendation: ${recommendation})` : ''}`,
         beforeState,
@@ -194,7 +194,7 @@ export default function AdminLeadDetail() {
         senior_reviewed_at: new Date().toISOString()
       });
       
-      await createAuditLog('reject', `Rejected: ${rejectionReason}`, beforeState, {
+      await logAudit('reject', `Rejected: ${rejectionReason}`, beforeState, {
         status: 'rejected',
         rejection_reason: rejectionReason
       });
@@ -268,7 +268,7 @@ Taylor Made Law Team
         senior_reviewed_at: new Date().toISOString()
       });
       
-      await createAuditLog('publish_marketplace', 'Published to Case Exchange', { status: lead.status }, { status: 'published' });
+      await logAudit('publish_marketplace', 'Published to Case Exchange', { status: lead.status }, { status: 'published' });
       
       setSuccess('Case published to marketplace!');
       refetch();
@@ -293,7 +293,7 @@ Taylor Made Law Team
         senior_reviewed_at: new Date().toISOString()
       });
       
-      await createAuditLog('route_cochran', 'Routed to Cochran Firm', { status: lead.status }, { status: 'routed_cochran' });
+      await logAudit('route_cochran', 'Routed to Cochran Firm', { status: lead.status }, { status: 'routed_cochran' });
       
       // Send email to Cochran with case information
       try {
@@ -320,7 +320,7 @@ ${lead.description}
 ${lead.internal_notes ? `INTERNAL NOTES:\n${lead.internal_notes}` : ''}
 
 Lead ID: ${leadId}
-Submitted: ${new Date(lead.created_date).toLocaleString()}
+Submitted: ${new Date((lead.created_at || lead.created_date)).toLocaleString()}
 
 ---
 This lead has been routed to Cochran Firm by ${user.email}
@@ -439,8 +439,8 @@ This lead has been routed to Cochran Firm by ${user.email}
                 </div>
                 
                 <div className="text-right text-sm text-gray-500">
-                  <p>Submitted {new Date(lead.created_date).toLocaleDateString()}</p>
-                  <p>{new Date(lead.created_date).toLocaleTimeString()}</p>
+                  <p>Submitted {new Date((lead.created_at || lead.created_date)).toLocaleDateString()}</p>
+                  <p>{new Date((lead.created_at || lead.created_date)).toLocaleTimeString()}</p>
                 </div>
               </div>
             </TMLCardContent>
@@ -558,7 +558,7 @@ This lead has been routed to Cochran Firm by ${user.email}
                               {' '}{log.notes || log.action}
                             </p>
                             <p className="text-gray-500 text-xs">
-                              {new Date(log.created_date).toLocaleString()}
+                              {new Date((log.created_at || log.created_date)).toLocaleString()}
                             </p>
                           </div>
                         </div>

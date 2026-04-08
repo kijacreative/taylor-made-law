@@ -97,7 +97,12 @@ export const AuthProvider = ({ children }) => {
             .select('*')
             .eq('id', newSession.user.id)
             .single()
-            .then(({ data: p }) => {
+            .then(({ data: p, error: fetchErr }) => {
+              if (fetchErr) {
+                // Non-fatal — initial auth already succeeded
+                console.debug('[auth] Profile re-fetch skipped:', fetchErr.message);
+                return;
+              }
               if (p) {
                 setUser({ ...p, id: newSession.user.id, email: newSession.user.email || p.email });
                 setIsAuthenticated(true);
