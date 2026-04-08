@@ -159,10 +159,10 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
     const msgIds = msgs.map(m => m.id);
     // Fetch all CircleFiles for this circle (filter by message_id)
     const files = await filterCircleFiles(
-      { circle_id: circleId, is_deleted: false },
+      { circle_id: circleId },
       'created_date',
       500
-    );
+    ).then(f => f.filter(x => !x.deleted_at && !x.is_deleted));
     const newMap = {};
     files.forEach(f => {
       if (f.message_id && msgIds.includes(f.message_id)) {
@@ -278,12 +278,12 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
     return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const visibleMessages = messages.filter(m => !m.is_deleted);
+  const visibleMessages = messages.filter(m => !m.is_deleted && !m.deleted_at);
 
   const grouped = visibleMessages.reduce((acc, msg, i) => {
     const prev = visibleMessages[i - 1];
     const isSameSender = prev && prev.sender_user_id === msg.sender_user_id &&
-      (new Date(msg.created_date) - new Date(prev.created_date)) < 5 * 60 * 1000;
+      (new Date((msg.created_at || msg.created_date)) - new Date(prev.created_date)) < 5 * 60 * 1000;
     acc.push({ ...msg, showHeader: !isSameSender });
     return acc;
   }, []);
@@ -330,7 +330,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
                   {msg.showHeader && (
                       <div className={`flex items-center gap-2 mb-1 ${isMe ? 'flex-row-reverse' : ''}`}>
                         <span className="text-xs font-semibold text-gray-700">{isMe ? 'You' : (userFullNames[msg.sender_user_id] || 'Attorney')}</span>
-                        <span className="text-xs text-gray-400">{formatTime(msg.created_date)}</span>
+                        <span className="text-xs text-gray-400">{formatTime((msg.created_at || msg.created_date))}</span>
                       </div>
                     )}
                   <div className={`relative flex items-start gap-2 ${isMe ? 'flex-row-reverse' : ''}`}>
@@ -339,7 +339,7 @@ export default function CircleChat({ circleId, user, isAdmin, circleName }) {
                         ? 'bg-[#3a164d] text-white rounded-tr-sm'
                         : 'bg-gray-100 text-gray-800 rounded-tl-sm'
                     }`}>
-                      {msg.message_text && <p>{msg.message_text}</p>}
+                      {(msg.message_text || msg.body) && <p>{(msg.message_text || msg.body)}</p>}
                       <MessageAttachments attachments={attachments} />
                     </div>
                     {(isAdmin || isMe) && (

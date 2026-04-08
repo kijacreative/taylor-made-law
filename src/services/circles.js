@@ -147,16 +147,71 @@ export function listCircleMessages(sort = '-created_date', limit) {
   return base44.entities.CircleMessage.list(sort, limit);
 }
 
-// CircleMessage — writes + subscriptions (Base44 only)
-export function createCircleMessage(data) {
+// CircleMessage — writes + subscriptions
+export async function createCircleMessage(data) {
+  if (useSupabase('circles_read')) {
+    logProvider('circles_read', 'createCircleMessage');
+    const sb = getSupabase();
+    if (sb) {
+      // Map Base44 field names to Supabase column names
+      const row = {
+        circle_id: data.circle_id,
+        sender_user_id: data.sender_user_id,
+        sender_email: data.sender_email,
+        body: data.message_text || data.body || '',
+        has_attachments: data.has_attachments || false,
+      };
+      const { data: record, error } = await sb.from('circle_messages').insert(row).select().single();
+      if (error) throw error;
+      return record;
+    }
+  }
   return base44.entities.CircleMessage.create(data);
 }
 
-export function updateCircleMessage(id, data) {
+export async function updateCircleMessage(id, data) {
+  if (useSupabase('circles_read')) {
+    logProvider('circles_read', 'updateCircleMessage');
+    const sb = getSupabase();
+    if (sb) {
+      // Map is_deleted to deleted_at
+      const updates = { ...data };
+      if (updates.is_deleted) {
+        updates.deleted_at = new Date().toISOString();
+        delete updates.is_deleted;
+      }
+      const { data: record, error } = await sb.from('circle_messages').update(updates).eq('id', id).select().single();
+      if (error) throw error;
+      return record;
+    }
+  }
   return base44.entities.CircleMessage.update(id, data);
 }
 
 export function subscribeCircleMessages(callback) {
+  if (useSupabase('circles_read')) {
+    logProvider('circles_read', 'subscribeCircleMessages');
+    const sb = getSupabase();
+    if (sb) {
+      const channel = sb.channel('circle-messages')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'circle_messages' }, (payload) => {
+          // Normalize to Base44-like shape for existing callbacks
+          const event = {
+            type: payload.eventType === 'INSERT' ? 'create' : payload.eventType === 'UPDATE' ? 'update' : 'delete',
+            id: payload.new?.id || payload.old?.id,
+            data: payload.new || payload.old,
+          };
+          // Map body → message_text for compatibility
+          if (event.data) {
+            event.data.message_text = event.data.body;
+            event.data.created_date = event.data.created_at;
+          }
+          callback(event);
+        })
+        .subscribe();
+      return () => sb.removeChannel(channel);
+    }
+  }
   return base44.entities.CircleMessage.subscribe(callback);
 }
 
@@ -207,11 +262,54 @@ export function sendCircleInviteEmail(payload) {
   return base44.functions.invoke('sendCircleInviteEmail', payload);
 }
 
-export function notifyCircleMessage(payload) {
+export async function notifyCircleMessage(payload) {
+  if (useSupabase('circles_read')) {
+    logProvider('circles_read', 'notifyCircleMessage');
+    const sb = getSupabase();
+    if (sb) {
+      const { data, error } = await sb.functions.invoke('circles', {
+        body: { action: 'notify_message', ...payload },
+      });
+      if (error) throw error;
+      return data?.data || data;
+    }
+  }
   return base44.functions.invoke('notifyCircleMessage', payload);
 }
 
-export function uploadCircleFile(formData) {
+export async function uploadCircleFile(formData) {
+  if (useSupabase('circles_read')) {
+    logProvider('circles_read', 'uploadCircleFile');
+    const sb = getSupabase();
+    if (sb) {
+      const file = formData.get ? formData.get('file') : formData.file;
+      const circleId = formData.get ? formData.get('circle_id') : formData.circle_id;
+      const messageId = formData.get ? formData.get('message_id') : formData.message_id;
+      if (!file) throw new Error('No file');
+      const ext = file.name?.split('.').pop() || 'bin';
+      const path = `circles/${circleId}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { data: uploadData, error: uploadErr } = await sb.storage.from('documents').upload(path, file);
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = sb.storage.from('documents').getPublicUrl(uploadData.path);
+      // Get current user for uploaded_by fields
+      const { data: { session } } = await sb.auth.getSession();
+      const userId = session?.user?.id;
+      const userEmail = session?.user?.email;
+      // Create circle_files record
+      const { data: fileRecord, error: fileErr } = await sb.from('circle_files').insert({
+        circle_id: circleId,
+        message_id: messageId || null,
+        uploaded_by_user_id: userId,
+        uploaded_by_email: userEmail,
+        file_name: file.name,
+        file_type: file.type,
+        file_size: file.size,
+        file_url: urlData.publicUrl,
+      }).select().single();
+      if (fileErr) throw fileErr;
+      return { data: { file: fileRecord } };
+    }
+  }
   return base44.functions.invoke('uploadCircleFile', formData);
 }
 
