@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { getCurrentUser, getProfile } from '@/services/auth';
 import { filterCases, updateCase } from '@/services/cases';
+import { filterCircleCases, updateCircleCase } from '@/services/circles';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
@@ -16,14 +17,13 @@ import {
   User,
   Loader2,
   ArrowRight,
-  AlertCircle,
   Edit,
   X,
   Eye
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
-import TMLCard, { TMLCardContent, TMLCardHeader, TMLCardTitle } from '@/components/ui/TMLCard';
+import TMLCard, { TMLCardContent } from '@/components/ui/TMLCard';
 import TMLBadge from '@/components/ui/TMLBadge';
 import TMLInput from '@/components/ui/TMLInput';
 import TMLTextarea from '@/components/ui/TMLTextarea';
@@ -64,14 +64,32 @@ export default function MyCases() {
 
   const lawyerProfile = profiles[0] || null;
 
-  // Get my cases
-  const { data: myCases = [], isLoading: casesLoading, refetch } = useQuery({
+  // Get my marketplace cases
+  const { data: marketplaceCases = [], isLoading: casesLoading, refetch } = useQuery({
     queryKey: ['myCases', user?.email],
     queryFn: () => filterCases({ accepted_by_email: user.email }),
     enabled: !!user?.email,
   });
 
-  const activeCases = myCases.filter(c => ['accepted', 'in_progress'].includes(c.status));
+  // Get my circle cases (accepted by me or submitted by me)
+  const { data: myCircleCases = [], isLoading: circleCasesLoading, refetch: refetchCircle } = useQuery({
+    queryKey: ['myCircleCases', user?.id],
+    queryFn: async () => {
+      const [accepted, submitted] = await Promise.all([
+        filterCircleCases({ accepted_by_user_id: user.id }),
+        filterCircleCases({ submitted_by_user_id: user.id }),
+      ]);
+      // Merge and deduplicate
+      const all = [...accepted, ...submitted];
+      const seen = new Set();
+      return all.filter(c => { if (seen.has(c.id)) return false; seen.add(c.id); return true; })
+        .map(c => ({ ...c, _source: 'circle' }));
+    },
+    enabled: !!user?.id,
+  });
+
+  const myCases = [...marketplaceCases.map(c => ({ ...c, _source: 'marketplace' })), ...myCircleCases];
+  const activeCases = myCases.filter(c => ['accepted', 'in_progress', 'available', 'pending_approval'].includes(c.status));
   const closedCases = myCases.filter(c => ['closed', 'withdrawn'].includes(c.status));
 
   const displayCases = activeTab === 'active' ? activeCases : closedCases;
@@ -87,17 +105,24 @@ export default function MyCases() {
 
   const handleSaveChanges = async () => {
     if (!viewingCase) return;
-    
+
     setSaving(true);
     try {
-      await updateCase(viewingCase.id, {
+      const updates = {
         description: viewingCase.description,
         estimated_value: viewingCase.estimated_value ? parseFloat(viewingCase.estimated_value) : null,
-        lawyer_notes: viewingCase.lawyer_notes
-      });
-      
+        lawyer_notes: viewingCase.lawyer_notes || undefined,
+        notes: viewingCase.notes || viewingCase.lawyer_notes || undefined,
+      };
+      if (viewingCase._source === 'circle') {
+        await updateCircleCase(viewingCase.id, updates);
+        refetchCircle();
+      } else {
+        await updateCase(viewingCase.id, updates);
+        refetch();
+      }
+
       setViewingCase(null);
-      refetch();
     } catch (err) {
       console.error('Error updating case:', err);
     } finally {
@@ -158,7 +183,7 @@ export default function MyCases() {
           </div>
 
           {/* Cases List */}
-          {casesLoading ? (
+          {(casesLoading || circleCasesLoading) ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 animate-spin text-[#7e277e]" />
             </div>
@@ -195,11 +220,14 @@ export default function MyCases() {
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-3">
-                            <TMLBadge 
-                              variant={caseItem.status === 'in_progress' ? 'warning' : caseItem.status === 'accepted' ? 'success' : 'default'}
+                            <TMLBadge
+                              variant={caseItem.status === 'in_progress' ? 'warning' : caseItem.status === 'accepted' ? 'success' : caseItem.status === 'available' ? 'info' : 'default'}
                             >
-                              {CASE_STATUSES[caseItem.status]?.label || caseItem.status}
+                              {CASE_STATUSES[caseItem.status]?.label || caseItem.status?.replace('_', ' ')}
                             </TMLBadge>
+                            {caseItem._source === 'circle' && (
+                              <TMLBadge variant="primary" size="sm">Circle</TMLBadge>
+                            )}
                           </div>
                           
                           <h3 className="text-xl font-semibold text-gray-900 mb-2">{caseItem.title}</h3>
