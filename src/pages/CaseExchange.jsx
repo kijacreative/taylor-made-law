@@ -51,7 +51,9 @@ export default function CaseExchange() {
 
   const isApproved = user?.user_status === 'approved' || user?.user_status === 'active' || lawyerProfile?.status === 'approved';
   const isPending = !isApproved;
-  const isPaidMember = user?.membership_status === 'paid' || user?.membership_status === 'trial' || lawyerProfile?.subscription_status === 'active' || lawyerProfile?.subscription_status === 'trial';
+  // Full access: paid, trial, or past_due (admin handles past_due separately)
+  const subStatus = lawyerProfile?.subscription_status || user?.subscription_status || 'none';
+  const isPaidMember = ['paid', 'active', 'trial', 'past_due'].includes(subStatus) || ['paid', 'trial'].includes(user?.membership_status);
 
   const handleUpgrade = () => {
     setShowUpgradeModal(false);

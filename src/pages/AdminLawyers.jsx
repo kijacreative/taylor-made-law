@@ -517,17 +517,17 @@ export default function AdminLawyers() {
                                 ) : (
                                   <span className="text-xs font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">Activated</span>
                                 )}
-                                {u.subscription_status === 'past_due' && (
-                                  <span className="text-xs font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-300 flex items-center gap-1"><AlertCircle className="w-3 h-3" />Payment Past Due</span>
+                                {(u.subscription_status === 'past_due' || u.membership_status === 'past_due') && (
+                                  <span className="text-xs font-semibold bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full border border-amber-300 flex items-center gap-1"><AlertCircle className="w-3 h-3" />Past Due</span>
                                 )}
-                                {u.subscription_status === 'cancelled' && (
-                                  <span className="text-xs font-semibold bg-red-100 text-red-800 px-2 py-0.5 rounded-full border border-red-300">Sub Cancelled</span>
-                                )}
-                                {u.membership_status === 'paid' && u.subscription_status === 'active' && (
+                                {['paid', 'active'].includes(u.subscription_status || u.membership_status) && (
                                   <span className="text-xs font-medium bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200 flex items-center gap-1"><DollarSign className="w-3 h-3" />Paid</span>
                                 )}
-                                {u.membership_status === 'trial' && (
+                                {(u.subscription_status === 'trial' || u.membership_status === 'trial') && (
                                   <span className="text-xs font-medium bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">Trial</span>
+                                )}
+                                {['none', 'cancelled'].includes(u.subscription_status) && !['paid', 'trial', 'past_due', 'active'].includes(u.membership_status) && (
+                                  <span className="text-xs font-medium bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full border border-gray-200">Not Paid</span>
                                 )}
                               </div>
                               <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">

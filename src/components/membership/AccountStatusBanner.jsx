@@ -11,7 +11,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { AlertCircle, Clock, CreditCard, Mail, ShieldAlert } from 'lucide-react';
+import { AlertCircle, Clock, CreditCard, Mail } from 'lucide-react';
 
 function getDaysRemaining(trialEndsAt) {
   if (!trialEndsAt) return 0;
@@ -25,29 +25,24 @@ export default function AccountStatusBanner({ user, lawyerProfile }) {
   if (!user) return null;
 
   const status = user.user_status;
-  const membership = user.membership_status || lawyerProfile?.subscription_status;
-  const subscriptionStatus = lawyerProfile?.subscription_status || user.subscription_status;
+  const subStatus = lawyerProfile?.subscription_status || user.subscription_status || user.membership_status || 'none';
   const passwordSet = user.password_set;
   const emailVerified = user.email_verified;
   const isPending = ['pending', 'active_pending_review', 'invited'].includes(status);
   const isApproved = status === 'approved' || lawyerProfile?.status === 'approved';
-  const isTrial = membership === 'trial' || subscriptionStatus === 'trial';
-  const isPaid = membership === 'paid' || subscriptionStatus === 'active';
-  const isPastDue = subscriptionStatus === 'past_due';
-  const isCancelled = subscriptionStatus === 'cancelled';
+  const isTrial = subStatus === 'trial';
+  const isPaid = ['paid', 'active'].includes(subStatus);
+  const isPastDue = subStatus === 'past_due';
+  const isNotPaid = ['none', 'cancelled'].includes(subStatus);
   const trialEndsAt = lawyerProfile?.trial_ends_at || user.trial_ends_at;
 
-  // State 5: Pending approval
-  if (isPending) {
-    return null; // Handled by the dashboard's own pending banner
-  }
+  // Pending approval — handled by dashboard's own banner
+  if (isPending) return null;
 
-  // State 4: Active + Paid + good standing → no banner
-  if (isApproved && isPaid && !isPastDue && !isCancelled) {
-    return null;
-  }
+  // Paid + good standing → no banner
+  if (isApproved && isPaid && !isPastDue) return null;
 
-  // State 4b: Active + Paid but payment issue
+  // Past Due — full access continues, but show info banner (admin handles separately)
   if (isApproved && isPastDue) {
     return (
       <div className="mb-6 flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-xl">
@@ -64,22 +59,7 @@ export default function AccountStatusBanner({ user, lawyerProfile }) {
   }
 
   // State 4c: Cancelled
-  if (isApproved && isCancelled) {
-    return (
-      <div className="mb-6 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
-        <ShieldAlert className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
-        <div className="flex-1">
-          <p className="font-semibold text-red-900 text-sm">Subscription Cancelled</p>
-          <p className="text-red-700 text-sm mt-0.5">Your subscription has been cancelled. Resubscribe to regain full access to the platform.</p>
-        </div>
-        <Link to={`${createPageUrl('LawyerSettings')}?tab=billing`} className="shrink-0 px-4 py-2 bg-[#3a164d] hover:bg-[#2a1038] text-white text-sm font-semibold rounded-lg transition-colors">
-          Resubscribe
-        </Link>
-      </div>
-    );
-  }
-
-  // State 3: Active + Trial → show days remaining
+  // State 3: Active + Trial → show days remaining (full access)
   if (isApproved && isTrial) {
     const daysLeft = getDaysRemaining(trialEndsAt);
     return (
@@ -122,15 +102,15 @@ export default function AccountStatusBanner({ user, lawyerProfile }) {
     );
   }
 
-  // State 2: Active, Not Paid (no trial, no subscription)
-  if (isApproved && !isPaid && !isTrial) {
+  // State 2: Active, Not Paid — can browse cases but can't accept
+  if (isApproved && isNotPaid) {
     return (
       <div className="mb-6 flex items-start gap-3 p-4 bg-gradient-to-r from-[#3a164d]/5 to-[#a47864]/5 border border-[#3a164d]/20 rounded-xl">
         <CreditCard className="w-5 h-5 text-[#3a164d] mt-0.5 shrink-0" />
         <div className="flex-1">
-          <p className="font-semibold text-[#3a164d] text-sm">Upgrade Your Membership</p>
+          <p className="font-semibold text-[#3a164d] text-sm">Subscribe to Accept Cases</p>
           <p className="text-gray-600 text-sm mt-0.5">
-            Subscribe for $99/month to accept cases, post referrals, and access all platform features. Or start with a free 3-month trial.
+            You can browse cases and join circles, but you need a subscription ($99/month) or a free trial to accept cases and post referrals.
           </p>
         </div>
         <Link to={`${createPageUrl('LawyerSettings')}?tab=billing`} className="shrink-0 px-4 py-2 bg-[#3a164d] hover:bg-[#2a1038] text-white text-sm font-semibold rounded-lg transition-colors flex items-center gap-2">

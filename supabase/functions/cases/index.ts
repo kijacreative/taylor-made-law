@@ -109,9 +109,11 @@ async function handleAccept(req: Request) {
     if (lp?.status !== 'approved') return errorResponse('Account must be approved to accept cases', 403);
   }
 
-  // Verify paid or trial membership
-  if (profile.membership_status !== 'paid' && profile.membership_status !== 'trial') {
-    return errorResponse('A paid membership or active trial is required to accept cases', 403);
+  // Verify subscription: paid, trial, or past_due all have full access
+  // Only 'none'/'cancelled' are blocked from accepting cases
+  const sub = profile.membership_status || profile.subscription_status || 'none';
+  if (!['paid', 'trial', 'past_due', 'active'].includes(sub)) {
+    return errorResponse('A subscription or active trial is required to accept cases', 403);
   }
 
   // Get lawyer profile for accepted_by
