@@ -60,11 +60,10 @@ export default function DirectMessages() {
       return res?.data || res || { threads: [], total_unread: 0 };
     },
     enabled: !!user && isApproved,
-    refetchInterval: 30000,
-    staleTime: 10000,
+    staleTime: 30000, // Cache for 30s — real-time handles updates
   });
 
-  // Real-time subscription: refresh inbox whenever any DM changes
+  // Real-time: refresh inbox instantly when any DM or thread changes
   useEffect(() => {
     if (!user || !isApproved) return;
     const unsub = subscribeDirectMessages(() => {

@@ -158,26 +158,35 @@ export default function DirectMessageThreadPage() {
     userFullNamesRef.current = userFullNames;
   }, [userFullNames]);
 
-  // Real-time subscription — stable deps, uses ref for userFullNames
+  // Real-time subscription — handles both Supabase Realtime and Base44 event shapes
   useEffect(() => {
     if (!threadId) return;
     const unsub = subscribeDirectMessages((event) => {
-      if (event.data?.thread_id === threadId) {
-        if (event.type === 'create' && !event.data.is_deleted) {
+      // Normalize: Supabase Realtime = { eventType, new, old }, Base44 = { type, data, id }
+      const evType = event.eventType === 'INSERT' ? 'create' : event.eventType === 'UPDATE' ? 'update' : event.type;
+      const evData = event.new || event.data;
+      const evId = evData?.id || event.id;
+
+      if (evData?.thread_id === threadId) {
+        if (evType === 'create' && !evData.deleted_at) {
           setMessages(prev => {
-            if (prev.find(m => m.id === event.id)) return prev;
-            return [...prev, { ...event.data, attachments: [] }];
+            // Skip if already exists (real msg) or replace optimistic msg from same sender
+            if (prev.find(m => m.id === evId)) return prev;
+            // Remove matching optimistic message (same sender, close timestamp)
+            const withoutOptimistic = prev.filter(m => {
+              if (!m._optimistic) return true;
+              return m.sender_user_id !== evData.sender_user_id;
+            });
+            return [...withoutOptimistic, { ...evData, attachments: [] }];
           });
-          // Load sender's full name if not cached (use ref to avoid stale closure)
-          const senderId = event.data?.sender_user_id;
+          const senderId = evData?.sender_user_id;
           if (senderId && !userFullNamesRef.current[senderId]) {
             loadUserFullName(senderId);
           }
-          // Mark thread as read + refresh inbox
           queryClient.invalidateQueries({ queryKey: ['directInbox'] });
-        } else if (event.type === 'update') {
+        } else if (evType === 'update') {
           setMessages(prev => prev.map(m =>
-            m.id === event.id ? { ...event.data, attachments: m.attachments } : m
+            m.id === evId ? { ...evData, attachments: m.attachments } : m
           ));
         }
       }
@@ -232,11 +241,34 @@ export default function DirectMessageThreadPage() {
     const filesToSend = [...pendingFiles];
     setPendingFiles([]);
 
+    // Optimistic: show message immediately
+    const optimisticId = `optimistic-${Date.now()}`;
+    const optimisticMsg = {
+      id: optimisticId,
+      thread_id: threadId,
+      sender_user_id: user.id,
+      sender_email: user.email,
+      body,
+      created_at: new Date().toISOString(),
+      has_attachments: filesToSend.length > 0,
+      _optimistic: true,
+    };
+    setMessages(prev => [...prev, optimisticMsg]);
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+
     try {
       const res = await sendDirectMessage({ thread_id: threadId, body });
       const sendData = res?.data || res;
       if (sendData?.error) throw new Error(sendData.error);
       const messageId = sendData?.message?.id;
+
+      // Replace optimistic message with real one
+      if (messageId) {
+        setMessages(prev => prev.map(m => m.id === optimisticId
+          ? { ...m, id: messageId, _optimistic: false }
+          : m
+        ));
+      }
 
       // Upload files if any
       if (filesToSend.length > 0 && messageId) {
