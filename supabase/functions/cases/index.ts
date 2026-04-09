@@ -109,9 +109,9 @@ async function handleAccept(req: Request) {
     if (lp?.status !== 'approved') return errorResponse('Account must be approved to accept cases', 403);
   }
 
-  // Verify paid
-  if (profile.membership_status !== 'paid') {
-    return errorResponse('A paid membership is required to accept cases', 403);
+  // Verify paid or trial membership
+  if (profile.membership_status !== 'paid' && profile.membership_status !== 'trial') {
+    return errorResponse('A paid membership or active trial is required to accept cases', 403);
   }
 
   // Get lawyer profile for accepted_by
