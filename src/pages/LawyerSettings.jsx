@@ -6,7 +6,7 @@ import { filterApplications, createProfile, updateProfile } from '@/services/law
 import { createConsentLog } from '@/services/admin';
 import { createSubscriptionCheckout } from '@/services/onboarding';
 import { uploadFile } from '@/services/storage';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import {
   User,
@@ -20,7 +20,6 @@ import {
   FileText,
   KeyRound,
   Mail,
-  Phone,
   Camera } from
 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
@@ -30,7 +29,7 @@ import TMLInput from '@/components/ui/TMLInput';
 import TMLTextarea from '@/components/ui/TMLTextarea';
 import TMLBadge from '@/components/ui/TMLBadge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { PRACTICE_AREAS, US_STATES, LAWYER_STATUSES } from '@/components/design/DesignTokens';
+import { PRACTICE_AREAS, US_STATES } from '@/components/design/DesignTokens';
 
 const REFERRAL_AGREEMENT_VERSION = '1.0.0';
 
@@ -948,7 +947,7 @@ export default function LawyerSettings() {
 
                   <div className="border border-gray-100 rounded-xl p-5 bg-gray-50 mb-4">
                     <p className="text-sm text-gray-500 mb-1">Monthly Price</p>
-                    <p className="text-4xl font-bold text-gray-900">$50<span className="text-lg font-normal text-gray-500">/month</span></p>
+                    <p className="text-4xl font-bold text-gray-900">$99<span className="text-lg font-normal text-gray-500">/month</span></p>
                     <ul className="mt-3 space-y-1.5 text-sm text-gray-600">
                       <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> Full access to Case Exchange</li>
                       <li className="flex items-center gap-2"><CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" /> Legal Circles & Collaboration</li>
@@ -970,7 +969,7 @@ export default function LawyerSettings() {
                       loading={checkoutLoading}
                       onClick={handleSubscribe}>
                       <CreditCard className="w-4 h-4 mr-2" />
-                      Subscribe Now — $50/month
+                      Subscribe Now — $99/month
                     </TMLButton>
                   ) : (
                     <p className="text-sm text-gray-500">

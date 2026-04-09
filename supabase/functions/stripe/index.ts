@@ -96,6 +96,7 @@ async function handleCreateCheckout(req: Request) {
     customer: customerId,
     mode: 'subscription',
     line_items: [{ price: priceId, quantity: 1 }],
+    allow_promotion_codes: true,
     success_url: `${origin}/LawyerSettings?tab=billing&checkout=success`,
     cancel_url: `${origin}/LawyerSettings?tab=billing&checkout=cancel`,
     metadata: {
