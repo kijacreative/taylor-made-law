@@ -23,6 +23,7 @@ import TMLButton from '@/components/ui/TMLButton';
 import PopupModal from '@/components/popups/PopupModal';
 import TMLCard, { TMLCardContent } from '@/components/ui/TMLCard';
 import TMLBadge from '@/components/ui/TMLBadge';
+import AccountStatusBanner from '@/components/membership/AccountStatusBanner';
 
 export default function LawyerDashboard() {
   const navigate = useNavigate();
@@ -176,6 +177,8 @@ export default function LawyerDashboard() {
               </div>
             </motion.div>
           )}
+
+          {!isPending && <AccountStatusBanner user={user} lawyerProfile={lawyerProfile} />}
 
           {/* Complete Profile Banner — shown to all users until profile is complete */}
           {!lawyerProfile?.bio && (

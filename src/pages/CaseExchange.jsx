@@ -16,12 +16,12 @@ import {
   Lock,
   Clock,
   Plus,
-  Crown,
 } from 'lucide-react';
 import AppSidebar from '@/components/layout/AppSidebar';
 import TMLButton from '@/components/ui/TMLButton';
 import SubmitCaseModal from '@/components/cases/SubmitCaseModal';
 import UpgradeModal from '@/components/membership/UpgradeModal';
+import AccountStatusBanner from '@/components/membership/AccountStatusBanner';
 import CategoryFilter from '@/components/cases/CategoryFilter';
 import { format } from 'date-fns';
 
@@ -51,7 +51,7 @@ export default function CaseExchange() {
 
   const isApproved = user?.user_status === 'approved' || user?.user_status === 'active' || lawyerProfile?.status === 'approved';
   const isPending = !isApproved;
-  const isPaidMember = user?.membership_status === 'paid';
+  const isPaidMember = user?.membership_status === 'paid' || user?.membership_status === 'trial' || lawyerProfile?.subscription_status === 'active' || lawyerProfile?.subscription_status === 'trial';
 
   const handleUpgrade = () => {
     setShowUpgradeModal(false);
@@ -127,23 +127,8 @@ export default function CaseExchange() {
             <UpgradeModal onClose={() => setShowUpgradeModal(false)} onUpgrade={handleUpgrade} />
           )}
 
-          {/* Upgrade Banner */}
-          {isApproved && !isPaidMember && (
-            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-              <div className="bg-gradient-to-r from-[#3a164d]/5 to-[#a47864]/5 border border-[#3a164d]/20 rounded-2xl p-5 flex items-center gap-4">
-                <div className="p-2.5 bg-[#3a164d]/10 rounded-xl shrink-0">
-                  <Crown className="w-5 h-5 text-[#3a164d]" />
-                </div>
-                <div className="flex-1">
-                  <h3 className="font-semibold text-[#3a164d] text-base">Upgrade to unlock full Case Exchange access</h3>
-                  <p className="text-gray-600 text-sm mt-0.5">Accept cases, post referrals, and access private circle case discussions — all for $99/month.</p>
-                </div>
-                <TMLButton variant="primary" size="sm" onClick={() => setShowUpgradeModal(true)}>
-                  Upgrade — $99/mo
-                </TMLButton>
-              </div>
-            </motion.div>
-          )}
+          {/* Account Status Banner (upgrade, trial, payment due) */}
+          <AccountStatusBanner user={user} lawyerProfile={lawyerProfile} />
 
           {/* Pending Banner */}
           {isPending && (
