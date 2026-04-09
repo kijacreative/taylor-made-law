@@ -123,15 +123,19 @@ async function handleAccept(req: Request) {
     .eq('user_id', profile.id)
     .maybeSingle();
 
-  // Update case
+  // Update case (include estimated_value if provided by accepting attorney)
+  const updateData: Record<string, unknown> = {
+    status: 'accepted',
+    accepted_by: lawyerProfile?.id || null,
+    accepted_by_email: profile.email,
+    accepted_at: new Date().toISOString(),
+  };
+  if (body.estimated_value) {
+    updateData.estimated_value = parseFloat(body.estimated_value);
+  }
   const { error: updateErr } = await sb
     .from('cases')
-    .update({
-      status: 'accepted',
-      accepted_by: lawyerProfile?.id || null,
-      accepted_by_email: profile.email,
-      accepted_at: new Date().toISOString(),
-    })
+    .update(updateData)
     .eq('id', caseId);
 
   if (updateErr) return errorResponse(updateErr.message, 500);

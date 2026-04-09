@@ -3,20 +3,17 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { getCurrentUser, getProfile } from '@/services/auth';
 import { filterCases, acceptCase, sendApplicationEmails } from '@/services/cases';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'framer-motion';
 import { 
   ArrowLeft, 
   Scale, 
-  MapPin, 
-  DollarSign,
+  MapPin,
   TrendingUp,
   CheckCircle2,
   AlertCircle,
-  Clock,
   Shield,
   FileText,
-  User,
   Loader2,
   Lock,
   Crown
@@ -33,6 +30,8 @@ export default function CaseDetail() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
+  const [showAcceptForm, setShowAcceptForm] = useState(false);
+  const [acceptValue, setAcceptValue] = useState('');
   const [error, setError] = useState(null);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   
@@ -117,7 +116,7 @@ export default function CaseDetail() {
     
     try {
       // Accept case via backend function (bypasses RLS)
-      await acceptCase({ caseId });
+      await acceptCase({ caseId, estimated_value: acceptValue ? parseFloat(acceptValue) : null });
       
       // Send confirmation email via backend function
       try {
@@ -269,21 +268,49 @@ export default function CaseDetail() {
                   </div>
                 )}
 
-                {/* Accept Button */}
+                {/* Accept Button / Form */}
                 {isAvailable && (
                   <div className="flex items-center gap-4 flex-wrap">
                     {isPaidMember ? (
                       <>
-                        <TMLButton 
-                          variant="primary" 
-                          size="lg"
-                          onClick={handleAcceptCase}
-                          loading={accepting}
-                          disabled={!canAccept}
-                        >
-                          <CheckCircle2 className="w-5 h-5 mr-2" />
-                          Accept This Case
-                        </TMLButton>
+                        {!showAcceptForm ? (
+                          <TMLButton
+                            variant="primary"
+                            size="lg"
+                            onClick={() => setShowAcceptForm(true)}
+                            disabled={!canAccept}
+                          >
+                            <CheckCircle2 className="w-5 h-5 mr-2" />
+                            Accept This Case
+                          </TMLButton>
+                        ) : (
+                          <div className="w-full bg-[#f5f0fa] border border-[#3a164d]/20 rounded-xl p-5 space-y-4">
+                            <h4 className="font-semibold text-gray-900">Accept Case — 25% Referral Fee</h4>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-1">Estimated Case Value ($)</label>
+                              <input
+                                type="number"
+                                value={acceptValue}
+                                onChange={e => setAcceptValue(e.target.value)}
+                                placeholder="Enter your estimated case value"
+                                className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#3a164d]/20 focus:border-[#3a164d]"
+                              />
+                              <p className="text-xs text-gray-500 mt-1">You can update this later. The referral fee is 25% of the case value.</p>
+                            </div>
+                            <div className="flex gap-3">
+                              <TMLButton variant="outline" size="sm" onClick={() => setShowAcceptForm(false)}>Cancel</TMLButton>
+                              <TMLButton
+                                variant="primary"
+                                size="sm"
+                                onClick={handleAcceptCase}
+                                loading={accepting}
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-2" />
+                                Confirm Acceptance
+                              </TMLButton>
+                            </div>
+                          </div>
+                        )}
                         {!canAccept && lawyerProfile && (
                           <div className="flex items-center gap-2 text-amber-600">
                             <AlertCircle className="w-5 h-5" />

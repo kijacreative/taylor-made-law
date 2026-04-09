@@ -320,10 +320,15 @@ function ActiveCaseCard({ caseItem, isPaidMember, onUpgrade }) {
 
         {/* Right side */}
         <div className="shrink-0 flex flex-col items-end gap-3 min-w-[120px]">
-          {caseItem.estimated_value && (
+          {caseItem.estimated_value ? (
             <div className="text-right">
               <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Est. Value</p>
               <p className="text-xl font-bold text-emerald-600">${caseItem.estimated_value.toLocaleString()}</p>
+            </div>
+          ) : (
+            <div className="text-right">
+              <p className="text-xs text-[#3a164d] font-semibold">25% Referral</p>
+              <p className="text-xs text-gray-400 mt-0.5">Value TBD</p>
             </div>
           )}
           {isPaidMember ? (

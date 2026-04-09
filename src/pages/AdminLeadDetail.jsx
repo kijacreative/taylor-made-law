@@ -233,7 +233,8 @@ export default function AdminLeadDetail() {
         description: lead.description,
         state: lead.state,
         practice_area: lead.practice_area,
-        estimated_value: lead.estimated_value || estimatedValue ? parseFloat(estimatedValue) : null,
+        estimated_value: null, // Set by accepting attorney
+        referral_percentage: 25, // Standard marketplace referral fee
         status: 'published',
         published_at: new Date().toISOString(),
         published_by: user.email,
