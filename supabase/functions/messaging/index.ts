@@ -359,7 +359,32 @@ async function handleGetInbox(req: Request) {
 
   if (threadErr) return errorResponse(threadErr.message, 500);
 
-  // For each thread, get the other participant's profile info
+  // Collect all other participant IDs, then batch-fetch profiles in one query
+  const otherUserIds: string[] = [];
+  for (const thread of (threads || [])) {
+    const otherUserId = (thread.participant_user_ids || []).find(
+      (uid: string) => uid !== profile.id
+    );
+    if (otherUserId && !otherUserIds.includes(otherUserId)) {
+      otherUserIds.push(otherUserId);
+    }
+  }
+
+  // Single batch query for all other participants
+  const profileMap: Record<string, Record<string, unknown>> = {};
+  if (otherUserIds.length > 0) {
+    const { data: profiles } = await sb
+      .from('profiles')
+      .select('id, email, full_name, profile_photo_url')
+      .in('id', otherUserIds);
+    if (profiles) {
+      for (const p of profiles) {
+        profileMap[p.id as string] = p;
+      }
+    }
+  }
+
+  // Enrich threads with participant info and unread status
   const enrichedThreads = [];
   let totalUnread = 0;
 
@@ -368,17 +393,6 @@ async function handleGetInbox(req: Request) {
       (uid: string) => uid !== profile.id
     );
 
-    let otherUser = null;
-    if (otherUserId) {
-      const { data: op } = await sb
-        .from('profiles')
-        .select('id, email, full_name, profile_photo_url')
-        .eq('id', otherUserId)
-        .maybeSingle();
-      otherUser = op;
-    }
-
-    // Calculate unread
     const lastRead = lastReadMap[thread.id];
     const isUnread = thread.last_message_at &&
       thread.last_message_sender_id !== profile.id &&
@@ -388,7 +402,7 @@ async function handleGetInbox(req: Request) {
 
     enrichedThreads.push({
       ...thread,
-      other_participant: otherUser,
+      other_participant: otherUserId ? (profileMap[otherUserId] || null) : null,
       is_unread: !!isUnread,
     });
   }

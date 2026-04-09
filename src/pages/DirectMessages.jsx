@@ -60,8 +60,8 @@ export default function DirectMessages() {
       return res?.data || res || { threads: [], total_unread: 0 };
     },
     enabled: !!user && isApproved,
-    refetchInterval: 8000,
-    staleTime: 0,
+    refetchInterval: 30000,
+    staleTime: 10000,
   });
 
   // Real-time subscription: refresh inbox whenever any DM changes
