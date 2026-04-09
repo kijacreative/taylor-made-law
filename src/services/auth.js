@@ -129,13 +129,17 @@ export async function verifyOtp({ email, otpCode }) {
     logProvider('auth', 'verifyOtp');
     const sb = getSupabase();
     if (!sb) throw new Error('Supabase client not available');
-    // Use custom OTP verification via edge function
-    const { data, error } = await sb.functions.invoke('auth-signup', {
-      body: { action: 'verify_otp', email, otpCode },
+    // Use direct fetch — sb.functions.invoke() throws on non-2xx, losing the error body
+    const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+    const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+    const res = await fetch(`${supabaseUrl}/functions/v1/auth-signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': anonKey, 'Authorization': `Bearer ${anonKey}` },
+      body: JSON.stringify({ action: 'verify_otp', email, otpCode }),
     });
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
-    return data;
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    return json.data || json;
   }
   logProvider('auth', 'verifyOtp', 'base44');
   return base44.auth.verifyOtp({ email, otpCode });
@@ -144,15 +148,16 @@ export async function verifyOtp({ email, otpCode }) {
 export async function resendOtp(email) {
   if (useSupabase('auth')) {
     logProvider('auth', 'resendOtp');
-    const sb = getSupabase();
-    if (!sb) throw new Error('Supabase client not available');
-    // Use custom OTP resend via edge function
-    const { data, error } = await sb.functions.invoke('auth-signup', {
-      body: { action: 'resend_otp', email },
+    const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+    const anonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
+    const res = await fetch(`${supabaseUrl}/functions/v1/auth-signup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'apikey': anonKey, 'Authorization': `Bearer ${anonKey}` },
+      body: JSON.stringify({ action: 'resend_otp', email }),
     });
-    if (error) throw error;
-    if (data?.error) throw new Error(data.error);
-    return data;
+    const json = await res.json();
+    if (json.error) throw new Error(json.error);
+    return json.data || json;
   }
   logProvider('auth', 'resendOtp', 'base44');
   return base44.auth.resendOtp(email);
