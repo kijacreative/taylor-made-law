@@ -136,10 +136,10 @@ export default function CaseExchange() {
                 </div>
                 <div className="flex-1">
                   <h3 className="font-semibold text-[#3a164d] text-base">Upgrade to unlock full Case Exchange access</h3>
-                  <p className="text-gray-600 text-sm mt-0.5">Accept cases, post referrals, and access private circle case discussions — all for $50/month.</p>
+                  <p className="text-gray-600 text-sm mt-0.5">Accept cases, post referrals, and access private circle case discussions — all for $99/month.</p>
                 </div>
                 <TMLButton variant="primary" size="sm" onClick={() => setShowUpgradeModal(true)}>
-                  Upgrade — $50/mo
+                  Upgrade — $99/mo
                 </TMLButton>
               </div>
             </motion.div>

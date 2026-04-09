@@ -27,7 +27,7 @@ export default function UpgradeModal({ onClose, onUpgrade }) {
 
         {/* Price */}
         <div className="px-8 py-5 border-b border-gray-100 flex items-baseline gap-2">
-          <span className="text-4xl font-extrabold text-gray-900">$50</span>
+          <span className="text-4xl font-extrabold text-gray-900">$99</span>
           <span className="text-gray-500">/month</span>
           <span className="ml-auto text-xs font-medium bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full">Cancel anytime</span>
         </div>
@@ -47,7 +47,7 @@ export default function UpgradeModal({ onClose, onUpgrade }) {
         {/* CTA */}
         <div className="px-8 pb-8 pt-2 space-y-3">
           <TMLButton variant="primary" className="w-full" onClick={onUpgrade}>
-            Upgrade Now — $50/month
+            Upgrade Now — $99/month
           </TMLButton>
           <button onClick={onClose} className="w-full text-sm text-gray-500 hover:text-gray-700 transition-colors py-1">
             Maybe later

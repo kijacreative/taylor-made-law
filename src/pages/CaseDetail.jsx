@@ -303,7 +303,7 @@ export default function CaseDetail() {
                         </TMLButton>
                         <div className="flex items-center gap-2 text-[#3a164d]/70">
                           <Lock className="w-4 h-4" />
-                          <span className="text-sm font-medium">Paid membership required — $50/month</span>
+                          <span className="text-sm font-medium">Paid membership required — $99/month</span>
                         </div>
                       </div>
                     )}
