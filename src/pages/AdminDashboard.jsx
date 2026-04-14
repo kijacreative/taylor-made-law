@@ -57,25 +57,28 @@ export default function AdminDashboard() {
   }, [navigate]);
 
   // Get leads
-  const { data: leads = [] } = useQuery({
+  const { data: rawLeads = [] } = useQuery({
     queryKey: ['allLeads'],
     queryFn: () => listLeads(),
     enabled: !!user
   });
+  const leads = Array.isArray(rawLeads) ? rawLeads : [];
 
   // Get cases
-  const { data: cases = [] } = useQuery({
+  const { data: rawCases = [] } = useQuery({
     queryKey: ['allCases'],
     queryFn: () => listCases(),
     enabled: !!user
   });
+  const cases = Array.isArray(rawCases) ? rawCases : [];
 
   // Get lawyers
-  const { data: lawyers = [] } = useQuery({
+  const { data: rawLawyers = [] } = useQuery({
     queryKey: ['allLawyers'],
     queryFn: () => listProfiles(),
     enabled: !!user
   });
+  const lawyers = Array.isArray(rawLawyers) ? rawLawyers : [];
 
   // Stats calculations
   const pendingLeads = leads.filter((l) => ['new', 'junior_review', 'senior_review'].includes(l.status)).length;

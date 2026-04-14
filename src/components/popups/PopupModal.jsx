@@ -59,7 +59,8 @@ export default function PopupModal({ user, lawyerProfile, placement = 'dashboard
 
   const loadPopup = async () => {
     const placementFilters = [placement, 'all_app'];
-    const allPopups = await filterPopups({ status: 'active' });
+    const rawPopups = await filterPopups({ status: 'active' });
+    const allPopups = Array.isArray(rawPopups) ? rawPopups : [];
 
     // Filter by placement and audience
     const eligible = allPopups.filter(p =>

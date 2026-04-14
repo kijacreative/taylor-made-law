@@ -56,6 +56,12 @@ export default function LawyerDashboard() {
           navigate('/AdminDashboard');
           return;
         }
+
+        // Onboarding gate — redirect before showing dashboard
+        if (!userData.profile_completed_at) {
+          navigate('/app/onboarding', { replace: true });
+          return;
+        }
       } catch (e) {
         navigate('/login');
       } finally {
@@ -96,15 +102,17 @@ export default function LawyerDashboard() {
     enabled: !!user,
   });
 
-  const availableCases = caseData?.cases || [];
+  const rawCases = caseData?.cases;
+  const availableCases = Array.isArray(rawCases) ? rawCases : [];
   const caseStats = caseData?.stats || { total: 0, byState: {}, byPracticeArea: {} };
 
   // Get my cases
-  const { data: myCases = [] } = useQuery({
+  const { data: rawMyCases = [] } = useQuery({
     queryKey: ['myCases', user?.email],
     queryFn: () => filterCases({ accepted_by_email: user.email }),
     enabled: !!user?.email,
   });
+  const myCases = Array.isArray(rawMyCases) ? rawMyCases : [];
 
   // Trending cases — only title/state/practice_area exposed even for pending
   const trendingCases = availableCases.filter(c => c.is_trending).slice(0, 3);
@@ -115,13 +123,6 @@ export default function LawyerDashboard() {
         <Loader2 className="w-8 h-8 animate-spin text-[#3a164d]" />
       </div>
     );
-  }
-
-  // Onboarding gate — if profile not complete, send to onboarding
-  const onboardingComplete = !!user?.profile_completed_at;
-  if (!onboardingComplete) {
-    navigate('/app/onboarding', { replace: true });
-    return null;
   }
 
   // Determine approval status — check user_status first, then fall back to lawyerProfile.status
