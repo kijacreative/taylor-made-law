@@ -1,0 +1,107 @@
+{
+  "name": "LegalCircleMember",
+  "type": "object",
+  "properties": {
+    "circle_id": {
+      "type": "string",
+      "description": "Reference to LegalCircle"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Reference to User"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "User email"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "member",
+        "admin",
+        "moderator"
+      ],
+      "default": "member",
+      "description": "Member role in group"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "pending",
+        "removed"
+      ],
+      "default": "active",
+      "description": "Membership status"
+    },
+    "joined_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When member joined"
+    },
+    "invited_by": {
+      "type": "string",
+      "description": "User who invited this member"
+    }
+  },
+  "required": [
+    "circle_id",
+    "user_id",
+    "user_email"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_member": true
+          }
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        },
+        {
+          "data.user_id": "{{user.id}}",
+          "data.status": "removed"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        }
+      ]
+    }
+  }
+}

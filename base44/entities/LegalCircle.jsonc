@@ -1,0 +1,133 @@
+{
+  "name": "LegalCircle",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Group name"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly identifier"
+    },
+    "description": {
+      "type": "string",
+      "description": "Group description"
+    },
+    "group_type": {
+      "type": "string",
+      "enum": [
+        "private",
+        "admin_curated",
+        "firm_based",
+        "peer_based"
+      ],
+      "default": "private",
+      "description": "Type of group"
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "hidden",
+        "discoverable"
+      ],
+      "default": "hidden",
+      "description": "Visibility setting"
+    },
+    "case_sharing_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Enable case sharing in this group"
+    },
+    "require_admin_approval": {
+      "type": "boolean",
+      "default": false,
+      "description": "Require admin approval for new members"
+    },
+    "member_can_submit_cases": {
+      "type": "boolean",
+      "default": true,
+      "description": "Members can submit cases"
+    },
+    "member_can_accept_cases": {
+      "type": "boolean",
+      "default": true,
+      "description": "Members can accept cases"
+    },
+    "case_approval_required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Cases need approval before visible"
+    },
+    "avatar_url": {
+      "type": "string",
+      "description": "Group avatar image"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Group tags"
+    },
+    "member_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of members"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Group is active"
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_member": true
+          }
+        },
+        {
+          "data.visibility": "discoverable"
+        },
+        {
+          "created_by": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        },
+        {
+          "created_by": "{{user.email}}"
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

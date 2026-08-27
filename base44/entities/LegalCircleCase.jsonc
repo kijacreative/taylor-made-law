@@ -1,0 +1,182 @@
+{
+  "name": "LegalCircleCase",
+  "type": "object",
+  "properties": {
+    "circle_id": {
+      "type": "string",
+      "description": "Reference to LegalCircle"
+    },
+    "title": {
+      "type": "string",
+      "description": "Case title"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Brief case summary"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed case description"
+    },
+    "state": {
+      "type": "string",
+      "description": "State jurisdiction"
+    },
+    "practice_area": {
+      "type": "string",
+      "description": "Practice area"
+    },
+    "estimated_value": {
+      "type": "number",
+      "description": "Estimated case value"
+    },
+    "key_facts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key case facts"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "pending_approval",
+        "available",
+        "accepted",
+        "closed"
+      ],
+      "default": "draft",
+      "description": "Case status"
+    },
+    "submitted_by_user_id": {
+      "type": "string",
+      "description": "User who submitted case"
+    },
+    "submitted_by_name": {
+      "type": "string",
+      "description": "Submitter name"
+    },
+    "accepted_by_user_id": {
+      "type": "string",
+      "description": "User who accepted case"
+    },
+    "accepted_by_email": {
+      "type": "string",
+      "description": "Acceptor email"
+    },
+    "accepted_by_name": {
+      "type": "string",
+      "description": "Acceptor name"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When case was accepted"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When case was published to group"
+    },
+    "client_first_name": {
+      "type": "string",
+      "description": "Client first name"
+    },
+    "client_last_name": {
+      "type": "string",
+      "description": "Client last name"
+    },
+    "client_email": {
+      "type": "string",
+      "description": "Client email"
+    },
+    "client_phone": {
+      "type": "string",
+      "description": "Client phone"
+    },
+    "lawyer_notes": {
+      "type": "string",
+      "description": "Notes from accepting lawyer"
+    },
+    "lead_docket_synced": {
+      "type": "boolean",
+      "default": false,
+      "description": "Synced to Lead Docket"
+    },
+    "lead_docket_id": {
+      "type": "string",
+      "description": "Lead Docket case ID"
+    }
+  },
+  "required": [
+    "circle_id",
+    "title",
+    "state",
+    "practice_area"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_member": true
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_member": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        },
+        {
+          "data.submitted_by_user_id": "{{user.id}}"
+        },
+        {
+          "data.accepted_by_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        }
+      ]
+    }
+  }
+}

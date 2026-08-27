@@ -1,0 +1,154 @@
+{
+  "name": "BlogPost",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Blog post title"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly unique identifier"
+    },
+    "excerpt": {
+      "type": "string",
+      "description": "Short summary for previews and SEO"
+    },
+    "body": {
+      "type": "string",
+      "description": "Full rich text body content (HTML)"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Updates",
+        "Education",
+        "Mass Torts",
+        "Compliance",
+        "Marketing",
+        "Case Management",
+        "Legal News",
+        "White Paper"
+      ],
+      "description": "Post category"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for filtering"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Author display name"
+    },
+    "author_email": {
+      "type": "string",
+      "description": "Author email"
+    },
+    "featured_image_url": {
+      "type": "string",
+      "description": "Featured image URL"
+    },
+    "featured_image_alt": {
+      "type": "string",
+      "description": "Featured image alt text"
+    },
+    "og_image_url": {
+      "type": "string",
+      "description": "OG/social share image URL"
+    },
+    "meta_title": {
+      "type": "string",
+      "description": "SEO meta title"
+    },
+    "meta_description": {
+      "type": "string",
+      "description": "SEO meta description"
+    },
+    "canonical_url": {
+      "type": "string",
+      "description": "Canonical URL (optional)"
+    },
+    "pdf_download_url": {
+      "type": "string",
+      "description": "Optional PDF file URL for download"
+    },
+    "pdf_file_name": {
+      "type": "string",
+      "description": "PDF file name for download"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published"
+      ],
+      "default": "draft",
+      "description": "Publication status"
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false,
+      "description": "Pin to top of feed"
+    },
+    "feature_on_dashboard": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show in dashboard resources module"
+    },
+    "post_to_community": {
+      "type": "boolean",
+      "default": false,
+      "description": "Also post to community as announcement"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Publication date/time"
+    },
+    "published_by": {
+      "type": "string",
+      "description": "Email of publisher"
+    },
+    "read_time_minutes": {
+      "type": "number",
+      "description": "Estimated read time"
+    }
+  },
+  "required": [
+    "title",
+    "slug",
+    "excerpt"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.status": "published"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

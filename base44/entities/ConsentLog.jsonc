@@ -1,0 +1,86 @@
+{
+  "name": "ConsentLog",
+  "type": "object",
+  "properties": {
+    "entity_type": {
+      "type": "string",
+      "description": "Type of entity (Lead, LawyerProfile, User)"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "ID of the entity"
+    },
+    "consent_type": {
+      "type": "string",
+      "enum": [
+        "intake_terms",
+        "lawyer_terms",
+        "referral_agreement",
+        "privacy_policy",
+        "marketing"
+      ],
+      "description": "Type of consent given"
+    },
+    "consent_version": {
+      "type": "string",
+      "description": "Version of the consent text"
+    },
+    "consent_text": {
+      "type": "string",
+      "description": "Full text of consent at time of acceptance"
+    },
+    "ip_address": {
+      "type": "string"
+    },
+    "user_agent": {
+      "type": "string"
+    },
+    "consented_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "entity_type",
+    "entity_id",
+    "consent_type",
+    "consent_version"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "user_type": {
+              "$in": [
+                "admin",
+                "senior_associate",
+                "junior_associate"
+              ]
+            }
+          }
+        },
+        {
+          "data.entity_type": "LawyerProfile",
+          "data.entity_id": "{{user.data.lawyer_profile_id}}"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

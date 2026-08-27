@@ -1,0 +1,136 @@
+{
+  "name": "DocumentSignature",
+  "type": "object",
+  "properties": {
+    "document_id": {
+      "type": "string",
+      "description": "Reference to CircleDocument"
+    },
+    "signer_user_id": {
+      "type": "string",
+      "description": "User who needs to sign"
+    },
+    "signer_email": {
+      "type": "string",
+      "description": "Email of signer"
+    },
+    "signer_name": {
+      "type": "string",
+      "description": "Name of signer"
+    },
+    "requested_by_user_id": {
+      "type": "string",
+      "description": "User who requested the signature"
+    },
+    "requested_by_name": {
+      "type": "string",
+      "description": "Name of requester"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "signed",
+        "declined",
+        "expired"
+      ],
+      "default": "pending",
+      "description": "Signature status"
+    },
+    "signed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When document was signed"
+    },
+    "signature_ip": {
+      "type": "string",
+      "description": "IP address when signed"
+    },
+    "signature_method": {
+      "type": "string",
+      "enum": [
+        "electronic_click",
+        "typed_name",
+        "uploaded_image",
+        "digital_certificate"
+      ],
+      "description": "Method used to sign"
+    },
+    "signature_data": {
+      "type": "string",
+      "description": "Signature image URL or typed name"
+    },
+    "declined_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When declined"
+    },
+    "decline_reason": {
+      "type": "string",
+      "description": "Reason for declining"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When signature request expires"
+    },
+    "reminder_sent_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of reminders sent"
+    },
+    "last_reminder_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last reminder sent"
+    }
+  },
+  "required": [
+    "document_id",
+    "signer_user_id",
+    "signer_email",
+    "requested_by_user_id"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.signer_user_id": "{{user.id}}"
+        },
+        {
+          "data.requested_by_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.signer_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.requested_by_user_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "name": "AuditLog",
+  "type": "object",
+  "properties": {
+    "entity_type": {
+      "type": "string",
+      "description": "Type of entity (Lead, Case, LawyerProfile, etc.)"
+    },
+    "entity_id": {
+      "type": "string",
+      "description": "ID of the affected entity"
+    },
+    "action": {
+      "type": "string",
+      "description": "Action performed (create, update, delete, approve, reject, etc.)"
+    },
+    "actor_email": {
+      "type": "string",
+      "description": "Email of user who performed action"
+    },
+    "actor_role": {
+      "type": "string",
+      "description": "Role of the actor"
+    },
+    "before_state": {
+      "type": "string",
+      "description": "JSON string of state before change"
+    },
+    "after_state": {
+      "type": "string",
+      "description": "JSON string of state after change"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about the action"
+    },
+    "ip_address": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "entity_type",
+    "entity_id",
+    "action",
+    "actor_email"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "user_type": {
+              "$in": [
+                "admin",
+                "senior_associate",
+                "junior_associate"
+              ]
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.actor_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

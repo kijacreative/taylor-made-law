@@ -1,0 +1,79 @@
+{
+  "name": "ContentPost",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Article/update title"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly identifier"
+    },
+    "excerpt": {
+      "type": "string",
+      "description": "Brief summary for cards"
+    },
+    "content": {
+      "type": "string",
+      "description": "Full article content (HTML/Markdown)"
+    },
+    "featured_image_url": {
+      "type": "string",
+      "description": "Optional featured image"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Author display name"
+    },
+    "author_email": {
+      "type": "string",
+      "description": "Author email"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "Announcement",
+        "Education",
+        "Mass Tort Update",
+        "Platform Update",
+        "Legal News"
+      ],
+      "default": "Announcement",
+      "description": "Content category"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for filtering"
+    },
+    "is_published": {
+      "type": "boolean",
+      "default": false,
+      "description": "Published status"
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false,
+      "description": "Pin to top of feed"
+    },
+    "is_featured_dashboard": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show on dashboard"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Publication date"
+    }
+  },
+  "required": [
+    "title",
+    "slug",
+    "excerpt",
+    "content"
+  ]
+}

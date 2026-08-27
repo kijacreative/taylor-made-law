@@ -1,0 +1,181 @@
+{
+  "name": "LawyerProfile",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Reference to User entity"
+    },
+    "full_name": {
+      "type": "string",
+      "description": "Attorney full name"
+    },
+    "firm_name": {
+      "type": "string",
+      "description": "Law firm name"
+    },
+    "bar_number": {
+      "type": "string",
+      "description": "Primary bar number (legacy)"
+    },
+    "bar_numbers": {
+      "type": "object",
+      "description": "Map of state code to bar number, e.g. {TX: '12345', CA: '67890'}"
+    },
+    "bio": {
+      "type": "string",
+      "description": "Professional biography"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Contact phone"
+    },
+    "states_licensed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "States where attorney is licensed"
+    },
+    "practice_areas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Areas of legal practice"
+    },
+    "years_experience": {
+      "type": "number",
+      "description": "Years of legal experience"
+    },
+    "profile_photo_url": {
+      "type": "string",
+      "description": "Profile photo URL"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "restricted",
+        "cancelled"
+      ],
+      "default": "pending",
+      "description": "Attorney approval status"
+    },
+    "referral_agreement_accepted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Has accepted referral agreement"
+    },
+    "referral_agreement_accepted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When referral agreement was accepted"
+    },
+    "stripe_customer_id": {
+      "type": "string",
+      "description": "Stripe customer ID"
+    },
+    "stripe_subscription_id": {
+      "type": "string",
+      "description": "Stripe subscription ID"
+    },
+    "subscription_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "trial",
+        "active",
+        "past_due",
+        "cancelled"
+      ],
+      "default": "none"
+    },
+    "free_trial_months": {
+      "type": "number",
+      "default": 0,
+      "description": "Admin-assigned free trial months"
+    },
+    "trial_ends_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "Email of approving admin"
+    }
+  },
+  "required": [
+    "firm_name",
+    "phone",
+    "states_licensed",
+    "practice_areas"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "user_type": {
+              "$in": [
+                "admin",
+                "senior_associate",
+                "junior_associate"
+              ]
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "user_type": {
+              "$in": [
+                "admin",
+                "senior_associate",
+                "junior_associate"
+              ]
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

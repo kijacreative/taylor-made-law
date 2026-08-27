@@ -1,0 +1,68 @@
+{
+  "name": "ActivationToken",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "User this token belongs to"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email at time of token creation"
+    },
+    "token_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of raw token (never store raw)"
+    },
+    "token_type": {
+      "type": "string",
+      "enum": [
+        "activation",
+        "password_reset"
+      ],
+      "default": "activation"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "used_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Null if unused"
+    },
+    "created_by_admin": {
+      "type": "string",
+      "description": "Email of admin who triggered this (null for self-serve)"
+    }
+  },
+  "required": [
+    "user_email",
+    "token_hash",
+    "expires_at"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        },
+        {
+          "data.user_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": null,
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

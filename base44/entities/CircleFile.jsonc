@@ -1,0 +1,112 @@
+{
+  "name": "CircleFile",
+  "type": "object",
+  "properties": {
+    "circle_id": {
+      "type": "string",
+      "description": "Reference to LegalCircle (required)"
+    },
+    "uploaded_by_user_id": {
+      "type": "string",
+      "description": "User who uploaded the file"
+    },
+    "uploaded_by_name": {
+      "type": "string",
+      "description": "Display name of uploader"
+    },
+    "uploaded_by_email": {
+      "type": "string",
+      "description": "Email of uploader"
+    },
+    "message_id": {
+      "type": "string",
+      "description": "Source message ID if uploaded via chat (nullable)"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original file name"
+    },
+    "file_type": {
+      "type": "string",
+      "description": "MIME type (e.g. image/png, application/pdf)"
+    },
+    "file_size": {
+      "type": "number",
+      "description": "File size in bytes"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Public storage URL"
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Thumbnail URL for images (optional)"
+    },
+    "is_deleted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Soft delete flag"
+    },
+    "deleted_by": {
+      "type": "string",
+      "description": "Who deleted the file"
+    }
+  },
+  "required": [
+    "circle_id",
+    "uploaded_by_user_id",
+    "file_name",
+    "file_url"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_member": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        },
+        {
+          "data.uploaded_by_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        },
+        {
+          "data.uploaded_by_user_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

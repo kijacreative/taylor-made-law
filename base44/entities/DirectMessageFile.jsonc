@@ -1,0 +1,79 @@
+{
+  "name": "DirectMessageFile",
+  "type": "object",
+  "properties": {
+    "message_id": {
+      "type": "string",
+      "description": "Reference to DirectMessage"
+    },
+    "thread_id": {
+      "type": "string",
+      "description": "Reference to DirectMessageThread (denormalized for queries)"
+    },
+    "uploaded_by_user_id": {
+      "type": "string"
+    },
+    "file_name": {
+      "type": "string"
+    },
+    "file_type": {
+      "type": "string"
+    },
+    "file_size": {
+      "type": "number"
+    },
+    "file_url": {
+      "type": "string"
+    },
+    "is_deleted": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "message_id",
+    "thread_id",
+    "uploaded_by_user_id",
+    "file_name",
+    "file_url"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.uploaded_by_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.uploaded_by_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.uploaded_by_user_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

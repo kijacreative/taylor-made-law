@@ -1,0 +1,87 @@
+{
+  "name": "DirectMessage",
+  "type": "object",
+  "properties": {
+    "thread_id": {
+      "type": "string",
+      "description": "Reference to DirectMessageThread"
+    },
+    "sender_user_id": {
+      "type": "string",
+      "description": "Sender user ID"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "Sender email"
+    },
+    "body": {
+      "type": "string",
+      "description": "Message body"
+    },
+    "has_attachments": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether message has attachments"
+    },
+    "attachment_file_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "DirectMessageFile IDs"
+    },
+    "is_deleted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Soft delete flag"
+    },
+    "deleted_by": {
+      "type": "string",
+      "description": "User who deleted the message"
+    }
+  },
+  "required": [
+    "thread_id",
+    "sender_user_id",
+    "body"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.sender_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.sender_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.sender_user_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

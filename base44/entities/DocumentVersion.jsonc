@@ -1,0 +1,105 @@
+{
+  "name": "DocumentVersion",
+  "type": "object",
+  "properties": {
+    "document_id": {
+      "type": "string",
+      "description": "Reference to CircleDocument"
+    },
+    "version_number": {
+      "type": "number",
+      "description": "Version number (1, 2, 3, etc.)"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL to the version file"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original file name"
+    },
+    "file_type": {
+      "type": "string",
+      "description": "MIME type"
+    },
+    "file_size": {
+      "type": "number",
+      "description": "File size in bytes"
+    },
+    "uploaded_by_user_id": {
+      "type": "string",
+      "description": "User who uploaded this version"
+    },
+    "uploaded_by_name": {
+      "type": "string",
+      "description": "Name of uploader"
+    },
+    "uploaded_by_email": {
+      "type": "string",
+      "description": "Email of uploader"
+    },
+    "change_summary": {
+      "type": "string",
+      "description": "Summary of changes made in this version"
+    },
+    "has_tracked_changes": {
+      "type": "boolean",
+      "default": false,
+      "description": "This version contains tracked changes"
+    },
+    "tracked_changes_data": {
+      "type": "string",
+      "description": "JSON string with tracked changes details (additions, deletions, modifications)"
+    },
+    "is_current": {
+      "type": "boolean",
+      "default": false,
+      "description": "Is this the current version"
+    },
+    "upload_reason": {
+      "type": "string",
+      "enum": [
+        "initial_upload",
+        "revision",
+        "correction",
+        "signature_update",
+        "other"
+      ],
+      "default": "initial_upload",
+      "description": "Reason for this version upload"
+    }
+  },
+  "required": [
+    "document_id",
+    "version_number",
+    "file_url",
+    "file_name"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_member": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

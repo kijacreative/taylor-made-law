@@ -1,0 +1,38 @@
+{
+  "name": "EmailVerificationOtp",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "description": "Email address the OTP was sent to"
+    },
+    "code_hash": {
+      "type": "string",
+      "description": "SHA-256 hash of the OTP code"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the code expires (10 minutes)"
+    },
+    "used_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the code was used (null if unused)"
+    },
+    "attempts_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of verification attempts"
+    },
+    "request_ip": {
+      "type": "string",
+      "description": "IP address of requester"
+    }
+  },
+  "required": [
+    "email",
+    "code_hash",
+    "expires_at"
+  ]
+}

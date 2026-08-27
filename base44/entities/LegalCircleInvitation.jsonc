@@ -1,0 +1,121 @@
+{
+  "name": "LegalCircleInvitation",
+  "type": "object",
+  "properties": {
+    "circle_id": {
+      "type": "string",
+      "description": "Reference to LegalCircle"
+    },
+    "inviter_user_id": {
+      "type": "string",
+      "description": "User who sent invite"
+    },
+    "inviter_name": {
+      "type": "string",
+      "description": "Inviter display name"
+    },
+    "invitee_email": {
+      "type": "string",
+      "description": "Email of invitee"
+    },
+    "invitee_name": {
+      "type": "string",
+      "description": "Invitee name (if known)"
+    },
+    "token": {
+      "type": "string",
+      "description": "Unique invitation token"
+    },
+    "message": {
+      "type": "string",
+      "description": "Personal message with invitation"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "declined",
+        "expired"
+      ],
+      "default": "pending",
+      "description": "Invitation status"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When invitation was sent"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When invitation was accepted"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Expiration date"
+    }
+  },
+  "required": [
+    "circle_id",
+    "inviter_user_id",
+    "invitee_email",
+    "token"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_member": true
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.inviter_user_id": "{{user.id}}"
+        },
+        {
+          "data.invitee_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.invitee_email": "{{user.email}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.inviter_user_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

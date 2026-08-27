@@ -1,0 +1,131 @@
+{
+  "name": "Resource",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Resource title"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly unique identifier"
+    },
+    "description": {
+      "type": "string",
+      "description": "Full description / body text"
+    },
+    "resource_type": {
+      "type": "string",
+      "enum": [
+        "upload",
+        "external_link"
+      ],
+      "default": "upload",
+      "description": "Whether this is a file upload or external link"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "URL to uploaded file"
+    },
+    "file_name": {
+      "type": "string",
+      "description": "Original file name"
+    },
+    "file_type": {
+      "type": "string",
+      "description": "MIME type or extension"
+    },
+    "file_size": {
+      "type": "number",
+      "description": "File size in bytes"
+    },
+    "external_url": {
+      "type": "string",
+      "description": "External resource URL"
+    },
+    "external_new_tab": {
+      "type": "boolean",
+      "default": true
+    },
+    "thumbnail_url": {
+      "type": "string",
+      "description": "Optional preview thumbnail"
+    },
+    "pdf_download_url": {
+      "type": "string",
+      "description": "Optional additional PDF download URL"
+    },
+    "pdf_file_name": {
+      "type": "string",
+      "description": "PDF file name for download"
+    },
+    "category": {
+      "type": "string",
+      "description": "Resource category"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "visibility": {
+      "type": "string",
+      "enum": [
+        "approved_only",
+        "all_lawyers"
+      ],
+      "default": "approved_only"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published"
+      ],
+      "default": "draft"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "title",
+    "slug",
+    "resource_type"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.status": "published"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,148 @@
+{
+  "name": "LawyerApplication",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "firm_name": {
+      "type": "string"
+    },
+    "bar_number": {
+      "type": "string"
+    },
+    "bar_numbers": {
+      "type": "object",
+      "description": "Map of state code to bar number, e.g. {TX: '12345', CA: '67890'}"
+    },
+    "years_experience": {
+      "type": "number"
+    },
+    "states_licensed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "practice_areas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "bio": {
+      "type": "string"
+    },
+    "referrals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "consent_terms": {
+      "type": "boolean",
+      "default": false
+    },
+    "consent_referral": {
+      "type": "boolean",
+      "default": false
+    },
+    "email_verified": {
+      "type": "boolean",
+      "default": false
+    },
+    "circle_token": {
+      "type": "string",
+      "description": "Circle invitation token if applicant was invited to a circle"
+    },
+    "circle_id": {
+      "type": "string",
+      "description": "Circle ID if applicant was invited to join a specific circle"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "active_pending_review",
+        "approved",
+        "approved_pending_activation",
+        "active",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "pending=old flow, active_pending_review=submitted via public signup, approved=admin approved, active=fully activated, rejected=rejected"
+    },
+    "rejection_reason": {
+      "type": "string"
+    },
+    "reviewed_by": {
+      "type": "string"
+    },
+    "reviewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "activation_token_hash": {
+      "type": "string"
+    },
+    "activation_token_expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "activation_token_used": {
+      "type": "boolean",
+      "default": false
+    },
+    "user_created": {
+      "type": "boolean",
+      "default": false
+    },
+    "signup_source": {
+      "type": "string",
+      "enum": [
+        "public_form",
+        "admin_invite",
+        "legacy",
+        "circle_invite"
+      ],
+      "default": "public_form"
+    }
+  },
+  "required": [
+    "full_name",
+    "email",
+    "firm_name"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

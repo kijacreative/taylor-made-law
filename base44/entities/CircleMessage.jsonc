@@ -1,0 +1,105 @@
+{
+  "name": "CircleMessage",
+  "type": "object",
+  "properties": {
+    "circle_id": {
+      "type": "string",
+      "description": "Reference to LegalCircle"
+    },
+    "sender_user_id": {
+      "type": "string",
+      "description": "Sender user ID"
+    },
+    "sender_email": {
+      "type": "string",
+      "description": "Sender email"
+    },
+    "message_text": {
+      "type": "string",
+      "description": "Message content"
+    },
+    "attachment_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Attached file URLs (legacy)"
+    },
+    "has_attachments": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this message has file attachments"
+    },
+    "attachment_file_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "CircleFile IDs attached to this message"
+    },
+    "is_deleted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Soft delete flag"
+    },
+    "deleted_by": {
+      "type": "string",
+      "description": "Who deleted the message"
+    }
+  },
+  "required": [
+    "circle_id",
+    "sender_user_id"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_member": true
+          }
+        },
+        {
+          "data.sender_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        },
+        {
+          "data.sender_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        }
+      ]
+    }
+  }
+}

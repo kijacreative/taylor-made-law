@@ -1,0 +1,98 @@
+{
+  "name": "Invitation",
+  "type": "object",
+  "properties": {
+    "inviter_email": {
+      "type": "string",
+      "description": "Email of person who sent invitation"
+    },
+    "inviter_name": {
+      "type": "string"
+    },
+    "invitee_email": {
+      "type": "string",
+      "description": "Email of invited attorney"
+    },
+    "invitee_name": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string",
+      "description": "Personal message with invitation"
+    },
+    "token": {
+      "type": "string",
+      "description": "Unique invitation token"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "accepted",
+        "expired"
+      ],
+      "default": "pending"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "inviter_email",
+    "invitee_email",
+    "token"
+  ],
+  "rls": {
+    "create": {
+      "data.inviter_email": "{{user.email}}"
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.inviter_email": "{{user.email}}"
+        },
+        {
+          "data.invitee_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.invitee_email": "{{user.email}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.inviter_email": "{{user.email}}"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,93 @@
+{
+  "name": "CircleNotification",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Target user"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Target user email"
+    },
+    "circle_id": {
+      "type": "string",
+      "description": "Related circle"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "invite",
+        "new_message",
+        "new_case",
+        "case_accepted",
+        "member_joined"
+      ],
+      "description": "Notification type"
+    },
+    "title": {
+      "type": "string",
+      "description": "Notification title"
+    },
+    "body": {
+      "type": "string",
+      "description": "Notification body"
+    },
+    "link": {
+      "type": "string",
+      "description": "Deep link URL"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false
+    },
+    "reference_id": {
+      "type": "string",
+      "description": "Related entity ID (invite, case, message)"
+    }
+  },
+  "required": [
+    "user_id",
+    "type",
+    "title"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

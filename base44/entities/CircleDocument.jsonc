@@ -1,0 +1,183 @@
+{
+  "name": "CircleDocument",
+  "type": "object",
+  "properties": {
+    "circle_id": {
+      "type": "string",
+      "description": "Reference to LegalCircle"
+    },
+    "title": {
+      "type": "string",
+      "description": "Document title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Document description"
+    },
+    "document_type": {
+      "type": "string",
+      "enum": [
+        "case_file",
+        "contract",
+        "motion",
+        "brief",
+        "discovery",
+        "correspondence",
+        "research",
+        "other"
+      ],
+      "default": "other",
+      "description": "Type of legal document"
+    },
+    "current_version_number": {
+      "type": "number",
+      "default": 1,
+      "description": "Current version number"
+    },
+    "current_file_url": {
+      "type": "string",
+      "description": "URL to the current version file"
+    },
+    "current_file_name": {
+      "type": "string",
+      "description": "Current file name"
+    },
+    "uploaded_by_user_id": {
+      "type": "string",
+      "description": "User who uploaded current version"
+    },
+    "uploaded_by_name": {
+      "type": "string",
+      "description": "Name of uploader"
+    },
+    "uploaded_by_email": {
+      "type": "string",
+      "description": "Email of uploader"
+    },
+    "case_id": {
+      "type": "string",
+      "description": "Reference to Case entity if linked to a case"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Document tags"
+    },
+    "is_confidential": {
+      "type": "boolean",
+      "default": false,
+      "description": "Mark as confidential"
+    },
+    "requires_signature": {
+      "type": "boolean",
+      "default": false,
+      "description": "Document requires electronic signature"
+    },
+    "signature_status": {
+      "type": "string",
+      "enum": [
+        "not_required",
+        "pending",
+        "partially_signed",
+        "fully_signed",
+        "declined"
+      ],
+      "default": "not_required",
+      "description": "Signature request status"
+    },
+    "signature_requested_by": {
+      "type": "string",
+      "description": "User ID who requested signature"
+    },
+    "signature_requested_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When signature was requested"
+    },
+    "signature_deadline": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Deadline for signature"
+    },
+    "track_changes_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Track changes is enabled for this document"
+    },
+    "has_pending_changes": {
+      "type": "boolean",
+      "default": false,
+      "description": "Document has pending tracked changes"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "final",
+        "archived"
+      ],
+      "default": "draft",
+      "description": "Document status"
+    }
+  },
+  "required": [
+    "circle_id",
+    "title",
+    "current_file_url"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_member": true
+          }
+        },
+        {
+          "data.circle_id": {
+            "$in": "{{user.circles}}"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        },
+        {
+          "data.uploaded_by_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        }
+      ]
+    }
+  }
+}

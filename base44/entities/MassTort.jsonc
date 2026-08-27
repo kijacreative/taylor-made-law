@@ -1,0 +1,122 @@
+{
+  "name": "MassTort",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Mass tort name/title"
+    },
+    "slug": {
+      "type": "string",
+      "description": "URL-friendly identifier"
+    },
+    "short_summary": {
+      "type": "string",
+      "description": "Brief description for cards"
+    },
+    "category": {
+      "type": "string",
+      "description": "Category/type of mass tort"
+    },
+    "jurisdiction": {
+      "type": "string",
+      "enum": [
+        "Federal",
+        "State",
+        "Multi-State"
+      ],
+      "description": "Legal jurisdiction"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Open",
+        "Monitoring",
+        "Closed"
+      ],
+      "default": "Open",
+      "description": "Current status"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Tags for filtering and categorization"
+    },
+    "featured_image_url": {
+      "type": "string",
+      "description": "Optional featured image"
+    },
+    "overview": {
+      "type": "string",
+      "description": "Background and overview content"
+    },
+    "ideal_cases": {
+      "type": "string",
+      "description": "Who it's for / ideal case types"
+    },
+    "key_details": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Bulleted key highlights"
+    },
+    "important_dates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Important deadlines/dates"
+    },
+    "external_links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "External resources"
+    },
+    "is_published": {
+      "type": "boolean",
+      "default": false,
+      "description": "Published status"
+    },
+    "is_featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Pin to top of feed"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Publication date"
+    },
+    "published_by": {
+      "type": "string",
+      "description": "Email of publisher"
+    }
+  },
+  "required": [
+    "title",
+    "slug",
+    "short_summary",
+    "jurisdiction"
+  ]
+}

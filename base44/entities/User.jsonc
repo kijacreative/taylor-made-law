@@ -1,0 +1,232 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "role": {
+      "type": "string",
+      "enum": [
+        "admin",
+        "user"
+      ],
+      "default": "user"
+    },
+    "user_status": {
+      "type": "string",
+      "enum": [
+        "invited",
+        "pending",
+        "approved",
+        "active_pending_review",
+        "active",
+        "disabled",
+        "cancelled"
+      ],
+      "description": "Unified identity status. active_pending_review=new self-signup, active=fully onboarded, approved=legacy old flow"
+    },
+    "review_status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "verified",
+        "rejected"
+      ],
+      "default": "pending",
+      "description": "Admin review status after auto-approve"
+    },
+    "email_verified": {
+      "type": "boolean",
+      "default": true
+    },
+    "email_verified_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "skip_email_verification": {
+      "type": "boolean",
+      "default": true,
+      "description": "Bypass platform email verification gate"
+    },
+    "password_set": {
+      "type": "boolean",
+      "default": false,
+      "description": "True once the user has set their password"
+    },
+    "invited_by_admin": {
+      "type": "string",
+      "description": "Email of the admin who invited this user"
+    },
+    "invited_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invitation was sent"
+    },
+    "firm_name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "bar_number": {
+      "type": "string"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "website": {
+      "type": "string"
+    },
+    "office_address": {
+      "type": "string"
+    },
+    "states_licensed": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "practice_areas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "years_experience": {
+      "type": "number"
+    },
+    "profile_photo_url": {
+      "type": "string"
+    },
+    "profile_completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "referral_agreement_accepted": {
+      "type": "boolean",
+      "default": false
+    },
+    "referral_agreement_accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "terms_accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "privacy_accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "consent_terms_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "approved_by": {
+      "type": "string"
+    },
+    "disabled_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "disabled_by": {
+      "type": "string"
+    },
+    "disabled_reason": {
+      "type": "string"
+    },
+    "reinstated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reinstated_by": {
+      "type": "string"
+    },
+    "free_trial_months": {
+      "type": "number",
+      "default": 0
+    },
+    "trial_ends_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "stripe_customer_id": {
+      "type": "string"
+    },
+    "stripe_subscription_id": {
+      "type": "string"
+    },
+    "subscription_status": {
+      "type": "string",
+      "enum": [
+        "none",
+        "trial",
+        "active",
+        "past_due",
+        "cancelled"
+      ],
+      "default": "none"
+    },
+    "membership_status": {
+      "type": "string",
+      "enum": [
+        "free",
+        "paid"
+      ],
+      "default": "free",
+      "description": "Controls access to Case Exchange actions and circle case content. free=browse only, paid=full access"
+    },
+    "membership_activated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When paid membership was activated"
+    },
+    "membership_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When paid membership expires if subscription lapses"
+    },
+    "billing_demo_plan": {
+      "type": "string",
+      "description": "Demo plan selected during onboarding"
+    },
+    "billing_demo_bank_name": {
+      "type": "string"
+    },
+    "billing_demo_account_holder": {
+      "type": "string"
+    },
+    "billing_demo_account_type": {
+      "type": "string",
+      "enum": [
+        "checking",
+        "savings"
+      ]
+    },
+    "billing_demo_last4": {
+      "type": "string"
+    },
+    "billing_demo_status": {
+      "type": "string",
+      "description": "collected / not_provided"
+    },
+    "billing_demo_collected_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "admin_note": {
+      "type": "string",
+      "description": "Internal admin notes"
+    },
+    "more_info_requested_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "more_info_requested_by": {
+      "type": "string"
+    }
+  },
+  "required": []
+}

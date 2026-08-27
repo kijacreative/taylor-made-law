@@ -1,0 +1,129 @@
+{
+  "name": "LegalCirclePost",
+  "type": "object",
+  "properties": {
+    "circle_id": {
+      "type": "string",
+      "description": "Reference to LegalCircle"
+    },
+    "author_user_id": {
+      "type": "string",
+      "description": "Post author user ID"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Author display name"
+    },
+    "author_email": {
+      "type": "string",
+      "description": "Author email"
+    },
+    "post_type": {
+      "type": "string",
+      "enum": [
+        "post",
+        "announcement"
+      ],
+      "default": "post",
+      "description": "Type of post"
+    },
+    "title": {
+      "type": "string",
+      "description": "Post title (optional)"
+    },
+    "body": {
+      "type": "string",
+      "description": "Post content"
+    },
+    "file_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Attached file URLs"
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false,
+      "description": "Pinned to top of feed"
+    },
+    "is_removed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Removed by moderator"
+    },
+    "removed_by": {
+      "type": "string",
+      "description": "Who removed the post"
+    },
+    "removed_reason": {
+      "type": "string",
+      "description": "Reason for removal"
+    },
+    "reply_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of replies"
+    }
+  },
+  "required": [
+    "circle_id",
+    "author_user_id",
+    "body"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "is_group_member": true
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_member": true
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        },
+        {
+          "data.author_user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "user_condition": {
+            "is_group_admin": true
+          }
+        },
+        {
+          "data.author_user_id": "{{user.id}}"
+        }
+      ]
+    }
+  }
+}

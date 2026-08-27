@@ -1,0 +1,64 @@
+{
+  "name": "DirectMessageParticipant",
+  "type": "object",
+  "properties": {
+    "thread_id": {
+      "type": "string",
+      "description": "Reference to DirectMessageThread"
+    },
+    "user_id": {
+      "type": "string",
+      "description": "Participant user ID"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Participant email"
+    },
+    "last_read_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this participant last read the thread"
+    },
+    "is_hidden": {
+      "type": "boolean",
+      "default": false,
+      "description": "User hid this thread from their inbox"
+    }
+  },
+  "required": [
+    "thread_id",
+    "user_id"
+  ],
+  "rls": {
+    "create": null,
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.user_id": "{{user.id}}"
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

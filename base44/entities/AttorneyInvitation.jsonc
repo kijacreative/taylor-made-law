@@ -1,0 +1,74 @@
+{
+  "name": "AttorneyInvitation",
+  "type": "object",
+  "properties": {
+    "inviter_admin_user_id": {
+      "type": "string",
+      "description": "Admin who sent the invite"
+    },
+    "inviter_name": {
+      "type": "string"
+    },
+    "invitee_email": {
+      "type": "string",
+      "description": "Email of invited attorney"
+    },
+    "invitee_name": {
+      "type": "string"
+    },
+    "firm_name": {
+      "type": "string"
+    },
+    "states_served": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "practice_areas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "admin_note": {
+      "type": "string"
+    },
+    "token_hash": {
+      "type": "string",
+      "description": "Hashed activation token"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "accepted",
+        "expired",
+        "revoked"
+      ],
+      "default": "sent"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "used_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "invitation_type": {
+      "type": "string",
+      "enum": [
+        "admin_invite",
+        "approval_activation"
+      ],
+      "default": "admin_invite"
+    }
+  },
+  "required": [
+    "inviter_admin_user_id",
+    "invitee_email",
+    "token_hash",
+    "expires_at"
+  ]
+}

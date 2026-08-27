@@ -1,0 +1,184 @@
+{
+  "name": "Case",
+  "type": "object",
+  "properties": {
+    "lead_id": {
+      "type": "string",
+      "description": "Reference to original lead"
+    },
+    "lead_docket_case_id": {
+      "type": "string",
+      "description": "Case ID from Lead Docket"
+    },
+    "title": {
+      "type": "string",
+      "description": "Case title/summary"
+    },
+    "description": {
+      "type": "string",
+      "description": "Case description"
+    },
+    "state": {
+      "type": "string"
+    },
+    "practice_area": {
+      "type": "string"
+    },
+    "estimated_value": {
+      "type": "number"
+    },
+    "key_facts": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key facts about the case"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "accepted",
+        "in_progress",
+        "closed",
+        "withdrawn"
+      ],
+      "default": "draft"
+    },
+    "is_trending": {
+      "type": "boolean",
+      "default": false
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "published_by": {
+      "type": "string"
+    },
+    "accepted_by": {
+      "type": "string",
+      "description": "Lawyer profile ID who accepted"
+    },
+    "accepted_by_email": {
+      "type": "string"
+    },
+    "accepted_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "client_first_name": {
+      "type": "string"
+    },
+    "client_last_name": {
+      "type": "string"
+    },
+    "client_email": {
+      "type": "string"
+    },
+    "client_phone": {
+      "type": "string"
+    },
+    "lawyer_notes": {
+      "type": "string",
+      "description": "Notes and questions from the accepting lawyer"
+    }
+  },
+  "required": [
+    "title",
+    "state",
+    "practice_area"
+  ],
+  "rls": {
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "user_type": {
+              "$in": [
+                "admin",
+                "senior_associate",
+                "junior_associate"
+              ]
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "user_type": {
+              "$in": [
+                "admin",
+                "senior_associate",
+                "junior_associate"
+              ]
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.status": "published"
+        },
+        {
+          "data.accepted_by_email": "{{user.email}}"
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "user_type": {
+              "$in": [
+                "admin",
+                "senior_associate",
+                "junior_associate"
+              ]
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.accepted_by_email": "{{user.email}}"
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "user_type": {
+              "$in": [
+                "admin",
+                "senior_associate",
+                "junior_associate"
+              ]
+            }
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

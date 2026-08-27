@@ -1,0 +1,147 @@
+{
+  "name": "Popup",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Internal name for this popup"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "draft"
+      ],
+      "default": "draft"
+    },
+    "placement": {
+      "type": "string",
+      "enum": [
+        "dashboard",
+        "community",
+        "mass_torts",
+        "blog",
+        "all_app"
+      ],
+      "default": "dashboard",
+      "description": "Which area of the app this shows on"
+    },
+    "audience": {
+      "type": "string",
+      "enum": [
+        "all",
+        "pending",
+        "approved"
+      ],
+      "default": "all",
+      "description": "Which lawyer audience segment sees this"
+    },
+    "trigger_type": {
+      "type": "string",
+      "enum": [
+        "on_load",
+        "delay",
+        "scroll"
+      ],
+      "default": "on_load"
+    },
+    "delay_seconds": {
+      "type": "number",
+      "default": 0
+    },
+    "scroll_percent": {
+      "type": "number",
+      "default": 50
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "once_ever",
+        "once_per_day",
+        "once_per_session",
+        "every_visit"
+      ],
+      "default": "once_ever"
+    },
+    "start_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "end_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "size": {
+      "type": "string",
+      "enum": [
+        "small",
+        "medium",
+        "large"
+      ],
+      "default": "medium"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "image_alt": {
+      "type": "string"
+    },
+    "headline": {
+      "type": "string"
+    },
+    "body_text": {
+      "type": "string"
+    },
+    "link_url": {
+      "type": "string"
+    },
+    "link_new_tab": {
+      "type": "boolean",
+      "default": true
+    },
+    "button_label": {
+      "type": "string"
+    },
+    "image_clickable": {
+      "type": "boolean",
+      "default": true
+    },
+    "close_on_overlay": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "data.status": "active"
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
